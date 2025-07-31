@@ -1,466 +1,332 @@
-// src/pages/admin/ProductsPage.jsx
-import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import { Link,useNavigate } from 'react-router-dom';
-import axios from "axios";
-import Select from 'react-select'; // Added for multi-select category
-import { PuffLoader } from "react-spinners"; 
-
-// Initial state for the edit form
-const initialFormState = {
-  name: "", price: "", description: "", category: [], // Use array for multi-select
-  stock: "", color: "", size: "", promotion: "", 
-  discountPercentage: "", // ✅ Add discount field
-  images: [],
-};
+import React, { useState } from "react";
 
 const ProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  // Static product data
+  const productList = [
+    { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666", totalSales: "$3,46,660" },
+    { name: "Arefot", price: "$10", totalOrder: "NaN", totalSales: "NaN" },
+    { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
+    { name: "Shoes", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
+  ];
 
-  
-  // State for the Edit Modal
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // The complete product object
-  const [editFormState, setEditFormState] = useState(initialFormState); // The data in the form fields
-  const [editLoading, setEditLoading] = useState(false); // Loading state for the modal submission
+  // Monthly data
+  const monthlyData = [
+    { month: "Jan", value: "23,400" },
+    { month: "Feb", value: "15,000" },
+    { month: "Mar", value: "30,000" },
+    { month: "Apr", value: "22,000" },
+    { month: "May", value: "10,000" },
+    { month: "Jun", value: "23,400" },
+    { month: "Jul", value: "5,000" },
+  ];
 
-  // State for dropdowns
-  const [categories, setCategories] = useState([]);
-  const [promotions, setPromotions] = useState([]);
+  // Sales analytics data for circular progress
+  const salesAnalytics = [
+    { label: "Total Sales", value: 50, color: "blue" },
+    { label: "Total Order", value: 30, color: "yellow" },
+    { label: "Order Cancel", value: 20, color: "red" },
+  ];
 
-  // ✅ Add state for multi-select categories and conditional promotion field
-  const [selectedEditCategories, setSelectedEditCategories] = useState([]); 
-  const [selectedEditPromotionName, setSelectedEditPromotionName] = useState("");
+  // State for slider
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [productName, setProductName] = useState("");
+  const [price, setPrice] = useState("");
+  const [images, setImages] = useState([]);
 
-  // Fetch all necessary data
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [prodRes, catRes, promoRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/categories`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/promotions`),
-        ]);
-        
-        setProducts(
-          Array.isArray(prodRes.data.data)
-            ? prodRes.data.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            : []
-        );
-        console.log("Product", products);
-        
-        setCategories(catRes.data.data.filter(c => c.isEnable));
-        setPromotions(promoRes.data.data.filter(p => p.isEnable));
-        setTimeout(() => {
-          setLoading(false);
-        }, 1500);
-      } catch (error) {
-        toast.error("Failed to fetch initial data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[80vh]">
-        <PuffLoader color="#00c7fc" />
-      </div>
-    );
-  }
-  
-  // Open the edit modal and populate the form
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-
-    // Format categories for react-select
-    const preselectedCategories = product.category.map(cat => ({
-      value: cat._id,
-      label: cat.name,
-    }));
-    setSelectedEditCategories(preselectedCategories);
-    
-    // Set the name of the current promotion for conditional rendering
-    const currentPromotion = promotions.find(p => p._id === product.promotion?._id);
-    setSelectedEditPromotionName(currentPromotion?.name || "");
-
-    setEditFormState({
-      name: product.name || "",
-      price: product.price || "",
-      description: product.description || "",
-      category: product.category.map(cat => cat._id), // Store just the IDs
-      stock: product.stock || "",
-      color: Array.isArray(product.color) ? product.color.join(", ") : "",
-      size: Array.isArray(product.size) ? product.size.join(", ") : "",
-      promotion: product.promotion?._id || "",
-      discountPercentage: product.discountPercentage || "", // ✅ Populate discount
-      images: [],
-    });
-    setShowEditModal(true);
+  // Handlers
+  const handleAddProduct = () => {
+    setIsSliderOpen(true);
   };
 
-  // Handle changes in the edit form
-  const handleEditFormChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "images") {
-      if (files.length > 5) {
-        toast.error("You can only upload a maximum of 5 new images.");
-        return;
-      }
-      setEditFormState(prev => ({ ...prev, images: Array.from(files) }));
-    } else {
-      setEditFormState(prev => ({ ...prev, [name]: value }));
-    }
+  const handleSave = () => {
+    console.log("Saving:", { productName, price, images });
+    setIsSliderOpen(false);
+    setProductName("");
+    setPrice("");
+    setImages([]);
   };
 
-  // Handler for multi-select category change in the modal
-  const handleEditCategoryChange = (selectedOptions) => {
-    setSelectedEditCategories(selectedOptions);
-    const categoryIds = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
-    setEditFormState(prev => ({ ...prev, category: categoryIds }));
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files.map(file => URL.createObjectURL(file)));
   };
 
-  // Handler for promotion dropdown change in the modal
-  const handleEditPromotionChange = (e) => {
-    const promotionId = e.target.value;
-    const promotion = promotions.find(p => p._id === promotionId);
-    setSelectedEditPromotionName(promotion?.name || "");
-    
-    setEditFormState(prev => ({
-      ...prev,
-      promotion: promotionId,
-      discountPercentage: promotion?.name === 'Discount' ? prev.discountPercentage : ""
-    }));
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
   };
-
-  // Submit the updated product data
-  const handleUpdateSubmit = async (e) => {
-    e.preventDefault();
-
-    // --- 1. VALIDATION FIRST ---
-    if (Number(editFormState.price) <= 145) {
-      toast.error("Price must be greater than 145.");
-      return; // Stop here. `editLoading` is still false.
-    }
-
-    // --- 2. SET LOADING STATE ---
-    setEditLoading(true);
-    
-    const formData = new FormData();
-    Object.keys(editFormState).forEach(key => {
-      // ✅ Join the category array into a comma-separated string
-      if (key === 'category') {
-        formData.append('category', editFormState.category.join(','));
-      } else if (key !== 'images') {
-        formData.append(key, editFormState[key]);
-      }
-    });
-
-    if (editFormState.images.length > 0) {
-      editFormState.images.forEach(image => {
-        formData.append('images', image);
-      });
-    }
-
-    try {
-      const { data } = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/products/${editingProduct._id}`, 
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-      setProducts(products.map(p => p._id === editingProduct._id ? data.data : p));
-      toast.success("Product updated successfully!");
-      setShowEditModal(false);
-      navigate('/admin/products'); 
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update product.");
-    } finally {
-      // --- 3. RESET LOADING STATE ---
-      setEditLoading(false);
-    }
-  };
-
-  // Delete a product
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      try {
-        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/products/${id}`);
-        setProducts(products.filter(p => p._id !== id));
-        toast.error("Product deleted successfully.");
-      } catch (error) {
-        toast.error("Failed to delete product.");
-      }
-    }
-  };
-
-  // Add this new handler function
-  const handleRemoveImage = async (publicId) => {
-    if (window.confirm("Are you sure you want to remove this image?")) {
-      try {
-        const { data } = await axios.delete(
-          `${import.meta.env.VITE_API_BASE_URL}/products/${editingProduct._id}/images/${publicId}`
-        );
-        // Update the product state locally to reflect the change immediately
-        const updatedProduct = data.data;
-        setEditingProduct(updatedProduct); // Update the product being edited
-        setProducts(products.map(p => p._id === updatedProduct._id ? updatedProduct : p)); // Update the main products list
-        toast.success("Image removed successfully.");
-      } catch (error) {
-        toast.error("Failed to remove image.");
-      }
-    }
-  };
-
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-10 min-h-screen">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">Products Management</h1>
-          <Link to='add-product'>
-            <button className="text-lg font-semibold px-4 py-2 rounded-md text-white bg-primary hover:bg-blue-700">
-              + Add Product
-            </button>
-          </Link>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Page Header with Add Product Button */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-newPrimary">Products List</h1>
+          <p className="text-gray-500 text-sm">Manage your products inventory</p>
+        </div>
+        <button
+          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary transition-colors duration-200 flex items-center"
+          onClick={handleAddProduct}
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Product
+        </button>
+      </div>
+
+      {/* Main Content with Table and Cards */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Product List Table */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 w-full lg:w-2/3">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Order</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {productList.map((product, index) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.price}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.totalOrder}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.totalSales}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Products Table */}
-        <div className="bg-white rounded shadow p-6 w-full mx-auto overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="py-2 px-4 text-left">Image</th>
-                <th className="py-2 px-4 text-left">Name</th>
-                <th className="py-2 px-4 text-left">Price</th>
-                <th className="py-2 px-4 text-left">Category</th>
-                <th className="py-2 px-4 text-left">Stock</th>
-                <th className="py-2 px-4 text-left">Discount</th>
-                <th className="py-2 px-4 text-left">Color(s)</th> {/* New Column */}
-                <th className="py-2 px-4 text-left">Size(s)</th>  {/* New Column */}
-                <th className="py-2 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="9" className="text-center py-6 text-gray-500">
-                    Loading products...
-                  </td>
-                </tr>
-              ) : products.length === 0 ? (
-                <tr>
-                  <td colSpan="9" className="text-center py-6 text-gray-500">
-                    No products found.
-                  </td>
-                </tr>
-              ) : (
-                [...products]
-                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                  .map((product) => (
-                    <tr key={product._id} className="border-b hover:bg-gray-50">
-                      <td className="py-2 px-4">
-                        <img src={product.images?.[0]?.url || 'https://via.placeholder.com/40'} alt={product.name} className="w-10 h-10 object-cover rounded"/>
-                      </td>
-                      <td className="py-2 px-4 font-medium">{product.name}</td>
-                      <td className="py-2 px-4">${product.price.toFixed(2)}</td>
-                      <td className="py-2 px-4">
-                        {product.category?.map(cat => cat.name).join(', ') || 'N/A'}
-                      </td>
-                      <td className="py-2 px-4">{product.stock}</td>
-                      <td className="py-2 px-4">
-                        {product.discountPercentage > 0 ? (
-                          <span className="font-semibold text-red-600">{product.discountPercentage}%</span>
-                        ) : (
-                          'N/A'
-                        )}
-                      </td>
-                      
-                      <td className="py-2 px-4">
-                        {product.color?.join(', ') || 'N/A'}
-                      </td>
-                      <td className="py-2 px-4">
-                        {product.size?.join(', ') || 'N/A'}
-                      </td>
-                      <td className="py-2 px-4 space-x-2 text-right">
-                        <button onClick={() => handleEdit(product)} className="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold">
-                          Edit
-                        </button>
-                        <button onClick={() => handleDelete(product._id)} className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-semibold">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
+        {/* Cards Section */}
+        <div className="flex flex-col gap-6 w-full lg:w-1/3">
+          {/* Monthly Data */}
+          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Add by Month</h2>
+            <div className="space-y-4">
+              {monthlyData.map((item, index) => (
+                <div key={index} className="flex items-center">
+                  <span className="w-16 text-gray-600 font-medium">{item.month}</span>
+                  <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        index % 2 === 0 ? "bg-gradient-to-r from-red-500 to-red-600" : "bg-gradient-to-r from-blue-500 to-blue-600"
+                      }`}
+                      style={{ width: `${(parseInt(item.value.replace(/,/g, "")) / 30000) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="w-20 text-right text-sm text-gray-700">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Analytics with Circular Progress Bar */}
+          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics</h2>
+            <div className="flex flex-col items-center">
+              <div className="relative w-40 h-40 mb-4">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke="#e0e0e0"
+                    strokeWidth="3"
+                  />
+                  {salesAnalytics.map((item, index) => {
+                    const offset = 100 - item.value;
+                    const startOffset = index === 0 ? 0 : salesAnalytics.slice(0, index).reduce((acc, curr) => acc + curr.value, 0);
+                    return (
+                      <circle
+                        key={index}
+                        cx="18"
+                        cy="18"
+                        r="15.9155"
+                        fill="none"
+                        stroke={item.color}
+                        strokeWidth="3"
+                        strokeDasharray="100"
+                        strokeDashoffset={startOffset + offset}
+                        transform="rotate(-90 18 18)"
+                        className="transition-all duration-1000"
+                      />
+                    );
+                  })}
+                  <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
+                    $220
+                  </text>
+                </svg>
+              </div>
+              <ul className="w-full space-y-2">
+                {salesAnalytics.map((item, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span
+                        className="w-3 h-3 mr-2 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      ></span>
+                      <span className="text-sm text-gray-600">{item.label}</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{item.value}%</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-      
-      {/* Edit Product Modal */}
-      {showEditModal && editingProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-6 text-center">Edit Product</h2>
-            <form onSubmit={handleUpdateSubmit}>
-              {/* Form fields are similar to AddProduct page */}
-              {/* Name */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Product Name</label>
-                <input type="text" name="name" value={editFormState.name} onChange={handleEditFormChange} required className="w-full border rounded px-3 py-2" />
-              </div>
-              {/* Price */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Price</label>
-                <input type="number" name="price" value={editFormState.price} onChange={handleEditFormChange} required className="w-full border rounded px-3 py-2" />
-              </div>
-              {/* Description */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Description</label>
-                <textarea name="description" value={editFormState.description} onChange={handleEditFormChange} required className="w-full border rounded px-3 py-2" rows="3" />
-              </div>
-              {/* Category */}
-              {/* Use react-select for multi-category */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Category</label>
-                <Select
-                  isMulti
-                  options={categories.map(cat => ({ value: cat._id, label: cat.name }))}
-                  value={selectedEditCategories}
-                  onChange={handleEditCategoryChange}
-                  className="basic-multi-select"
-                  classNamePrefix="select"
-                />
-              </div>
-              {/* Color & Size */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Color (comma-separated)</label>
-                <input type="text" name="color" value={editFormState.color} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Size (comma-separated)</label>
-                <input type="text" name="size" value={editFormState.size} onChange={handleEditFormChange} className="w-full border rounded px-3 py-2" />
-              </div>
-              {/* Stock */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Stock</label>
-                <input type="number" name="stock" value={editFormState.stock} onChange={handleEditFormChange} required className="w-full border rounded px-3 py-2" />
-              </div>
-              {/* Promotion */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Promotion</label>
-                <select
-                  name="promotion"
-                  value={editFormState.promotion}
-                  onChange={handleEditPromotionChange} // ✅ Use the new handler
-                  className="w-full border rounded px-3 py-2"
+
+      {/* Enhanced Right-Side Slider */}
+      {isSliderOpen && (
+        <div className="fixed inset-0 bg-gray-600/50 backdrop-blur-sm z-50 transition-opacity duration-300">
+          <div className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
+                <h2 className="text-xl font-bold text-newPrimary">Add New Product</h2>
+                <button
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  onClick={() => setIsSliderOpen(false)}
                 >
-                  <option value="">No Promotion</option>
-                  {promotions.map(promo => <option key={promo._id} value={promo._id}>{promo.name}</option>)}
-                </select>
+                  &times;
+                </button>
               </div>
-              {/* ✅ Conditionally Render Discount Percentage Field */}
-              {selectedEditPromotionName === 'Discount' && (
-                <div className="mb-4 p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
-                  <label className="block mb-1 font-medium text-blue-800">Discount Percentage (%)</label>
-                  <input
-                    type="number"
-                    name="discountPercentage"
-                    value={editFormState.discountPercentage}
-                    onChange={handleEditFormChange} // Generic handler is fine
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="e.g. 10 for 10%"
-                    min="1"
-                    max="99"
-                    required
-                  />
-                </div>
-              )}
 
-              {/* Image Upload */}
-              <div className="mb-4 p-4 border rounded">
-                <label className="block mb-2 font-medium">Product Images</label>
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                  {/* Product Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Product Name
+                    </label>
+                    <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                      placeholder="Enter product name"
+                    />
+                  </div>
 
-                {/* Display Current Images with Remove Button */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">Current Images:</p>
-                  {editingProduct.images && editingProduct.images.length > 0 ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                      {editingProduct.images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img 
-                            src={image.url} 
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-20 object-cover rounded-md border"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(image.public_id)}
-                            className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Remove Image"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-gray-500">No current images.</p>
-                  )}
-                </div>
-
-                {/* New Image Upload */}
-                <div>
-                  <label className="block mb-1 font-medium text-sm">Add New Images</label>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Adding new images will <span className="font-semibold">append</span> to the existing ones.
-                  </p>
-                  <input 
-                    type="file" 
-                    name="images" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={handleEditFormChange} 
-                    className="w-full text-sm border rounded file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
-
-                {/* Display names of newly selected files for upload */}
-                {editFormState.images.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium">New files to add:</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {editFormState.images.map((file, idx) => (
-                        <span key={idx} className="text-xs bg-gray-200 px-2 py-1 rounded">
-                          {file.name}
-                        </span>
-                      ))}
+                  {/* Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Price
+                    </label>
+                    <div className="relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                        placeholder="0.00"
+                      />
                     </div>
                   </div>
-                )}
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Product Images
+                    </label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex text-sm text-gray-600 justify-center">
+                          <label
+                            htmlFor="file-upload"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-newPrimary hover:text-newPrimary focus-within:outline-none"
+                          >
+                            <span>Upload files</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              multiple
+                              onChange={handleImageUpload}
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, GIF up to 10MB
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Image Preview */}
+                    {images.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Images</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {images.map((image, idx) => (
+                            <div key={idx} className="relative group">
+                              <img
+                                src={image}
+                                alt={`Preview ${idx}`}
+                                className="w-full h-32 object-cover rounded-md border border-gray-200"
+                              />
+                              <button
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => removeImage(idx)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-4 mt-8">
-                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+              {/* Footer */}
+              <div className="p-4 border-t flex justify-end space-x-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => setIsSliderOpen(false)}
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={editLoading} className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 disabled:bg-gray-400">
-                  {editLoading ? "Saving..." : "Save Changes"}
+                <button
+                  type="button"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={handleSave}
+                >
+                  Save Product
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
