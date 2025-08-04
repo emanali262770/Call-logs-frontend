@@ -33,8 +33,12 @@ const Login = () => {
 
       // Role-based redirect
       if (user.isAdmin === true) {
-        navigate("/admin");
-      } else {
+        navigate("/admin/dashboard");
+      }
+      else  if (user.isAdmin === false) {
+        navigate("/admin/dashboard");
+      }  
+      else {
         navigate("/");
       }
       

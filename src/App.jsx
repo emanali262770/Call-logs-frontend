@@ -21,7 +21,7 @@ function AppContent() {
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
           {/* Admin Routes */}
@@ -43,9 +43,6 @@ function AppContent() {
             <Route path="promotion" element={<Promotion />} />
             <Route path="category" element={<Category />} />
           </Route>
-
-          {/* Redirect to login by default */}
-          <Route path="*" element={<Login />} />
         </Routes>
       </main>
       <ToastContainer position="top-right" autoClose={2000} />

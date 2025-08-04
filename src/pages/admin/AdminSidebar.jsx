@@ -20,7 +20,7 @@ const AdminSidebar = () => {
     // Clear local storage or token
     localStorage.removeItem("user");
     // Redirect to login
-    navigate("/login");
+    navigate("/");
   };
 
   return (

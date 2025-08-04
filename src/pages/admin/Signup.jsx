@@ -60,7 +60,7 @@ const Signup = () => {
       );
       console.log(response.data.user);
       toast.success("Signup successful!");
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -182,7 +182,7 @@ const Signup = () => {
         </form>
         <div className="mt-4 text-center text-sm text-gray-700">
           Already have an account?{" "}
-          <Link to="/login" className="text-secondary hover:text-secondary/80 font-medium">
+          <Link to="/" className="text-secondary hover:text-secondary/80 font-medium">
             Log in
           </Link>
         </div>
