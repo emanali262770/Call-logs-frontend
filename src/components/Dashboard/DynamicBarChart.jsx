@@ -50,7 +50,7 @@ const DynamicBarChart = () => {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`);
+      // const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`);
       const transactions = res.data.data || [];
       setChartData(getChartData(transactions));
     };

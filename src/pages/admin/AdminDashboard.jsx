@@ -22,12 +22,12 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const [allProductsRes, recentProductsRes, usersRes, transactionsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/products?limit=5&sort=desc`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/users`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
-        ]);
+        // const [allProductsRes, recentProductsRes, usersRes, transactionsRes] = await Promise.all([
+        //   axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
+        //   axios.get(`${import.meta.env.VITE_API_BASE_URL}/products?limit=5&sort=desc`),
+        //   axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/users`),
+        //   axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
+        // ]);
 
         setAllProducts(allProductsRes.data.data);
         setRecentProducts(recentProductsRes.data.data);
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
           <span className="text-2xl font-bold text-primary">
             {allProducts.length}
           </span>
-          <span className="text-gray-600 mt-2">Total Products</span>
+          <span className="text-gray-600 mt-2">Total Customer</span>
         </div>
         <div className="bg-white rounded shadow p-6 flex flex-col items-center">
           <span className="text-2xl font-bold text-primary">

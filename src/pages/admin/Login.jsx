@@ -28,8 +28,11 @@ const Login = () => {
       const user = data.user || data;
 
       dispatch(loginSuccess(user));
-      localStorage.setItem("userInfo", JSON.stringify(user));
+      const token = localStorage.setItem("userInfo", JSON.stringify(user));
       toast.success("Logged in successfully 🎉");
+
+      console.log("Token", token);
+      
 
       // Role-based redirect
       if (user.isAdmin === true) {

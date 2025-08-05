@@ -14,7 +14,7 @@ function Charts() {
       setLoading(true);
       try {
         const [transactionsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
+          // axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
         ]);
         setTransactions(transactionsRes.data);
         setTimeout(() => {

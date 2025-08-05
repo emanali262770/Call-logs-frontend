@@ -1,6 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef  } from "react";
+import gsap from "gsap";
+import { toast } from "react-toastify";
+
 
 const ProductsPage = () => {
+
+    // State for slider
+    const [isSliderOpen, setIsSliderOpen] = useState(false);
+    const [productName, setProductName] = useState("");
+    const [price, setPrice] = useState("");
+    const [images, setImages] = useState([]);
+    const sliderRef = useRef(null);
+
   // Static product data
   const productList = [
     { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666", totalSales: "$3,46,660" },
@@ -8,7 +19,27 @@ const ProductsPage = () => {
     { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
     { name: "Shoes", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
   ];
+useEffect(() =>{
+  const token = JSON.parse(localStorage.getItem("userInfo"));
+  console.log("UserInfo ", token);
+  
+},[])
 
+
+useEffect(() => {
+  if (isSliderOpen && sliderRef.current) {
+    gsap.fromTo(
+      sliderRef.current,
+      { x: "100%", opacity: 0 },  // offscreen right
+      {
+        x: "0%",
+        opacity: 1,
+        duration: 1.2,
+        ease: "expo.out",          // smoother easing
+      }
+    );
+  }
+}, [isSliderOpen]);
   // Monthly data
   const monthlyData = [
     { month: "Jan", value: "23,400" },
@@ -27,25 +58,63 @@ const ProductsPage = () => {
     { label: "Order Cancel", value: 20, color: "red" },
   ];
 
-  // State for slider
-  const [isSliderOpen, setIsSliderOpen] = useState(false);
-  const [productName, setProductName] = useState("");
-  const [price, setPrice] = useState("");
-  const [images, setImages] = useState([]);
+
 
   // Handlers
   const handleAddProduct = () => {
     setIsSliderOpen(true);
   };
 
-  const handleSave = () => {
-    console.log("Saving:", { productName, price, images });
-    setIsSliderOpen(false);
-    setProductName("");
-    setPrice("");
-    setImages([]);
+  // Product Save
+  const handleSave = async () => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  console.log("userinfo token", userInfo.token);
+  
+    if (!userInfo || userInfo.isAdmin !== true) {
+      toast.error("Only admin can add products.");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("productName", productName);
+    formData.append("price", price);
+  
+    try {
+      // Convert image preview URLs back to blobs
+      for (let i = 0; i < images.length; i++) {
+        const blob = await fetch(images[i]).then((res) => res.blob());
+        formData.append("images", blob, `image-${i}.jpg`);
+      }
+  
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/products`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+          body: formData,
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to add product");
+      }
+  
+      const result = await response.json();
+      toast.success("Product added successfully!");
+      console.log("Product added:", result);
+    } catch (err) {
+      console.error("Add product error:", err);
+      toast.error("Failed to add product!");
+    } finally {
+      setIsSliderOpen(false);
+      setProductName("");
+      setPrice("");
+      setImages([]);
+    }
   };
-
+  
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     setImages(files.map(file => URL.createObjectURL(file)));
@@ -185,7 +254,9 @@ const ProductsPage = () => {
       {/* Enhanced Right-Side Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600/50 backdrop-blur-sm z-50 transition-opacity duration-300">
-          <div className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+          <div 
+            ref={sliderRef} 
+            className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
