@@ -20,12 +20,12 @@ const ProductsPage = () => {
     image: "",
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null); // store the product _id for editing
+  const [editId, setEditId] = useState(null); 
 
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
-  const [image, setImage] = useState(null);           // the actual file
-  const [imagePreview, setImagePreview] = useState(null); // preview URL
+  const [image, setImage] = useState(null);           
+  const [imagePreview, setImagePreview] = useState(null); 
 
 
   // Get User from the LocalStorage
@@ -34,7 +34,7 @@ const ProductsPage = () => {
 
 
 
-
+// slider styling 
   useEffect(() => {
     if (isSliderOpen && sliderRef.current) {
       gsap.fromTo(
@@ -199,7 +199,6 @@ const ProductsPage = () => {
   }, []);
 
 
-
   // Product Save
   const handleSave = async () => {
     const formData = new FormData();
@@ -255,8 +254,6 @@ const ProductsPage = () => {
     }
   };
   
-  
-
 
   // Image Upload
   const handleImageUpload = (e) => {
@@ -271,14 +268,12 @@ const ProductsPage = () => {
     }
   };
   
-  
 
   const removeImage = () => {
     setImagePreview("");
     setEditFormState({ ...formState, image: "" });
   };
   
-
   const parseCurrency = (value) => {
     if (value == null) return 0;
     return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;

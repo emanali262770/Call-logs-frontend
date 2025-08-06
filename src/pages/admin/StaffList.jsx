@@ -1,20 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { PuffLoader } from "react-spinners";
+import gsap from "gsap";
 
 const StaffList = () => {
-  const staffList = [
-    { name: "John Doe", department: "Social Marketing", designation: "Designer", address: "Johar Town, Lahore.", number: "+92-123789456", email: "info@gmail.com" },
-    { name: "Jane Smith", department: "IT", designation: "Developer", address: "Model Town, Lahore.", number: "+92-987654321", email: "jane@gmail.com" },
-    { name: "Ali Khan", department: "Sales", designation: "Manager", address: "Gulberg, Lahore.", number: "+92-456789123", email: "ali@gmail.com" },
-    { name: "Sara Ahmed", department: "HR", designation: "Coordinator", address: "Defence, Lahore.", number: "+92-789123456", email: "sara@gmail.com" },
-    { name: "Ahmed Raza", department: "Marketing", designation: "Analyst", address: "Cantt, Lahore.", number: "+92-321654987", email: "ahmed@gmail.com" },
-    { name: "Fatima Zahra", department: "Design", designation: "Artist", address: "Garden Town, Lahore.", number: "+92-654321789", email: "fatima@gmail.com" },
-    { name: "Omar Farooq", department: "IT", designation: "Engineer", address: "Johar Town, Lahore.", number: "+92-123456789", email: "omar@gmail.com" },
-    { name: "Ayesha Malik", department: "Finance", designation: "Accountant", address: "Model Town, Lahore.", number: "+92-987123456", email: "ayesha@gmail.com" },
-    { name: "Zainab Ali", department: "Support", designation: "Agent", address: "Gulberg, Lahore.", number: "+92-456123789", email: "zainab@gmail.com" },
-    { name: "Hassan Iqbal", department: "Operations", designation: "Supervisor", address: "Defence, Lahore.", number: "+92-789654123", email: "hassan@gmail.com" },
-  ];
+  const [staffList, setStaffList] = useState([]);
 
-  // State for slider
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [staffName, setStaffName] = useState("");
   const [department, setDepartment] = useState("");
@@ -22,30 +12,198 @@ const StaffList = () => {
   const [address, setAddress] = useState("");
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [images, setImages] = useState([]);
+  const [image, setImage] = useState(null);   
+  const [imagePreview, setImagePreview] = useState(null); 
+
+  const [formState, setEditFormState] = useState({
+    name: "",
+    department: "",
+    designation: "",
+    address:"",
+    number: "",
+    email: "",
+    image: ""
+  });
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null); 
+
+  const sliderRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  console.log("Admin", userInfo.isAdmin);
+
+  // slider styling 
+  useEffect(() => {
+    if (isSliderOpen && sliderRef.current) {
+      gsap.fromTo(
+        sliderRef.current,
+        { x: "100%", opacity: 0 },  // offscreen right
+        {
+          x: "0%",
+          opacity: 1,
+          duration: 1.2,
+          ease: "expo.out",          // smoother easing
+        }
+      );
+    }
+  }, [isSliderOpen]);
+
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/staff`,
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          // Map API data to match table structure, using username as name
+          const mappedStaff = result.data.map((staff) => ({
+            _id: staff._id,
+            name: staff.username,
+            department: staff.department,
+            designation: staff.designation,
+            address: staff.address,
+            number: staff.number,
+            email: staff.email,
+            image: staff.image || [],
+          }));
+
+          setStaffList(mappedStaff);
+
+
+          setTimeout(() => {
+            setLoading(false);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error("Error fetching staff data:", error);
+      }
+    };
+    fetchStaff();
+  }, []);
 
   // Handlers
   const handleAddStaff = () => {
     setIsSliderOpen(true);
   };
 
-  const handleSave = () => {
-    // Placeholder for save logic
-    console.log("Saving:", { staffName, department, designation, address, number, email, images });
-    setIsSliderOpen(false);
+
+ //  Staff saved
+ const handleSave = async () => {
+  const formData = new FormData();
+  formData.append("username", staffName);
+  formData.append("department", department);
+  formData.append("designation", designation);
+  formData.append("address", address);
+  formData.append("number", number);
+  formData.append("email", email);
+  if (image) {
+    formData.append("image", image);
+  }
+
+  try {
+    const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+    };
+
+    if (isEdit && editId) {
+      await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/staff/${editId}`,
+        formData,
+        { headers }
+      );
+      toast.success("✅ Staff updated successfully");
+    } else {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/staff`,
+        formData,
+        { headers }
+      );
+      toast.success("✅ Staff added successfully");
+    }
+
+    // Reset fields
     setStaffName("");
     setDepartment("");
     setDesignation("");
     setAddress("");
     setNumber("");
     setEmail("");
-    setImages([]);
+    setImage(null);
+    setImagePreview(null);
+    setEditId(null);
+    setIsEdit(false);
+    setIsSliderOpen(false);
+
+    // Refresh list
+    fetchStaff();
+
+  } catch (error) {
+    console.error(error);
+    toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
+  }
+};
+
+
+ 
+  // Image Upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  
+
+  const removeImage = () => {
+    setImagePreview("");
+    setEditFormState({ ...formState, image: "" });
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setImages(files.map(file => URL.createObjectURL(file)));
+
+  // Open the edit modal and populate the form
+  const handleEdit = (staff) => {
+    setIsEdit(true);
+    setEditId(staff._id);
+    setStaffName(staff.name || "");
+    setDepartment(staff.department || "");
+    setDesignation(staff.designation || "");
+    setAddress(staff.address || "");
+    setNumber(staff.number || "");
+    setEmail(staff.email || "");
+    setImagePreview(staff.image?.[0]?.url || "");
+    setImage(null);
+    setIsSliderOpen(true);
   };
+  
+
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <PuffLoader
+            height="150"
+            width="150"
+            radius={1}
+            color="#00809D"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -61,47 +219,105 @@ const StaffList = () => {
           + Add Staff
         </button>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-secondary/10">
-                <th className="py-3 px-4 text-left text-newPrimary">Name</th>
-                <th className="py-3 px-4 text-left text-newPrimary">Department</th>
-                <th className="py-3 px-4 text-left text-newPrimary">Designation</th>
-                <th className="py-3 px-4 text-left text-newPrimary">Address</th>
-                <th className="py-3 px-4 text-left text-newPrimary">Number</th>
-                <th className="py-3 px-4 text-left text-newPrimary">Email</th>
-              </tr>
-            </thead>
-            <tbody>
+
+      {/* Staff Table */}
+      <div className="rounded-xl shadow p-6 border border-gray-100 w-full  overflow-hidden">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="w-full">
+            {/* Table Headers */}
+            <div className="hidden lg:grid grid-cols-7 gap-20 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+              <div>Name</div>
+              <div>Department</div>
+              <div>Designation</div>
+              <div>Address</div>
+              <div>Number</div>
+              <div>Email</div>
+              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
+            </div>
+
+            {/* Staff Rows */}
+            <div className="mt-4 flex flex-col gap-[14px] pb-14">
               {staffList.map((staff, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-secondary/20">
-                  <td className="py-3 px-4 flex items-center">
-                    <img src="https://via.placeholder.com/40" alt={`${staff.name}'s profile`} className="w-10 h-10 rounded-full mr-2" onError={(e) => { e.target.style.display = 'none'; }} />
-                    {staff.name || "N/A"}
-                  </td>
-                  <td className="py-3 px-4">{staff.department || "N/A"}</td>
-                  <td className="py-3 px-4">{staff.designation || "N/A"}</td>
-                  <td className="py-3 px-4">{staff.address || "N/A"}</td>
-                  <td className="py-3 px-4">{staff.number || "N/A"}</td>
-                  <td className="py-3 px-4">{staff.email || "N/A"}</td>
-                </tr>
+                <div
+                  key={index}
+                  className="grid grid-cols-7 items-center gap-20 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                >
+                  {/* Name */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                      <img
+                        src={staff.image?.[0]?.url || "https://via.placeholder.com/40"}
+                        alt="Staff"
+                        className="w-7 h-7 object-cover rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {staff.name}
+                    </span>
+                  </div>
+
+                  {/* Department */}
+                  <div className="text-sm text-gray-500">{staff.department}</div>
+
+                  {/* Designation */}
+                  <div className="text-sm text-gray-500">{staff.designation}</div>
+
+                  {/* Address */}
+                  <div className="text-sm font-semibold text-green-600">{staff.address}</div>
+
+                  {/* Number */}
+                  <div className="text-sm font-semibold text-green-600">{staff.number}</div>
+
+                  {/* Email */}
+                  <div className="text-sm font-semibold text-green-600">{staff.email}</div>
+
+                  {/* Actions */}
+                  {userInfo?.isAdmin && (
+                    <div className="text-right relative group">
+                      <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
+
+                      {/* Dropdown */}
+                      <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
+                  opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+                  transition-opacity duration-300 z-50 flex flex-col justify-between">
+                        <button
+                          onClick={() => handleEdit(staff)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(staff._id)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
+
 
       {/* Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
-          <div className="w-1/3 bg-white p-6 h-full overflow-y-auto shadow-lg">
+          <div
+            ref={sliderRef}
+            className="w-1/3 bg-white p-6 h-full overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-newPrimary">Add a New Staff</h2>
               <button
                 className="text-gray-500 hover:text-gray-700"
-                onClick={() => setIsSliderOpen(false)}
+                onClick={() => {
+                    setIsSliderOpen(false);
+                    setIsEdit(false);
+                    setEditId(null);
+                    setImage(null);
+                    setImagePreview(null);
+                  }}
               >
                 ×
               </button>
@@ -114,7 +330,7 @@ const StaffList = () => {
                     className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl text-gray-600 hover:bg-gray-300 transition-colors duration-200"
                   >
                     📷
-                    
+
                   </button>
                   <input
                     id="imageUpload"

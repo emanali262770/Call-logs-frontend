@@ -8,7 +8,7 @@ const links = [
   { to: "/admin/customers", label: "Customer Data" },
   { to: "/admin/promotion", label: "Meeting Details" },
   { to: "/admin/followup", label: "Follow Up" },
-   { to: "/admin/calendar", label: "Calendar" },
+   { to: "/admin/calendar", label: "Calendar" },  
   { to: "/admin/report", label: "Report" },
   { to: "/admin/settings", label: "Settings" },
 ];

@@ -38,7 +38,7 @@ const Login = () => {
       console.log("Stored userInfo:", userInfo);
   
       if (user.isAdmin === true || user.isAdmin === false) {
-        navigate("/admin/dashboard");
+        navigate("/admin");
       } else {
         navigate("/");
       }
