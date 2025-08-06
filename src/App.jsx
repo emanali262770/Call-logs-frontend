@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import StaffList from "./pages/admin/StaffList";
 import CustomerData from "./pages/admin/CustomerData";
 import FollowUp from "./pages/admin/FollowUp";
+import Calendar from "./pages/admin/Calendar";
 import ProductsPage from "./pages/admin/ProductsPage";
 import AddProduct from "./pages/admin/AddProduct";
 import { ToastContainer } from "react-toastify";
@@ -39,6 +40,7 @@ function AppContent() {
             <Route path="products" element={<ProductsPage />} />
             <Route path="customers" element={<CustomerData />} />
             <Route path="followup" element={<FollowUp />} />
+            <Route path="calendar" element={<Calendar />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="promotion" element={<Promotion />} />
             <Route path="category" element={<Category />} />
