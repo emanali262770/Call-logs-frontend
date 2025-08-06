@@ -1,55 +1,46 @@
-import React, { useEffect, useState, useRef  } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
+import axios from 'axios'
+import { FiEdit, FiTrash } from "react-icons/fi";
 
 
 const ProductsPage = () => {
 
-    // State for slider
-    const [isSliderOpen, setIsSliderOpen] = useState(false);
-    const [productName, setProductName] = useState("");
-    const [price, setPrice] = useState("");
-    const [images, setImages] = useState([]);
-    const sliderRef = useRef(null);
-
-  // Static product data
-  const productList = [
-    { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666", totalSales: "$3,46,660" },
-    { name: "Arefot", price: "$10", totalOrder: "NaN", totalSales: "NaN" },
-    { name: "Bluetooth Devices", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
-    { name: "Shoes", price: "$10", totalOrder: "34,666 Piece", totalSales: "$3,46,660" },
-  ];
-useEffect(() =>{
-  const token = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("UserInfo ", token);
-  
-},[])
+  // State for slider
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [productName, setProductName] = useState("");
+  const [price, setPrice] = useState("");
+  const [products, setProducts] = useState([]);
+  const [productsByMonths, setProductsByMonths] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const sliderRef = useRef(null);
+  const [image, setImage] = useState(null);           // the actual file
+  const [imagePreview, setImagePreview] = useState(null); // preview URL
 
 
-useEffect(() => {
-  if (isSliderOpen && sliderRef.current) {
-    gsap.fromTo(
-      sliderRef.current,
-      { x: "100%", opacity: 0 },  // offscreen right
-      {
-        x: "0%",
-        opacity: 1,
-        duration: 1.2,
-        ease: "expo.out",          // smoother easing
-      }
-    );
-  }
-}, [isSliderOpen]);
-  // Monthly data
-  const monthlyData = [
-    { month: "Jan", value: "23,400" },
-    { month: "Feb", value: "15,000" },
-    { month: "Mar", value: "30,000" },
-    { month: "Apr", value: "22,000" },
-    { month: "May", value: "10,000" },
-    { month: "Jun", value: "23,400" },
-    { month: "Jul", value: "5,000" },
-  ];
+  // Get User from the LocalStorage
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  console.log("Admin", userInfo.isAdmin);
+
+
+
+
+  useEffect(() => {
+    if (isSliderOpen && sliderRef.current) {
+      gsap.fromTo(
+        sliderRef.current,
+        { x: "100%", opacity: 0 },  // offscreen right
+        {
+          x: "0%",
+          opacity: 1,
+          duration: 1.2,
+          ease: "expo.out",          // smoother easing
+        }
+      );
+    }
+  }, [isSliderOpen]);
+
 
   // Sales analytics data for circular progress
   const salesAnalytics = [
@@ -59,70 +50,181 @@ useEffect(() => {
   ];
 
 
-
   // Handlers
   const handleAddProduct = () => {
     setIsSliderOpen(true);
   };
 
+  // Fetch All Products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        if (!userInfo?.token) {
+          throw new Error("Token not found");
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/products`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${userInfo.token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        const result = await response.json();
+        console.log("Product Response ", result.data);
+
+        setProducts(result.data); // Make sure your backend returns { data: [...] }
+        console.log("Fetched Products:", result.data);
+      } catch (err) {
+        console.error("Fetch products error:", err);
+        toast.error("Failed to fetch products!");
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+ 
+
+  // Fetch All Product Add by Month
+  useEffect(() => {
+    const fetchProductsAddMonths = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        if (!userInfo?.token) {
+          throw new Error("Token not found");
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/products/analytics/monthly`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${userInfo.token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        const result = await response.json();
+        console.log("ProductsByMonths", result.data);
+
+        setProductsByMonths(result.data); // Make sure your backend returns { data: [...] }
+        console.log("Fetched Products:", result.data);
+      } catch (err) {
+        console.error("Fetch products error:", err);
+        toast.error("Failed to fetch products!");
+      }
+    };
+
+    fetchProductsAddMonths();
+  }, []);
+
+   // Get Currently Month 
+   const getCurrentMonth = () => {
+    const date = new Date();
+    return date.toLocaleString("default", { month: "long" });
+  };
+  const month = getCurrentMonth(); 
+  // Fetch All Orders
+  useEffect(() => {
+    const fetchOrdersByMonth = async (month) => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/orders?month=${month}`,
+        );
+    
+        const res = response.data.data;
+        setOrders(res)
+        console.log("Order", res);
+         // filtered order list
+      } catch (error) {
+        console.error("Error fetching orders by month:", error);
+        return [];
+      }
+    };
+
+    fetchOrdersByMonth(month);
+  }, []);
+
+
+
   // Product Save
   const handleSave = async () => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("userinfo token", userInfo.token);
-  
-    if (!userInfo || userInfo.isAdmin !== true) {
-      toast.error("Only admin can add products.");
-      return;
-    }
-  
     const formData = new FormData();
-    formData.append("productName", productName);
+    formData.append("name", productName);
     formData.append("price", price);
-  
+    if (image) {
+      formData.append("image", image); // name must match the multer field
+    }
+
     try {
-      // Convert image preview URLs back to blobs
-      for (let i = 0; i < images.length; i++) {
-        const blob = await fetch(images[i]).then((res) => res.blob());
-        formData.append("images", blob, `image-${i}.jpg`);
-      }
-  
-      const response = await fetch(
+      const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
+      console.log("Token in Product ", token);
+
+      const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/products`,
+        formData,
         {
-          method: "POST",
           headers: {
-            Authorization: `Bearer ${userInfo.token}`,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
-          body: formData,
         }
       );
-  
-      if (!response.ok) {
-        throw new Error("Failed to add product");
-      }
-  
-      const result = await response.json();
-      toast.success("Product added successfully!");
-      console.log("Product added:", result);
-    } catch (err) {
-      console.error("Add product error:", err);
-      toast.error("Failed to add product!");
-    } finally {
-      setIsSliderOpen(false);
+
+      toast.success("Product added successfully ✅");
+      // Clear fields
       setProductName("");
       setPrice("");
-      setImages([]);
+      setImage(null);
+      setImagePreview(null);
+      setIsSliderOpen(false);
+
+    } catch (err) {
+      toast.error("Failed to add product ❌");
+      console.error(err);
     }
   };
-  
+
+
+  // Image Upload
   const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setImages(files.map(file => URL.createObjectURL(file)));
+    const file = e.target.files[0]; // Only one image allowed
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
-  const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index));
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
   };
+
+  const parseCurrency = (value) => {
+    if (value == null) return 0;
+    return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
+  };
+
+
+  // Capital 1st letter 
+  function capitalizeFirstLetter(string) {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -145,31 +247,85 @@ useEffect(() => {
 
       {/* Main Content with Table and Cards */}
       <div className="flex flex-col lg:flex-row gap-6">
+
         {/* Product List Table */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 w-full lg:w-2/3">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Order</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {productList.map((product, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.price}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.totalOrder}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.totalSales}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="rounded-xl shadow p-6  border border-gray-100 w-full lg:w-2/3  overflow-hidden ">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="w-full">
+              {/* Table Headers */}
+              <div className="hidden lg:grid grid-cols-5 gap-20 bg-gray-50 py-3 px-6  text-xs font-medium text-gray-500 uppercase rounded-lg ">
+                <div>Name</div>
+                <div>Price</div>
+                <div>Total Orders</div>
+                <div>Total Sales</div>
+                {userInfo?.isAdmin && <div className="text-right">Actions</div>}
+              </div>
+
+              {/* Product Rows */}
+              <div className="mt-4 flex flex-col gap-[14px] pb-14">
+                {products.map((product, index) => {
+                  const price = parseCurrency(product.price);
+                  const totalOrders = parseCurrency(product.totalOrders);
+                  const totalSales = price * totalOrders;
+
+                  return (
+                    <div
+                      key={index}
+                      className="grid grid-cols-5 items-center gap-20 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                    >
+                      {/* Name */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                          <img
+                            src={product.image[0]?.url}
+                            alt="Product Icon"
+                            className="w-7 h-7 object-cover rounded-full"
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {capitalizeFirstLetter(product.name)}
+                        </span>
+                      </div>
+
+                      {/* Price */}
+                      <div className="text-sm text-gray-500">${price.toLocaleString()}</div>
+
+                      {/* Orders */}
+                      <div className="text-sm text-gray-500">{totalOrders} Orders</div>
+
+                      {/* Sales */}
+                      <div className="text-sm font-semibold text-green-600">${totalSales.toLocaleString()}</div>
+
+                      {/* Actions */}
+                      {userInfo?.isAdmin &&
+                        <div className="text-right relative group">
+                          <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
+
+                          {/* Dropdown */}
+                          <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
+              opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+              transition-opacity duration-300 z-50 flex flex-col justify-between">
+                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
+                              <FiEdit className="text-base text-blue-400" />
+                              Edit
+                            </button>
+                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
+                              <FiTrash className="text-base text-red-400" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
+
+
 
         {/* Cards Section */}
         <div className="flex flex-col gap-6 w-full lg:w-1/3">
@@ -177,26 +333,36 @@ useEffect(() => {
           <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
             <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Add by Month</h2>
             <div className="space-y-4">
-              {monthlyData.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <span className="w-16 text-gray-600 font-medium">{item.month}</span>
-                  <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        index % 2 === 0 ? "bg-gradient-to-r from-red-500 to-red-600" : "bg-gradient-to-r from-blue-500 to-blue-600"
-                      }`}
-                      style={{ width: `${(parseInt(item.value.replace(/,/g, "")) / 30000) * 100}%` }}
-                    ></div>
+              {productsByMonths.map((item, index) => {
+                const count = item.count || 0;
+                // First: Find the maximum count value across all months
+                const maxCount = Math.max(...productsByMonths.map(item => item.count || 0));
+                const percentage = maxCount ? (count / maxCount) * 100 : 0;
+
+                return (
+                  <div key={index} className="flex items-center">
+                    <span className="w-16 text-gray-600 font-medium">{item.month}</span>
+                    <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${index % 2 === 0
+                          ? "bg-gradient-to-r from-[#FF8F6B] to-[#FF8F6B]"
+                          : "bg-gradient-to-r from-blue-500 to-blue-600"
+                          }`}
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <span className="w-20 text-right text-sm text-gray-700">{count}</span>
                   </div>
-                  <span className="w-20 text-right text-sm text-gray-700">{item.value}</span>
-                </div>
-              ))}
+                );
+              })}
+
+
             </div>
           </div>
 
           {/* Analytics with Circular Progress Bar */}
           <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics this Month</h2>
             <div className="flex flex-col items-center">
               <div className="relative w-40 h-40 mb-4">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
@@ -254,8 +420,8 @@ useEffect(() => {
       {/* Enhanced Right-Side Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600/50 backdrop-blur-sm z-50 transition-opacity duration-300">
-          <div 
-            ref={sliderRef} 
+          <div
+            ref={sliderRef}
             className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col h-full">
               {/* Header */}
@@ -336,7 +502,6 @@ useEffect(() => {
                               id="file-upload"
                               name="file-upload"
                               type="file"
-                              multiple
                               onChange={handleImageUpload}
                               className="sr-only"
                             />
@@ -350,28 +515,26 @@ useEffect(() => {
                     </div>
 
                     {/* Image Preview */}
-                    {images.length > 0 && (
+
+                    {imagePreview && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Images</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          {images.map((image, idx) => (
-                            <div key={idx} className="relative group">
-                              <img
-                                src={image}
-                                alt={`Preview ${idx}`}
-                                className="w-full h-32 object-cover rounded-md border border-gray-200"
-                              />
-                              <button
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => removeImage(idx)}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                        <div className="relative group w-48 h-32">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-md border border-gray-200"
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
                         </div>
                       </div>
                     )}
+
                   </div>
                 </div>
               </div>

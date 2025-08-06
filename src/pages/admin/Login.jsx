@@ -20,36 +20,32 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
         { email, password }
       );
-
-      const user = data.user || data;
-
-      dispatch(loginSuccess(user));
-      const token = localStorage.setItem("userInfo", JSON.stringify(user));
+  
+      const { token, user } = response.data;
+  
+      // ✅ Merge token with user and save as userInfo
+      const userInfo = { ...user, token };
+  
+      // ✅ Store in Redux (will also store in localStorage via authSlice)
+      dispatch(loginSuccess(userInfo));
+  
+      // ✅ Toast and redirect
       toast.success("Logged in successfully 🎉");
-
-      console.log("Token", token);
-      
-
-      // Role-based redirect
-      if (user.isAdmin === true) {
+      console.log("Stored userInfo:", userInfo);
+  
+      if (user.isAdmin === true || user.isAdmin === false) {
         navigate("/admin/dashboard");
-      }
-      else  if (user.isAdmin === false) {
-        navigate("/admin/dashboard");
-      }  
-      else {
+      } else {
         navigate("/");
       }
-      
-      // Refresh the page after navigation
+  
       setTimeout(() => {
         window.location.reload();
       }, 100);
-      
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
@@ -58,6 +54,7 @@ const Login = () => {
       );
     }
   };
+  
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">

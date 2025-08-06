@@ -13,6 +13,7 @@ export default {
         accent: "#e94560",
         newPrimary: "#605BFF",
         secondary: "#58C5A0",
+        Green: "#2B9943",
       
       },
       screens: {
@@ -20,5 +21,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar-hide")], 
 };
