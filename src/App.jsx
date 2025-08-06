@@ -11,6 +11,7 @@ import Calendar from "./pages/admin/Calendar";
 import ProductsPage from "./pages/admin/ProductsPage";
 import AddProduct from "./pages/admin/AddProduct";
 import { ToastContainer } from "react-toastify";
+import Calendar from "./pages/admin/Calendar";
 import "react-toastify/dist/ReactToastify.css";
 import Promotion from "./pages/admin/Promotion";
 import Category from "./pages/admin/Category";
@@ -39,6 +40,7 @@ function AppContent() {
             <Route path="staff" element={<StaffList />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="customers" element={<CustomerData />} />
+            <Route path="calendar" element={<Calendar />} />
             <Route path="followup" element={<FollowUp />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="products/add" element={<AddProduct />} />
