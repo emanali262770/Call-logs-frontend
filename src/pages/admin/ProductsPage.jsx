@@ -1,19 +1,28 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect,useCallback, useState, useRef } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from 'axios'
 import { FiEdit, FiTrash } from "react-icons/fi";
+
+import { PuffLoader } from "react-spinners";
 
 
 const ProductsPage = () => {
 
   // State for slider
   const [isSliderOpen, setIsSliderOpen] = useState(false);
-  const [productName, setProductName] = useState("");
-  const [price, setPrice] = useState("");
   const [products, setProducts] = useState([]);
   const [productsByMonths, setProductsByMonths] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [formState, setEditFormState] = useState({
+    name: "",
+    price: "",
+    image: "",
+  });
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null); // store the product _id for editing
+
+  const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
   const [image, setImage] = useState(null);           // the actual file
   const [imagePreview, setImagePreview] = useState(null); // preview URL
@@ -48,81 +57,118 @@ const ProductsPage = () => {
     setIsSliderOpen(true);
   };
 
+
+
   // Fetch All Products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        if (!userInfo?.token) {
-          throw new Error("Token not found");
-        }
-
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/products`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${userInfo.token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
-        const result = await response.json();
-        console.log("Product Response ", result.data);
-
-        setProducts(result.data); // Make sure your backend returns { data: [...] }
-        console.log("Fetched Products:", result.data);
-      } catch (err) {
-        console.error("Fetch products error:", err);
-        toast.error("Failed to fetch products!");
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo?.token) {
+        throw new Error("Token not found");
       }
-    };
-
+  
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/products`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+  
+      const result = await response.json();
+      console.log("Product Response ", result.data);
+  
+      setProducts(result.data);
+  
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    } catch (err) {
+      console.error("Fetch products error:", err);
+      toast.error("Failed to fetch products!");
+    }
+  }, []); // ✅ empty dependency array so it doesn't re-create every render
+  
+  // ✅ Only run on mount
+  useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
 
 
   // Fetch All Product Add by Month
-  useEffect(() => {
-    const fetchProductsAddMonths = async () => {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        if (!userInfo?.token) {
-          throw new Error("Token not found");
+  const fetchProductsAddMonths = useCallback(async () => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo?.token) {
+        throw new Error("Token not found");
+      }
+  
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/products/analytics/monthly`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
         }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch product analytics");
+      }
+  
+      const result = await response.json();
+      console.log("ProductsByMonths", result.data);
+  
+      setProductsByMonths(result.data);
+    } catch (err) {
+      console.error("Fetch product analytics error:", err);
+      toast.error("Failed to fetch product analytics!");
+    }
+  }, []); // no dependencies since nothing dynamic used
+  
+  useEffect(() => {
+    fetchProductsAddMonths();
+  }, [fetchProductsAddMonths]);
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/products/analytics/monthly`,
+  
+  //Delete Product 
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        const token = userInfo?.token;
+  
+        if (!token) {
+          toast.error("Authorization token missing!");
+          return;
+        }
+  
+        await axios.delete(
+          `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
           {
-            method: "GET",
             headers: {
-              Authorization: `Bearer ${userInfo.token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
-        const result = await response.json();
-        console.log("ProductsByMonths", result.data);
-
-        setProductsByMonths(result.data); // Make sure your backend returns { data: [...] }
-        console.log("Fetched Products:", result.data);
-      } catch (err) {
-        console.error("Fetch products error:", err);
-        toast.error("Failed to fetch products!");
+  
+        setProducts(products.filter((p) => p._id !== id));
+        toast.error("Product deleted successfully.");
+      } catch (error) {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete product.");
       }
-    };
-
-    fetchProductsAddMonths();
-  }, []);
+    }
+  };
+  
 
   // Get Currently Month 
   const getCurrentMonth = () => {
@@ -130,6 +176,7 @@ const ProductsPage = () => {
     return date.toLocaleString("default", { month: "long" });
   };
   const month = getCurrentMonth();
+
   // Fetch All Orders
   useEffect(() => {
     const fetchOrdersByMonth = async (month) => {
@@ -156,55 +203,81 @@ const ProductsPage = () => {
   // Product Save
   const handleSave = async () => {
     const formData = new FormData();
-    formData.append("name", productName);
-    formData.append("price", price);
+    formData.append("name", formState.name);
+    formData.append("price", formState.price);
+  
     if (image) {
-      formData.append("image", image); // name must match the multer field
+      formData.append("image", image); // New image if uploaded
     }
-
+  
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
-      console.log("Token in Product ", token);
-
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/products`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      toast.success("Product added successfully ✅");
-      // Clear fields
-      setProductName("");
-      setPrice("");
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      };
+  
+      let response;
+  
+      if (isEdit && editId) {
+        // 🔁 Update Existing Product
+        response = await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/products/${editId}`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Product updated successfully");
+        fetchProducts();
+        fetchProductsAddMonths()
+      } else {
+        // ➕ Add New Product
+        response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/products`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Product added successfully");
+        fetchProducts();
+        fetchProductsAddMonths()
+      }
+  
+      // Reset form and close slider
+      setEditFormState({ name: "", price: "", image: "" });
       setImage(null);
       setImagePreview(null);
       setIsSliderOpen(false);
-
-    } catch (err) {
-      toast.error("Failed to add product ❌");
-      console.error(err);
+      setIsEdit(false);
+      setEditId(null);
+  
+    } catch (error) {
+      console.error(error);
+      toast.error(`❌ ${isEdit ? "Update" : "Add"} product failed`);
     }
   };
+  
+  
 
 
   // Image Upload
   const handleImageUpload = (e) => {
-    const file = e.target.files[0]; // Only one image allowed
+    const file = e.target.files[0];
     if (file) {
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
+      setImage(file); // For upload
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result); // For preview
+      };
+      reader.readAsDataURL(file);
     }
   };
+  
+  
 
   const removeImage = () => {
-    setImage(null);
-    setImagePreview(null);
+    setImagePreview("");
+    setEditFormState({ ...formState, image: "" });
   };
+  
 
   const parseCurrency = (value) => {
     if (value == null) return 0;
@@ -218,6 +291,38 @@ const ProductsPage = () => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
+  // Open the edit modal and populate the form
+  const handleEdit = (product) => {
+    setIsEdit(true);
+    setEditId(product._id); // save product ID
+    setEditFormState({
+      name: product.name || "",
+      price: product.price || "",
+      image: product.image?.[0]?.url || "",
+    });
+    setImagePreview(product.image?.[0]?.url || "");
+    setIsSliderOpen(true);
+    console.log("Edit Data", formState);
+    
+  };
+  
+
+
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <PuffLoader
+            height="150"
+            width="150"
+            radius={1}
+            color="#00809D"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -298,11 +403,15 @@ const ProductsPage = () => {
                           <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
               opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
               transition-opacity duration-300 z-50 flex flex-col justify-between">
-                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
+                            <button
+                              onClick={() => handleEdit(product)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
                               <FiEdit className="text-base text-blue-400" />
                               Edit
                             </button>
-                            <button className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
+                            <button 
+                              onClick={() => handleDelete(product._id)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
                               <FiTrash className="text-base text-red-400" />
                               Delete
                             </button>
@@ -355,107 +464,107 @@ const ProductsPage = () => {
 
           {/* Analytics with Circular Progress Bar */}
           <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-  <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics (This Month)</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics (This Month)</h2>
 
-  <div className="flex flex-col items-center">
-    <div className="relative w-40 h-40 mb-4">
-      <svg className="w-full h-full" viewBox="0 0 36 36">
-        {/* Base Circle */}
-        <circle
-          cx="18"
-          cy="18"
-          r="15.9155"
-          fill="none"
-          stroke="#e0e0e0"
-          strokeWidth="3"
-        />
+            <div className="flex flex-col items-center">
+              <div className="relative w-40 h-40 mb-4">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  {/* Base Circle */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke="#e0e0e0"
+                    strokeWidth="3"
+                  />
 
-        {/* Circle Segments */}
-        {(() => {
-          const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
-          const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
-          const total = totalConfirmed + totalCanceled;
+                  {/* Circle Segments */}
+                  {(() => {
+                    const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
+                    const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+                    const total = totalConfirmed + totalCanceled;
 
-          const confirmedPercent = total ? (totalConfirmed / total) * 100 : 0;
-          const canceledPercent = total ? (totalCanceled / total) * 100 : 0;
+                    const confirmedPercent = total ? (totalConfirmed / total) * 100 : 0;
+                    const canceledPercent = total ? (totalCanceled / total) * 100 : 0;
 
-          return (
-            <>
-              {/* Confirmed */}
-              <circle
-                cx="18"
-                cy="18"
-                r="15.9155"
-                fill="none"
-                stroke="#4CAF50"
-                strokeWidth="3"
-                strokeDasharray={`${confirmedPercent} 100`}
-                strokeDashoffset="0"
-                transform="rotate(-90 18 18)"
-              />
-              {/* Canceled */}
-              <circle
-                cx="18"
-                cy="18"
-                r="15.9155"
-                fill="none"
-                stroke="#F44336"
-                strokeWidth="3"
-                strokeDasharray={`${canceledPercent} 100`}
-                strokeDashoffset={confirmedPercent}
-                transform="rotate(-90 18 18)"
-              />
-            </>
-          );
-        })()}
+                    return (
+                      <>
+                        {/* Confirmed */}
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15.9155"
+                          fill="none"
+                          stroke="#4CAF50"
+                          strokeWidth="3"
+                          strokeDasharray={`${confirmedPercent} 100`}
+                          strokeDashoffset="0"
+                          transform="rotate(-90 18 18)"
+                        />
+                        {/* Canceled */}
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15.9155"
+                          fill="none"
+                          stroke="#F44336"
+                          strokeWidth="3"
+                          strokeDasharray={`${canceledPercent} 100`}
+                          strokeDashoffset={confirmedPercent}
+                          transform="rotate(-90 18 18)"
+                        />
+                      </>
+                    );
+                  })()}
 
-        {/* Center Text: Total Sales */}
-        <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
-          $
-          {orders.reduce((sum, order) => sum + (order.totalSales || 0), 0).toLocaleString()}
-        </text>
-      </svg>
-    </div>
-
-    {/* Legend */}
-    <ul className="w-full space-y-2 text-sm">
-      {(() => {
-        const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
-        const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
-        const total = totalConfirmed + totalCanceled;
-
-        const confirmedPercent = total ? ((totalConfirmed / total) * 100).toFixed(1) : 0;
-        const canceledPercent = total ? ((totalCanceled / total) * 100).toFixed(1) : 0;
-
-        return (
-          <>
-            <li className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                <span className="text-gray-600">Confirmed Orders</span>
+                  {/* Center Text: Total Sales */}
+                  <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
+                    $
+                    {orders.reduce((sum, order) => sum + (order.totalSales || 0), 0).toLocaleString()}
+                  </text>
+                </svg>
               </div>
-              <span className="font-medium text-gray-700">{confirmedPercent}%</span>
-            </li>
-            <li className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-                <span className="text-gray-600">Canceled Orders</span>
-              </div>
-              <span className="font-medium text-gray-700">{canceledPercent}%</span>
-            </li>
-            <li className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
-                <span className="text-gray-600">Total Orders</span>
-              </div>
-              <span className="font-medium text-gray-700">{total}</span>
-            </li>
-          </>
-        );
-      })()}
-    </ul>
-  </div>
-</div>
+
+              {/* Legend */}
+              <ul className="w-full space-y-2 text-sm">
+                {(() => {
+                  const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
+                  const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+                  const total = totalConfirmed + totalCanceled;
+
+                  const confirmedPercent = total ? ((totalConfirmed / total) * 100).toFixed(1) : 0;
+                  const canceledPercent = total ? ((totalCanceled / total) * 100).toFixed(1) : 0;
+
+                  return (
+                    <>
+                      <li className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                          <span className="text-gray-600">Confirmed Orders</span>
+                        </div>
+                        <span className="font-medium text-gray-700">{confirmedPercent}%</span>
+                      </li>
+                      <li className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                          <span className="text-gray-600">Canceled Orders</span>
+                        </div>
+                        <span className="font-medium text-gray-700">{canceledPercent}%</span>
+                      </li>
+                      <li className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                          <span className="text-gray-600">Total Orders</span>
+                        </div>
+                        <span className="font-medium text-gray-700">{total}</span>
+                      </li>
+                    </>
+                  );
+                })()}
+              </ul>
+            </div>
+          </div>
 
         </div>
       </div>
@@ -469,10 +578,17 @@ const ProductsPage = () => {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-newPrimary">Add New Product</h2>
+                <h2 className="text-xl font-bold text-newPrimary"> {isEdit ? "Edit Product" : "Add New Product"}</h2>
                 <button
                   className="text-gray-500 hover:text-gray-700 text-2xl"
-                  onClick={() => setIsSliderOpen(false)}
+                  onClick={() => {
+                    setIsSliderOpen(false);
+                    setIsEdit(false);
+                    setEditId(null);
+                    setEditFormState({ name: "", price: "", image: "" });
+                    setImage(null);
+                    setImagePreview(null);
+                  }}
                 >
                   &times;
                 </button>
@@ -484,12 +600,15 @@ const ProductsPage = () => {
                   {/* Product Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Product Name
+                      Product Name {}
+                      <span className="text-newPrimary">*</span>
                     </label>
                     <input
                       type="text"
-                      value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
+                      value={formState.name}
+                      onChange={(e) =>
+                        setEditFormState({ ...formState, name: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                       placeholder="Enter product name"
                     />
@@ -498,7 +617,8 @@ const ProductsPage = () => {
                   {/* Price */}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Price
+                      Price {}
+                      <span className="text-newPrimary">*</span>
                     </label>
                     <div className="relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -506,8 +626,10 @@ const ProductsPage = () => {
                       </div>
                       <input
                         type="text"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
+                        value={formState.price}
+  onChange={(e) =>
+    setEditFormState({ ...formState, price: e.target.value })
+  }
                         className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                         placeholder="0.00"
                       />
@@ -517,7 +639,8 @@ const ProductsPage = () => {
                   {/* Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Product Images
+                      Product Images {}
+                      <span className="text-newPrimary">*</span>
                     </label>
                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                       <div className="space-y-1 text-center">
@@ -587,7 +710,14 @@ const ProductsPage = () => {
                 <button
                   type="button"
                   className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => setIsSliderOpen(false)}
+                  onClick={() => {
+                    setIsSliderOpen(false);
+                    setIsEdit(false);
+                    setEditId(null);
+                    setEditFormState({ name: "", price: "", image: "" });
+                    setImage(null);
+                    setImagePreview(null);
+                  }}
                 >
                   Cancel
                 </button>
@@ -596,7 +726,7 @@ const ProductsPage = () => {
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   onClick={handleSave}
                 >
-                  Save Product
+                  {isEdit ? "Update Product" : "Save Product"}
                 </button>
               </div>
             </div>
