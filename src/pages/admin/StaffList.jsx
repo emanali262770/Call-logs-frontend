@@ -1,20 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const StaffList = () => {
-  const staffList = [
-    { name: "John Doe", department: "Social Marketing", designation: "Designer", address: "Johar Town, Lahore.", number: "+92-123789456", email: "info@gmail.com" },
-    { name: "Jane Smith", department: "IT", designation: "Developer", address: "Model Town, Lahore.", number: "+92-987654321", email: "jane@gmail.com" },
-    { name: "Ali Khan", department: "Sales", designation: "Manager", address: "Gulberg, Lahore.", number: "+92-456789123", email: "ali@gmail.com" },
-    { name: "Sara Ahmed", department: "HR", designation: "Coordinator", address: "Defence, Lahore.", number: "+92-789123456", email: "sara@gmail.com" },
-    { name: "Ahmed Raza", department: "Marketing", designation: "Analyst", address: "Cantt, Lahore.", number: "+92-321654987", email: "ahmed@gmail.com" },
-    { name: "Fatima Zahra", department: "Design", designation: "Artist", address: "Garden Town, Lahore.", number: "+92-654321789", email: "fatima@gmail.com" },
-    { name: "Omar Farooq", department: "IT", designation: "Engineer", address: "Johar Town, Lahore.", number: "+92-123456789", email: "omar@gmail.com" },
-    { name: "Ayesha Malik", department: "Finance", designation: "Accountant", address: "Model Town, Lahore.", number: "+92-987123456", email: "ayesha@gmail.com" },
-    { name: "Zainab Ali", department: "Support", designation: "Agent", address: "Gulberg, Lahore.", number: "+92-456123789", email: "zainab@gmail.com" },
-    { name: "Hassan Iqbal", department: "Operations", designation: "Supervisor", address: "Defence, Lahore.", number: "+92-789654123", email: "hassan@gmail.com" },
-  ];
-
-  // State for slider
+  const [staffList, setStaffList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [staffName, setStaffName] = useState("");
   const [department, setDepartment] = useState("");
@@ -23,6 +10,31 @@ const StaffList = () => {
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");
   const [images, setImages] = useState([]);
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const response = await fetch("https://call-logs-backend.vercel.app/api/staff");
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          // Map API data to match table structure, using username as name
+          const mappedStaff = result.data.map(staff => ({
+            name: staff.username,
+            department: staff.department,
+            designation: staff.designation,
+            address: staff.address,
+            number: staff.number,
+            email: staff.email,
+          }));
+          setStaffList(mappedStaff);
+        }
+      } catch (error) {
+        console.error("Error fetching staff data:", error);
+      }
+    };
+    fetchStaff();
+  }, []);
 
   // Handlers
   const handleAddStaff = () => {
@@ -114,7 +126,6 @@ const StaffList = () => {
                     className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl text-gray-600 hover:bg-gray-300 transition-colors duration-200"
                   >
                     📷
-                    
                   </button>
                   <input
                     id="imageUpload"
