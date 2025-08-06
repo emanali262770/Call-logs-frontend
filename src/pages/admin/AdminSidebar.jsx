@@ -8,9 +8,9 @@ const links = [
   { to: "/admin/customers", label: "Customer Data" },
   { to: "/admin/promotion", label: "Meeting Details" },
   { to: "/admin/followup", label: "Follow Up" },
-  { to: "/admin/category", label: "Report" },
-  { to: "/admin/category", label: "Calendar" },
-  { to: "/admin/category", label: "Settings" },
+   { to: "/admin/calendar", label: "Calendar" },
+  { to: "/admin/report", label: "Report" },
+  { to: "/admin/settings", label: "Settings" },
 ];
 
 const AdminSidebar = () => {
