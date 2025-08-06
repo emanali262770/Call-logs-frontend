@@ -42,13 +42,6 @@ const ProductsPage = () => {
   }, [isSliderOpen]);
 
 
-  // Sales analytics data for circular progress
-  const salesAnalytics = [
-    { label: "Total Sales", value: 50, color: "blue" },
-    { label: "Total Order", value: 30, color: "yellow" },
-    { label: "Order Cancel", value: 20, color: "red" },
-  ];
-
 
   // Handlers
   const handleAddProduct = () => {
@@ -92,7 +85,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
- 
+
 
   // Fetch All Product Add by Month
   useEffect(() => {
@@ -131,12 +124,12 @@ const ProductsPage = () => {
     fetchProductsAddMonths();
   }, []);
 
-   // Get Currently Month 
-   const getCurrentMonth = () => {
+  // Get Currently Month 
+  const getCurrentMonth = () => {
     const date = new Date();
     return date.toLocaleString("default", { month: "long" });
   };
-  const month = getCurrentMonth(); 
+  const month = getCurrentMonth();
   // Fetch All Orders
   useEffect(() => {
     const fetchOrdersByMonth = async (month) => {
@@ -144,11 +137,11 @@ const ProductsPage = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/orders?month=${month}`,
         );
-    
+
         const res = response.data.data;
         setOrders(res)
         console.log("Order", res);
-         // filtered order list
+        // filtered order list
       } catch (error) {
         console.error("Error fetching orders by month:", error);
         return [];
@@ -362,58 +355,108 @@ const ProductsPage = () => {
 
           {/* Analytics with Circular Progress Bar */}
           <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics this Month</h2>
-            <div className="flex flex-col items-center">
-              <div className="relative w-40 h-40 mb-4">
-                <svg className="w-full h-full" viewBox="0 0 36 36">
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9155"
-                    fill="none"
-                    stroke="#e0e0e0"
-                    strokeWidth="3"
-                  />
-                  {salesAnalytics.map((item, index) => {
-                    const offset = 100 - item.value;
-                    const startOffset = index === 0 ? 0 : salesAnalytics.slice(0, index).reduce((acc, curr) => acc + curr.value, 0);
-                    return (
-                      <circle
-                        key={index}
-                        cx="18"
-                        cy="18"
-                        r="15.9155"
-                        fill="none"
-                        stroke={item.color}
-                        strokeWidth="3"
-                        strokeDasharray="100"
-                        strokeDashoffset={startOffset + offset}
-                        transform="rotate(-90 18 18)"
-                        className="transition-all duration-1000"
-                      />
-                    );
-                  })}
-                  <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
-                    $220
-                  </text>
-                </svg>
+  <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics (This Month)</h2>
+
+  <div className="flex flex-col items-center">
+    <div className="relative w-40 h-40 mb-4">
+      <svg className="w-full h-full" viewBox="0 0 36 36">
+        {/* Base Circle */}
+        <circle
+          cx="18"
+          cy="18"
+          r="15.9155"
+          fill="none"
+          stroke="#e0e0e0"
+          strokeWidth="3"
+        />
+
+        {/* Circle Segments */}
+        {(() => {
+          const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
+          const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+          const total = totalConfirmed + totalCanceled;
+
+          const confirmedPercent = total ? (totalConfirmed / total) * 100 : 0;
+          const canceledPercent = total ? (totalCanceled / total) * 100 : 0;
+
+          return (
+            <>
+              {/* Confirmed */}
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9155"
+                fill="none"
+                stroke="#4CAF50"
+                strokeWidth="3"
+                strokeDasharray={`${confirmedPercent} 100`}
+                strokeDashoffset="0"
+                transform="rotate(-90 18 18)"
+              />
+              {/* Canceled */}
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9155"
+                fill="none"
+                stroke="#F44336"
+                strokeWidth="3"
+                strokeDasharray={`${canceledPercent} 100`}
+                strokeDashoffset={confirmedPercent}
+                transform="rotate(-90 18 18)"
+              />
+            </>
+          );
+        })()}
+
+        {/* Center Text: Total Sales */}
+        <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
+          $
+          {orders.reduce((sum, order) => sum + (order.totalSales || 0), 0).toLocaleString()}
+        </text>
+      </svg>
+    </div>
+
+    {/* Legend */}
+    <ul className="w-full space-y-2 text-sm">
+      {(() => {
+        const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
+        const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+        const total = totalConfirmed + totalCanceled;
+
+        const confirmedPercent = total ? ((totalConfirmed / total) * 100).toFixed(1) : 0;
+        const canceledPercent = total ? ((totalCanceled / total) * 100).toFixed(1) : 0;
+
+        return (
+          <>
+            <li className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                <span className="text-gray-600">Confirmed Orders</span>
               </div>
-              <ul className="w-full space-y-2">
-                {salesAnalytics.map((item, index) => (
-                  <li key={index} className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span
-                        className="w-3 h-3 mr-2 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <span className="text-sm text-gray-600">{item.label}</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">{item.value}%</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+              <span className="font-medium text-gray-700">{confirmedPercent}%</span>
+            </li>
+            <li className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                <span className="text-gray-600">Canceled Orders</span>
+              </div>
+              <span className="font-medium text-gray-700">{canceledPercent}%</span>
+            </li>
+            <li className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                <span className="text-gray-600">Total Orders</span>
+              </div>
+              <span className="font-medium text-gray-700">{total}</span>
+            </li>
+          </>
+        );
+      })()}
+    </ul>
+  </div>
+</div>
+
         </div>
       </div>
 
