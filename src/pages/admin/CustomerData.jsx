@@ -5,21 +5,9 @@ import axios from 'axios'
 import { PuffLoader } from "react-spinners";
 
 const CustomerData = () => {
-  const [customerData, setCustomerData] = useState([]);
-  
-  
-  const customerList = [
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-    { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
-  ];
+  const [customerList, setCustomerData] = useState([]);
+  const [staffMembers, setStaffMember] = useState([]);
+  const [productList, setProductList] = useState([]);
 
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
@@ -31,56 +19,159 @@ const CustomerData = () => {
   const [persons, setPersons] = useState([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
-  const [images, setImages] = useState([]);
-  
-  const [loading, setLoading] = useState(true);
+  const [image, setImage] = useState([]);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null); 
+  const [loading, setLoading] = useState(true)
+  const [imagePreview, setImagePreview] = useState(null);;
 
   const handleAddCustomer = () => {
     setIsSliderOpen(true);
   };
 
 
+  // Token
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  console.log("Admin", userInfo.isAdmin);
+
+  //  Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/clients`);
       const result = await response.json();
       console.log("Clients ", result);
-      
+
       setCustomerData(result);
 
-      
+
     } catch (error) {
       console.error("Error fetching staff data:", error);
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
-  }, []); // No dependencies so the function is memoized once
-
-  // console.log("Client List", CustomerData);
+  }, []);
 
   useEffect(() => {
-    fetchCustomerData(); // Only re-executes if fetchStaff reference changes
+    fetchCustomerData();
   }, [fetchCustomerData]);
 
-  const handleSave = () => {
-    console.log("Saving:", { customerEmail, customerPhone, customerAddress, customerCity, companyName, businessType, persons, assignedStaff, assignedProduct, images });
-    setIsSliderOpen(false);
-    setCustomerEmail("");
-    setCustomerPhone("");
-    setCustomerAddress("");
-    setCustomerCity("");
-    setCompanyName("");
-    setBusinessType("");
-    setPersons([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
-    setAssignedStaff("");
-    setAssignedProduct("");
-    setImages([]);
+  console.log("Customer Data", customerList);
+  
+
+
+  //  Fetch Staff Member Data
+  const fetchAssignedData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const staffRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/staff`);
+      const productRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products`);
+      const staff = await staffRes.json();
+      const product = await productRes.json();
+      setStaffMember(staff.data);
+      setProductList(product.data);
+
+    } catch (error) {
+      console.error("Error fetching staff data:", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAssignedData();
+  }, [fetchAssignedData]);
+
+
+
+  console.log("Product List ", productList);
+  console.log("Staff List  ", staffMembers);
+
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("email", customerEmail);
+    formData.append("mobileNumber", customerPhone);
+    formData.append("address", customerAddress);
+    formData.append("city", customerCity);
+    formData.append("companyName", companyName);
+    formData.append("businessType", businessType);
+    
+    persons.forEach((person, index) => {
+      formData.append(`persons[${index}].name`, person.fullName);
+      formData.append(`persons[${index}].phoneNumber`, person.phone);
+      formData.append(`persons[${index}].email`, person.email);
+      formData.append(`persons[${index}].designation`, person.designation);
+      formData.append(`persons[${index}].department`, person.department);
+    });
+    
+
+    formData.append("assignToStaffId", assignedStaff);
+    formData.append("assignToProductId", assignedProduct);
+
+    if (image) {
+      formData.append("companyLogo", image); // Correct
+    }
+  
+    console.log("Form Data", formData);
+    
+    try {
+      const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      };
+  
+      if (isEdit && editId) {
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/clients/${editId}`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Staff updated successfully");
+      } else {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/clients`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Staff added successfully");
+      }
+  
+      // Reset fields
+      setStaffName("");
+      setDepartment("");
+      setDesignation("");
+      setAddress("");
+      setNumber("");
+      setEmail("");
+      setImage(null);
+      setImagePreview(null);
+      setEditId(null);
+      setIsEdit(false);
+      setIsSliderOpen(false);
+  
+      // Refresh list
+      fetchStaff();
+  
+    } catch (error) {
+      console.error(error);
+      toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
+    }
   };
 
+
+//  Image Upload
   const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setImages(files.map(file => URL.createObjectURL(file)));
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+  
+  // Image Remove 
+  const removeImage = () => {
+    setImagePreview(null);
   };
 
   const handleAddPerson = () => {
@@ -93,21 +184,21 @@ const CustomerData = () => {
     setPersons(newPersons);
   };
 
-    // Show loading spinner
-    if (loading) {
-      return (
-        <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <PuffLoader
-              height="150"
-              width="150"
-              radius={1}
-              color="#00809D"
-            />
-          </div>
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <PuffLoader
+            height="150"
+            width="150"
+            radius={1}
+            color="#00809D"
+          />
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -123,60 +214,105 @@ const CustomerData = () => {
           + Add Customer
         </button>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-secondary/10">
-                <th className="py-3 px-4 text-left text-gray-900">Name</th>
-                <th className="py-3 px-4 text-left text-gray-900">Email</th>
-                <th className="py-3 px-4 text-left text-gray-900">Designation</th>
-                <th className="py-3 px-4 text-left text-gray-900">Address</th>
-                <th className="py-3 px-4 text-left text-gray-900">Department</th>
-                <th className="py-3 px-4 text-left text-gray-900">Assign to Staff</th>
-                <th className="py-3 px-4 text-left text-gray-900">Assign Product</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customerList.map((customer, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-secondary/20 transition-colors duration-150">
-                  <td className="py-3 px-4 flex items-center">
-                    <img 
-                      src="https://via.placeholder.com/40" 
-                      alt={`${customer.name}'s profile`} 
-                      className="w-10 h-10 rounded-full mr-2" 
-                      onError={(e) => { 
-                        e.target.onerror = null; 
-                        e.target.src = "https://www.gravatar.com/avatar/?d=mp"; 
-                      }} 
-                    />
-                    {customer.name || "N/A"}
-                  </td>
-                  <td className="py-3 px-4">{customer.email || "N/A"}</td>
-                  <td className="py-3 px-4">{customer.designation || "N/A"}</td>
-                  <td className="py-3 px-4">{customer.address || "N/A"}</td>
-                  <td className="py-3 px-4">{customer.department || "N/A"}</td>
-                  <td className="py-3 px-4">{customer.assignedStaff || "N/A"}</td>
-                  <td className="py-3 px-4">{customer.assignedProduct || "N/A"}</td>
-                </tr>
+
+
+      {/* Customer Table */}
+      <div className="rounded-xl shadow p-6 border border-gray-100 w-full  overflow-hidden">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="w-full">
+            {/* Table Headers */}
+            <div className="hidden lg:grid grid-cols-8 gap-4 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+              <div>Name</div>
+              <div>Email</div>
+              <div>Designation</div>
+              <div>Address</div>
+              <div>Department</div>
+              <div>Assign to Staff</div>
+              <div>Assign Product</div>
+              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
+            </div>
+
+            {/* Staff in Table */}
+            <div className="mt-4 flex flex-col gap-[14px] pb-14">
+              {customerList.map((client, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-8 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                >
+                  {/* Name */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                      <img
+                        src={client.companyLogo?.url || "https://via.placeholder.com/40"}
+                        alt="Staff"
+                        className="w-7 h-7 object-cover rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {client.companyName}
+                    </span>
+                  </div>
+
+                  {/* Email */}
+                  <div className="text-sm font-semibold text-green-600">{client.email}</div>
+
+                  {/* Designation */}
+                  <div className="text-sm text-gray-500">{client?.persons?.designation}</div>
+
+                  {/* Address */}
+                  <div className="text-sm font-semibold text-green-600">{client.address}</div>
+
+                  {/* Department */}
+                  <div className="text-sm text-gray-500">{client.department}</div>
+
+                  {/* Assign to Staff */}
+                  <div className="text-sm text-gray-500">{client?.assignToStaffId?.username}</div>
+
+                  {/* Assign Product */}
+                  <div className="text-sm text-gray-500">{client?.assignToProductId?.name}</div>
+
+                  {/* Actions */}
+                  {userInfo?.isAdmin && (
+                    <div className="text-right relative group">
+                      <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
+
+                      {/* Dropdown */}
+                      <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
+                  opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+                  transition-opacity duration-300 z-50 flex flex-col justify-between">
+                        <button
+                          onClick={() => handleEdit(client)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(client._id)}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Centered Modal/Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">Add Client</h2>
               <button
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
                 onClick={() => setIsSliderOpen(false)}
               >
                 &times;
               </button>
+
             </div>
             <div className="p-6 space-y-6">
               {/* Customer Section */}
@@ -317,35 +453,47 @@ const CustomerData = () => {
               <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Assign</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Assign to Staff Dropdown */}
                   <div>
                     <label className="block text-gray-700 mb-1">Assign to Staff</label>
-                    <input
-                      type="text"
+                    <select
                       value={assignedStaff}
                       onChange={(e) => setAssignedStaff(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Select staff"
-                    />
+                    >
+                      <option value="">Select Staff</option>
+                      {staffMembers.map((staff) => (
+                        <option key={staff._id} value={staff._id}>
+                          {staff.username}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
+                  {/* Assign Product Dropdown */}
                   <div>
                     <label className="block text-gray-700 mb-1">Assign Product</label>
-                    <input
-                      type="text"
+                    <select
                       value={assignedProduct}
                       onChange={(e) => setAssignedProduct(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Select product"
-                    />
+                    >
+                      <option value="">Select Product</option>
+                      {productList.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
 
               {/* Image Upload Section */}
               <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Upload Images</h3>
+                <h3 className="text-lg font-semibold mb-4">Company Logo Upload</h3>
                 <input
                   type="file"
-                  multiple
                   onChange={handleImageUpload}
                   className="block w-full text-sm text-gray-500
                     file:mr-4 file:py-2 file:px-4
@@ -355,14 +503,35 @@ const CustomerData = () => {
                     hover:file:bg-primaryDark
                     file:transition-colors file:duration-200"
                 />
-                {images.length > 0 && (
+                {image.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {images.map((img, index) => (
+                    {image.map((img, index) => (
                       <img key={index} src={img} alt={`Upload ${index}`} className="w-20 h-20 object-cover rounded" />
                     ))}
                   </div>
                 )}
               </div>
+
+               {/* Image Preview */}
+
+               {imagePreview && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                        <div className="relative group w-48 h-32">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-md border border-gray-200"
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <button

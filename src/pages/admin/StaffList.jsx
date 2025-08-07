@@ -345,7 +345,7 @@ const StaffList = () => {
             ref={sliderRef}
             className="w-1/3 bg-white p-6 h-full overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-newPrimary">Add a New Staff</h2>
+              <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Update Staff" : "Add a New Staff"}</h2>
               <button
                 className="text-gray-500 hover:text-gray-700"
                 onClick={() => {
@@ -503,7 +503,7 @@ const StaffList = () => {
                 className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 w-full"
                 onClick={handleSave}
               >
-                Save Staff
+              {isEdit ? "Update Staff" : "Save Staff"}
               </button>
             </div>
           </div>
