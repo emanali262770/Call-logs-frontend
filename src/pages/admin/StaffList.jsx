@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { PuffLoader } from "react-spinners";
 import gsap from "gsap";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const StaffList = () => {
   const [staffList, setStaffList] = useState([]);
@@ -12,6 +14,7 @@ const StaffList = () => {
   const [address, setAddress] = useState("");
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [image, setImage] = useState(null);   
   const [imagePreview, setImagePreview] = useState(null); 
 
@@ -22,6 +25,7 @@ const StaffList = () => {
     address:"",
     number: "",
     email: "",
+    password: "",
     image: ""
   });
   const [isEdit, setIsEdit] = useState(false);
@@ -51,40 +55,41 @@ const StaffList = () => {
 
 
   // Fetch data from API
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/staff`,
-        );
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          // Map API data to match table structure, using username as name
-          const mappedStaff = result.data.map((staff) => ({
-            _id: staff._id,
-            name: staff.username,
-            department: staff.department,
-            designation: staff.designation,
-            address: staff.address,
-            number: staff.number,
-            email: staff.email,
-            image: staff.image || [],
-          }));
+  const fetchStaff = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/staff`);
+      const result = await response.json();
 
-          setStaffList(mappedStaff);
+      if (result.success && Array.isArray(result.data)) {
+        const mappedStaff = result.data.map((staff) => ({
+          _id: staff._id,
+          name: staff.username,
+          department: staff.department,
+          designation: staff.designation,
+          address: staff.address,
+          number: staff.number,
+          email: staff.email,
+          password:staff.password,
+          image: staff.image || [],
+        }));
 
-
-          setTimeout(() => {
-            setLoading(false);
-          }, 1000);
-        }
-      } catch (error) {
-        console.error("Error fetching staff data:", error);
+        setStaffList(mappedStaff);
+        
       }
-    };
-    fetchStaff();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching staff data:", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []); // No dependencies so the function is memoized once
+
+  console.log("Staff List", staffList);
+
+  useEffect(() => {
+    fetchStaff(); // Only re-executes if fetchStaff reference changes
+  }, [fetchStaff]);
+
 
   // Handlers
   const handleAddStaff = () => {
@@ -101,10 +106,13 @@ const StaffList = () => {
   formData.append("address", address);
   formData.append("number", number);
   formData.append("email", email);
+  formData.append('password', password)
   if (image) {
     formData.append("image", image);
   }
 
+  console.log("Form Data", formData);
+  
   try {
     const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
     const headers = {
@@ -165,8 +173,7 @@ const StaffList = () => {
     }
   };
   
-  
-
+  // Image Remove
   const removeImage = () => {
     setImagePreview("");
     setEditFormState({ ...formState, image: "" });
@@ -183,10 +190,40 @@ const StaffList = () => {
     setAddress(staff.address || "");
     setNumber(staff.number || "");
     setEmail(staff.email || "");
-    setImagePreview(staff.image?.[0]?.url || "");
+    setPassword(staff.password || "");
+    setImagePreview(staff.image?.url || "");
     setImage(null);
     setIsSliderOpen(true);
   };
+
+  //Delete Staff 
+  const handleDelete = async (id) => {
+      if (window.confirm("Are you sure you want to delete this product?")) {
+        try {
+          const token = userInfo?.token;
+    
+          if (!token) {
+            toast.error("Authorization token missing!");
+            return;
+          }
+    
+          await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/staff/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+    
+          setStaffList(staffList.filter((p) => p._id !== id));
+          toast.error("Product deleted successfully.");
+        } catch (error) {
+          console.error("Delete error:", error);
+          toast.error("Failed to delete product.");
+        }
+      }
+    };
   
 
   // Show loading spinner
@@ -235,7 +272,7 @@ const StaffList = () => {
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
-            {/* Staff Rows */}
+            {/* Staff in Table */}
             <div className="mt-4 flex flex-col gap-[14px] pb-14">
               {staffList.map((staff, index) => (
                 <div
@@ -246,7 +283,7 @@ const StaffList = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
                       <img
-                        src={staff.image?.[0]?.url || "https://via.placeholder.com/40"}
+                        src={staff.image?.url || "https://via.placeholder.com/40"}
                         alt="Staff"
                         className="w-7 h-7 object-cover rounded-full"
                       />
@@ -324,23 +361,9 @@ const StaffList = () => {
             </div>
             <div>
               <div className="mb-4">
-                <div className="flex justify-center mb-2">
-                  <button
-                    onClick={() => document.getElementById("imageUpload").click()}
-                    className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl text-gray-600 hover:bg-gray-300 transition-colors duration-200"
-                  >
-                    📷
-
-                  </button>
-                  <input
-                    id="imageUpload"
-                    type="file"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-                <label className="block text-gray-700">Name</label>
+               
+                <label className="block text-gray-700">Name {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={staffName}
@@ -349,7 +372,8 @@ const StaffList = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Department</label>
+                <label className="block text-gray-700">Department {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={department}
@@ -358,7 +382,8 @@ const StaffList = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Designation</label>
+                <label className="block text-gray-700">Designation {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={designation}
@@ -367,7 +392,8 @@ const StaffList = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Address</label>
+                <label className="block text-gray-700">Address {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={address}
@@ -376,7 +402,8 @@ const StaffList = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Number</label>
+                <label className="block text-gray-700">Number {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={number}
@@ -385,7 +412,8 @@ const StaffList = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700">Email</label>
+                <label className="block text-gray-700">Email {}
+                <span className="text-newPrimary">*</span></label>
                 <input
                   type="email"
                   value={email}
@@ -393,19 +421,84 @@ const StaffList = () => {
                   className="w-full p-2 border rounded"
                 />
               </div>
+
               <div className="mb-4">
-                <label className="block text-gray-700">Staff Image</label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  {images.map((image, idx) => (
-                    <img
-                      key={idx}
-                      src={image}
-                      alt={`Uploaded ${idx}`}
-                      className="w-full h-32 object-cover rounded"
-                    />
-                  ))}
-                </div>
+                <label className="block text-gray-700">Password {}
+                <span className="text-newPrimary">*</span></label>
+                <input
+                  type="text"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
               </div>
+              
+              {/* Image Upload */}
+              <div className="mb-10">
+                    <label className="block text-gray-700 mb-4 ">
+                      Staff Image {}
+                      <span className="text-newPrimary">*</span>
+                    </label>
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex text-sm text-gray-600 justify-center">
+                          <label
+                            htmlFor="file-upload"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-newPrimary hover:text-newPrimary focus-within:outline-none"
+                          >
+                            <span>Upload files</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              onChange={handleImageUpload}
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, GIF up to 10MB
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Image Preview */}
+
+                    {imagePreview && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                        <div className="relative group w-48 h-32">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-md border border-gray-200"
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
               <button
                 className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 w-full"
                 onClick={handleSave}

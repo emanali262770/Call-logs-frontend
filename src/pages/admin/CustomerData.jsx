@@ -1,6 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import gsap from "gsap";
+import { toast } from "react-toastify";
+import axios from 'axios'
+import { PuffLoader } from "react-spinners";
 
 const CustomerData = () => {
+  const [customerData, setCustomerData] = useState([]);
+  
+  
   const customerList = [
     { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
     { name: "John Doe", email: "info@gmail.com", designation: "Operator", address: "Johar Town, Lahore.", department: "Academics", assignedStaff: "NaN", assignedProduct: "NaN" },
@@ -25,10 +32,36 @@ const CustomerData = () => {
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
   const [images, setImages] = useState([]);
+  
+  const [loading, setLoading] = useState(true);
 
   const handleAddCustomer = () => {
     setIsSliderOpen(true);
   };
+
+
+  const fetchCustomerData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/clients`);
+      const result = await response.json();
+      console.log("Clients ", result);
+      
+      setCustomerData(result);
+
+      
+    } catch (error) {
+      console.error("Error fetching staff data:", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []); // No dependencies so the function is memoized once
+
+  // console.log("Client List", CustomerData);
+
+  useEffect(() => {
+    fetchCustomerData(); // Only re-executes if fetchStaff reference changes
+  }, [fetchCustomerData]);
 
   const handleSave = () => {
     console.log("Saving:", { customerEmail, customerPhone, customerAddress, customerCity, companyName, businessType, persons, assignedStaff, assignedProduct, images });
@@ -59,6 +92,22 @@ const CustomerData = () => {
     newPersons[index][field] = value;
     setPersons(newPersons);
   };
+
+    // Show loading spinner
+    if (loading) {
+      return (
+        <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <PuffLoader
+              height="150"
+              width="150"
+              radius={1}
+              color="#00809D"
+            />
+          </div>
+        </div>
+      );
+    }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
