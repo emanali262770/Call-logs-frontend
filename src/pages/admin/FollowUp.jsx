@@ -1,19 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const FollowUp = () => {
-  const followUpList = [
-    { customerName: "John Doe", customerNumber: "12345", customerDescription: "Discuss product demo", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Jane Smith", customerNumber: "67890", customerDescription: "Follow up on payment", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Alice Johnson", customerNumber: "11223", customerDescription: "Review contract", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Bob Wilson", customerNumber: "44556", customerDescription: "Schedule meeting", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Charlie Brown", customerNumber: "77889", customerDescription: "Send proposal", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Dana White", customerNumber: "99001", customerDescription: "Check availability", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Eve Davis", customerNumber: "22334", customerDescription: "Confirm order", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Frank Miller", customerNumber: "55667", customerDescription: "Discuss feedback", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Grace Lee", customerNumber: "88990", customerDescription: "Arrange call", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { customerName: "Henry Clark", customerNumber: "11223", customerDescription: "Follow up email", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-  ];
-
+  const [followUpList, setFollowUpList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerNumber, setCustomerNumber] = useState("");
@@ -21,6 +9,37 @@ const FollowUp = () => {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [status, setStatus] = useState("Active");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchFollowUps = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("https://call-logs-backend.vercel.app/api/follow-ups");
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const result = await response.json();
+        // Map API data to match the table structure
+        const mappedData = result.data.map(item => ({
+          customerName: item.customerName,
+          customerNumber: item.customerNumber,
+          customerDescription: item.customerDescription,
+          date: item.date,
+          time: item.time,
+          status: item.isActive ? "Active" : "Non Active"
+        }));
+        setFollowUpList(mappedData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFollowUps();
+  }, []);
 
   const handleAddFollowUp = () => {
     setIsSliderOpen(true);
@@ -51,36 +70,40 @@ const FollowUp = () => {
         </button>
       </div>
       <div className="bg-white rounded-lg shadow p-6 mt-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-secondary/10">
-                <th className="py-3 px-4 text-left text-gray-900">Customer Name</th>
-                <th className="py-3 px-4 text-left text-gray-900">Customer Number</th>
-                <th className="py-3 px-4 text-left text-gray-900">Customer Description</th>
-                <th className="py-3 px-4 text-left text-gray-900">Date</th>
-                <th className="py-3 px-4 text-left text-gray-900">Time</th>
-                <th className="py-3 px-4 text-left text-gray-900">Active or Non Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {followUpList.map((followUp, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="py-3 px-4">{followUp.customerName || "N/A"}</td>
-                  <td className="py-3 px-4">{followUp.customerNumber || "N/A"}</td>
-                  <td className="py-3 px-4">{followUp.customerDescription || "N/A"}</td>
-                  <td className="py-3 px-4">{followUp.date || "N/A"}</td>
-                  <td className="py-3 px-4">{followUp.time || "N/A"}</td>
-                  <td className="py-3 px-4">
-                    <span className={followUp.status === "Active" ? "text-green-600" : "text-red-600"}>
-                      {followUp.status}
-                    </span>
-                  </td>
+        {isLoading && <p className="text-center text-gray-600">Loading...</p>}
+        {error && <p className="text-center text-red-600">Error: {error}</p>}
+        {!isLoading && !error && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-secondary/10">
+                  <th className="py-3 px-4 text-left text-gray-900">Customer Name</th>
+                  <th className="py-3 px-4 text-left text-gray-900">Customer Number</th>
+                  <th className="py-3 px-4 text-left text-gray-900">Customer Description</th>
+                  <th className="py-3 px-4 text-left text-gray-900">Date</th>
+                  <th className="py-3 px-4 text-left text-gray-900">Time</th>
+                  <th className="py-3 px-4 text-left text-gray-900">Active or Non Active</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {followUpList.map((followUp, index) => (
+                  <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="py-3 px-4">{followUp.customerName || "N/A"}</td>
+                    <td className="py-3 px-4">{followUp.customerNumber || "N/A"}</td>
+                    <td className="py-3 px-4">{followUp.customerDescription || "N/A"}</td>
+                    <td className="py-3 px-4">{followUp.date || "N/A"}</td>
+                    <td className="py-3 px-4">{followUp.time || "N/A"}</td>
+                    <td className="py-3 px-4">
+                      <span className={followUp.status === "Active" ? "text-green-600" : "text-red-600"}>
+                        {followUp.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {isSliderOpen && (
@@ -102,7 +125,7 @@ const FollowUp = () => {
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                 />
               </div>
               <div>
@@ -111,7 +134,7 @@ const FollowUp = () => {
                   type="text"
                   value={customerNumber}
                   onChange={(e) => setCustomerNumber(e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                 />
               </div>
               <div>
@@ -120,7 +143,7 @@ const FollowUp = () => {
                   type="text"
                   value={customerDescription}
                   onChange={(e) => setCustomerDescription(e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                 />
               </div>
               <div>
@@ -129,7 +152,7 @@ const FollowUp = () => {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
                 />
               </div>
               <div>

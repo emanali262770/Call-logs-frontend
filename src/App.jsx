@@ -7,7 +7,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import StaffList from "./pages/admin/StaffList";
 import CustomerData from "./pages/admin/CustomerData";
 import FollowUp from "./pages/admin/FollowUp";
-import Calendar from "./pages/admin/Calendar";
 import ProductsPage from "./pages/admin/ProductsPage";
 import AddProduct from "./pages/admin/AddProduct";
 import { ToastContainer } from "react-toastify";
