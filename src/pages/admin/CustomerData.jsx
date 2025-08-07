@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-
-// Placeholder for authentication token (replace with your actual token)
-const AUTH_TOKEN = "your-auth-token-here"; // Replace with the actual token from your auth system
+import gsap from "gsap";
+import { toast } from "react-toastify";
+import { PuffLoader } from "react-spinners";
 
 const CustomerData = () => {
-  const [customerList, setCustomerList] = useState([]);
+  const [customerData, setCustomerData] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -16,63 +16,55 @@ const CustomerData = () => {
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
   const [images, setImages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-
-        // Fetch clients data (public endpoint)
-        const clientsResponse = await fetch("https://call-logs-backend.vercel.app/api/clients");
-        if (!clientsResponse.ok) {
-          throw new Error(`Failed to fetch clients data: ${clientsResponse.status}`);
-        }
-        const clientsData = await clientsResponse.json();
-
-        // Fetch assigned data (protected endpoint with auth)
-        const assignedResponse = await fetch("https://call-logs-backend.vercel.app/api/clients/assigned", {
+        setLoading(true);
+        const response = await fetch("https://call-logs-backend.vercel.app/api/clients", {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${AUTH_TOKEN}`, // Add authentication token
+            "Content-Type": "application/json",
           },
         });
-        const assignedData = assignedResponse.ok
-          ? await assignedResponse.json()
-          : { data: [] }; // Fallback to empty array if auth fails
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log("Raw API Response:", result); 
 
-        // Log raw data for debugging
-        console.log("Clients Data:", clientsData);
-        console.log("Assigned Data:", assignedData);
+        let clients = [];
+        // Handle different API response formats
+        if (result.success && Array.isArray(result.data)) {
+          clients = result.data;
+        } else if (Array.isArray(result)) {
+          clients = result; // Handle direct array response
+        } else {
+          throw new Error("Invalid API response format: Expected { success: true, data: [...] } or an array");
+        }
 
-        // Combine and map data
-        const allClients = [...(clientsData || []), ...(assignedData.data || [])];
-        const mappedData = allClients.flatMap(client =>
-          client.persons.map(person => ({
-            name: person.name || "N/A",
-            email: person.email || "N/A",
-            designation: person.designation || "N/A",
-            address: `${client.address || "N/A"}, ${client.city || "N/A"}`,
-            department: person.department || "N/A",
-            assignedStaff: client.assignToStaffId?.name || "N/A",
-            assignedProduct: client.assignToProductId?.name || "N/A",
-            companyLogo: client.companyLogo?.url || "https://www.gravatar.com/avatar/?d=mp",
-          }))
-        );
-
-        // Log mapped data for debugging
-        console.log("Mapped Data:", mappedData);
-
-        setCustomerList(mappedData);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.message || "An error occurred while fetching data");
+        const mappedClients = clients.map(client => ({
+          name: client.persons && client.persons[0]?.name ? client.persons[0].name : "N/A",
+          email: client.email || "N/A",
+          designation: client.persons && client.persons[0]?.designation ? client.persons[0].designation : "N/A",
+          address: client.address || "N/A",
+          department: client.persons && client.persons[0]?.department ? client.persons[0].department : "N/A",
+          assignedStaff: client.assignToStaffId?.username || "N/A",
+          assignedProduct: client.assignToProductId?.name || "N/A",
+        }));
+        setCustomerData(mappedClients);
+        if (mappedClients.length === 0) {
+          toast.warn("No client data available");
+        }
+      } catch (error) {
+        console.error("Error fetching client data:", error);
+        toast.error(`Failed to fetch client data: ${error.message}`);
+        setCustomerData([]); // Ensure table is empty on error
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
     fetchClients();
   }, []);
 
@@ -110,6 +102,17 @@ const CustomerData = () => {
     setPersons(newPersons);
   };
 
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <PuffLoader height="150" width="150" radius={1} color="#00809D" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -125,54 +128,48 @@ const CustomerData = () => {
         </button>
       </div>
       <div className="bg-white rounded-lg shadow p-6">
-        {isLoading && <p className="text-center text-gray-600">Loading...</p>}
-        {error && <p className="text-center text-red-600">Error: {error}</p>}
-        {!isLoading && !error && customerList.length === 0 && (
-          <p className="text-center text-gray-600">No data available</p>
-        )}
-        {!isLoading && !error && customerList.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-secondary/10">
-                  <th className="py-3 px-4 text-left text-gray-900">Name</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Email</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Designation</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Address</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Department</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Assign to Staff</th>
-                  <th className="py-3 px-4 text-left text-gray-900">Assign Product</th>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-secondary/10">
+                <th className="py-3 px-4 text-left text-gray-900">Name</th>
+                <th className="py-3 px-4 text-left text-gray-900">Email</th>
+                <th className="py-3 px-4 text-left text-gray-900">Designation</th>
+                <th className="py-3 px-4 text-left text-gray-900">Address</th>
+                <th className="py-3 px-4 text-left text-gray-900">Department</th>
+                <th className="py-3 px-4 text-left text-gray-900">Assign to Staff</th>
+                <th className="py-3 px-4 text-left text-gray-900">Assign Product</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customerData.map((customer, index) => (
+                <tr key={index} className="border-b border-gray-200 hover:bg-secondary/20 transition-colors duration-150">
+                  <td className="py-3 px-4 flex items-center">
+                    <img
+                      src="https://via.placeholder.com/40"
+                      alt={`${customer.name}'s profile`}
+                      className="w-10 h-10 rounded-full mr-2"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://www.gravatar.com/avatar/?d=mp";
+                      }}
+                    />
+                    {customer.name || "N/A"}
+                  </td>
+                  <td className="py-3 px-4">{customer.email || "N/A"}</td>
+                  <td className="py-3 px-4">{customer.designation || "N/A"}</td>
+                  <td className="py-3 px-4">{customer.address || "N/A"}</td>
+                  <td className="py-3 px-4">{customer.department || "N/A"}</td>
+                  <td className="py-3 px-4">{customer.assignedStaff || "N/A"}</td>
+                  <td className="py-3 px-4">{customer.assignedProduct || "N/A"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {customerList.map((customer, index) => (
-                  <tr key={index} className="border-b border-gray-200 hover:bg-secondary/20 transition-colors duration-150">
-                    <td className="py-3 px-4 flex items-center">
-                      <img
-                        src={customer.companyLogo}
-                        alt={`${customer.name}'s profile`}
-                        className="w-10 h-10 rounded-full mr-2"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://www.gravatar.com/avatar/?d=mp";
-                        }}
-                      />
-                      {customer.name}
-                    </td>
-                    <td className="py-3 px-4">{customer.email}</td>
-                    <td className="py-3 px-4">{customer.designation}</td>
-                    <td className="py-3 px-4">{customer.address}</td>
-                    <td className="py-3 px-4">{customer.department}</td>
-                    <td className="py-3 px-4">{customer.assignedStaff}</td>
-                    <td className="py-3 px-4">{customer.assignedProduct}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      {/* Centered Modal/Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -186,6 +183,7 @@ const CustomerData = () => {
               </button>
             </div>
             <div className="p-6 space-y-6">
+              {/* Customer Section */}
               <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Customer</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -252,6 +250,7 @@ const CustomerData = () => {
                 </div>
               </div>
 
+              {/* Person Section */}
               <div className="border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Person</h3>
@@ -318,6 +317,7 @@ const CustomerData = () => {
                 ))}
               </div>
 
+              {/* Assign Section */}
               <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Assign</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,6 +344,7 @@ const CustomerData = () => {
                 </div>
               </div>
 
+              {/* Image Upload Section */}
               <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Upload Images</h3>
                 <input
