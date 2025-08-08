@@ -45,12 +45,13 @@ const CustomerData = () => {
 
       setCustomerData(result);
 
+
     } catch (error) {
       console.error("Error fetching staff data:", error);
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
-  }, [setCustomerList]);
+  }, []);
 
   useEffect(() => {
     fetchCustomerData();

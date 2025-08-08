@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { PuffLoader } from "react-spinners";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,6 +7,7 @@ const AddMeeting = () => {
   // State for the modal
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [customerList, setCustomerList] = useState([]);
 
   const [companyName, setCompanyName] = useState("");
   const [personName, setPersonName] = useState("");
@@ -20,6 +21,28 @@ const AddMeeting = () => {
   const [referenceProvidedBy, setReferenceProvidedBy] = useState("");
   const [referToStaff, setReferToStaff] = useState("");
   const [contactMethod, setContactMethod] = useState("By Visit");
+
+  // Fetch Customer Data
+  const fetchCustomerData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/clients`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch clients');
+      }
+      const result = await response.json();
+      setCustomerList(result);
+    } catch (error) {
+      console.error("Error fetching client data:", error);
+      toast.error("Failed to load client data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   // Handle opening the modal
   const handleAddClick = () => {
@@ -41,7 +64,7 @@ const AddMeeting = () => {
 
   // Handle closing the modal
   const handleCloseModal = () => {
-    console.log("Closing modal"); // Debug log
+    console.log("Closing modal");
     setShowModal(false);
     // Reset form fields
     setCompanyName("");
@@ -83,7 +106,7 @@ const AddMeeting = () => {
       {/* Modal for Add Meeting */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-xl shadow-lg w-full max-w-[1400px] flex flex-col max-h-800px]"> {/* Set width to 900px and height to 650px, removed overflow-y-auto */}
+          <div className="bg-white p-4 rounded-xl shadow-lg w-full max-w-[1400px] flex flex-col max-h-800px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">Add Meeting</h2>
               <button
@@ -93,7 +116,7 @@ const AddMeeting = () => {
                 &times;
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-3"> {/* Reduced to space-y-3 for tighter spacing */}
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Company Name and Person */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -102,10 +125,14 @@ const AddMeeting = () => {
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    required
                   >
-                    <option value="">Company name</option>
-                    <option value="Company A">Company A</option>
-                    <option value="Company B">Company B</option>
+                    <option value="">Select Company</option>
+                    {customerList.map((client) => (
+                      <option key={client._id} value={client.companyName}>
+                        {client.companyName}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -122,6 +149,7 @@ const AddMeeting = () => {
                 </div>
               </div>
 
+              {/* Rest of your form remains the same */}
               {/* Designation and Products */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -347,16 +375,17 @@ const AddMeeting = () => {
 
               {/* Save Button */}
               <button
-  type="submit"
-  disabled={loading}
-  className="w-1/4 mx-auto bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md font-semibold transition-all mt-4 block"
->
-  {loading ? "Saving..." : "Save"}
-</button>
+                type="submit"
+                disabled={loading}
+                className="w-1/4 mx-auto bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md font-semibold transition-all mt-4 block"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
             </form>
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };
