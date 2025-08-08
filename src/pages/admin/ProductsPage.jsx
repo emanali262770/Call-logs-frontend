@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from 'axios'
 import { FiEdit, FiTrash } from "react-icons/fi";
-
+import Swal from "sweetalert2";
 import { PuffLoader } from "react-spinners";
 
 
@@ -20,12 +20,12 @@ const ProductsPage = () => {
     image: "",
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null); // store the product _id for editing
+  const [editId, setEditId] = useState(null); 
 
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
-  const [image, setImage] = useState(null);           // the actual file
-  const [imagePreview, setImagePreview] = useState(null); // preview URL
+  const [image, setImage] = useState(null);           
+  const [imagePreview, setImagePreview] = useState(null); 
 
 
   // Get User from the LocalStorage
@@ -34,7 +34,7 @@ const ProductsPage = () => {
 
 
 
-
+// slider styling 
   useEffect(() => {
     if (isSliderOpen && sliderRef.current) {
       gsap.fromTo(
@@ -140,35 +140,73 @@ const ProductsPage = () => {
   }, [fetchProductsAddMonths]);
 
   
-  //Delete Product 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      try {
-        const token = userInfo?.token;
-  
-        if (!token) {
-          toast.error("Authorization token missing!");
-          return;
-        }
-  
-        await axios.delete(
-          `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+ // Delete Product
+const handleDelete = async (id) => {
+  const swalWithTailwindButtons = Swal.mixin({
+    customClass: {
+      actions: "space-x-2", // gap between buttons
+      confirmButton:
+        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+      cancelButton:
+        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+    },
+    buttonsStyling: false,
+  });
+
+  swalWithTailwindButtons
+    .fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    })
+    .then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = userInfo?.token;
+          if (!token) {
+            toast.error("Authorization token missing!");
+            return;
           }
+
+          await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          // Update UI
+          setProducts(products.filter((p) => p._id !== id));
+
+          swalWithTailwindButtons.fire(
+            "Deleted!",
+            "Product deleted successfully.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Delete error:", error);
+          swalWithTailwindButtons.fire(
+            "Error!",
+            "Failed to delete product.",
+            "error"
+          );
+        }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire(
+          "Cancelled",
+          "Product is safe 🙂",
+          "error"
         );
-  
-        setProducts(products.filter((p) => p._id !== id));
-        toast.error("Product deleted successfully.");
-      } catch (error) {
-        console.error("Delete error:", error);
-        toast.error("Failed to delete product.");
       }
-    }
-  };
-  
+    });
+};
+
 
   // Get Currently Month 
   const getCurrentMonth = () => {
@@ -197,7 +235,6 @@ const ProductsPage = () => {
 
     fetchOrdersByMonth(month);
   }, []);
-
 
 
   // Product Save
@@ -255,8 +292,6 @@ const ProductsPage = () => {
     }
   };
   
-  
-
 
   // Image Upload
   const handleImageUpload = (e) => {
@@ -271,14 +306,12 @@ const ProductsPage = () => {
     }
   };
   
-  
 
   const removeImage = () => {
     setImagePreview("");
     setEditFormState({ ...formState, image: "" });
   };
   
-
   const parseCurrency = (value) => {
     if (value == null) return 0;
     return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
