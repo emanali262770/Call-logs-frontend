@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from 'axios'
 import { PuffLoader } from "react-spinners";
+import Swal from "sweetalert2";
 
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
@@ -84,9 +85,10 @@ const CustomerData = () => {
 
 
 
-  console.log("Product List ", productList);
-  console.log("Staff List  ", staffMembers);
+  // console.log("Product List ", productList);
+  // console.log("Staff List  ", staffMembers);
 
+  // Customer Data Saved
   const handleSave = async () => {
     const formData = new FormData();
     formData.append("email", customerEmail);
@@ -127,23 +129,17 @@ const CustomerData = () => {
           formData,
           { headers }
         );
-        toast.success("✅ Staff updated successfully");
+        toast.success("✅ Customer updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/clients`,
           formData,
           { headers }
         );
-        toast.success("✅ Staff added successfully");
+        toast.success("✅ Customer added successfully");
       }
   
       // Reset fields
-      setStaffName("");
-      setDepartment("");
-      setDesignation("");
-      setAddress("");
-      setNumber("");
-      setEmail("");
       setImage(null);
       setImagePreview(null);
       setEditId(null);
@@ -151,7 +147,7 @@ const CustomerData = () => {
       setIsSliderOpen(false);
   
       // Refresh list
-      fetchStaff();
+      fetchCustomerData();
   
     } catch (error) {
       console.error(error);
@@ -174,6 +170,7 @@ const CustomerData = () => {
     setImagePreview(null);
   };
 
+
   const handleAddPerson = () => {
     setPersons([...persons, { fullName: "", phone: "", email: "", designation: "", department: "" }]);
   };
@@ -183,6 +180,126 @@ const CustomerData = () => {
     newPersons[index][field] = value;
     setPersons(newPersons);
   };
+
+   // Open the edit modal and populate the form
+   const handleEdit = (client) => {
+    setIsEdit(true);
+    setEditId(client._id); // Save client ID for update
+  
+    // Prefill customer section
+    setCustomerEmail(client.email || "");
+    setCustomerPhone(client.mobileNumber || "");
+    setCustomerAddress(client.address || "");
+    setCustomerCity(client.city || "");
+    setCompanyName(client.companyName || "");
+    setBusinessType(client.businessType || "");
+  
+    // Prefill persons array
+    setPersons(
+      client.persons?.map(person => ({
+        fullName: person.name || "",
+        phone: person.phoneNumber || "",
+        email: person.email || "",
+        designation: person.designation || "",
+        department: person.department || ""
+      })) || []
+    );
+  
+     // Prefill assign section (fix: extract _id if object)
+  setAssignedStaff(
+    typeof client.assignToStaffId === "object"
+      ? client.assignToStaffId._id || ""
+      : client.assignToStaffId || ""
+  );
+
+  setAssignedProduct(
+    typeof client.assignToProductId === "object"
+      ? client.assignToProductId._id || ""
+      : client.assignToProductId || ""
+  );
+  
+    // Prefill image
+    if (client.companyLogo?.url) {
+      setImagePreview(client.companyLogo.url);
+      setImage([client.companyLogo.url]); // keep array for preview loop
+    } else {
+      setImagePreview(null);
+      setImage([]);
+    }
+  
+    setIsSliderOpen(true); // Open the form modal
+    console.log("Editing Client Data", client);
+  };
+  
+  // Delete Customer
+const handleDelete = async (id) => {
+  const swalWithTailwindButtons = Swal.mixin({
+    customClass: {
+      actions: "space-x-2", // ensures gap between buttons
+      confirmButton:
+        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+      cancelButton:
+        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+    },
+    buttonsStyling: false,
+  });
+
+  swalWithTailwindButtons
+    .fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    })
+    .then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = userInfo?.token;
+          if (!token) {
+            toast.error("Authorization token missing!");
+            return;
+          }
+
+          await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/clients/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          // Update UI after deletion
+          setCustomerData(customerList.filter((p) => p._id !== id));
+
+          swalWithTailwindButtons.fire(
+            "Deleted!",
+            "Customer deleted successfully.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Delete error:", error);
+          swalWithTailwindButtons.fire(
+            "Error!",
+            "Failed to delete Customer.",
+            "error"
+          );
+        }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire(
+          "Cancelled",
+          "Customer is safe 🙂",
+          "error"
+        );
+      }
+    });
+};
+
+   
+
 
   // Show loading spinner
   if (loading) {
@@ -199,6 +316,8 @@ const CustomerData = () => {
       </div>
     );
   }
+
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -232,7 +351,7 @@ const CustomerData = () => {
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
-            {/* Staff in Table */}
+            {/* Customer Table */}
             <div className="mt-4 flex flex-col gap-[14px] pb-14">
               {customerList.map((client, index) => (
                 <div
@@ -305,7 +424,7 @@ const CustomerData = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-newPrimary">Add Client</h2>
+              <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Edit Client" : "Add Client"}</h2>
               <button
                 className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
                 onClick={() => setIsSliderOpen(false)}
@@ -503,20 +622,14 @@ const CustomerData = () => {
                     hover:file:bg-primaryDark
                     file:transition-colors file:duration-200"
                 />
-                {image.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {image.map((img, index) => (
-                      <img key={index} src={img} alt={`Upload ${index}`} className="w-20 h-20 object-cover rounded" />
-                    ))}
-                  </div>
-                )}
+                
               </div>
 
                {/* Image Preview */}
 
                {imagePreview && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo</h3>
                         <div className="relative group w-48 h-32">
                           <img
                             src={imagePreview}
@@ -544,7 +657,7 @@ const CustomerData = () => {
                   className="bg-newPrimary text-white px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
                   onClick={handleSave}
                 >
-                  Save Customer
+                 {isEdit ? "Update Client" : "Save Client"}
                 </button>
               </div>
             </div>

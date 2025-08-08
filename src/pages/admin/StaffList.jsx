@@ -3,6 +3,8 @@ import { PuffLoader } from "react-spinners";
 import gsap from "gsap";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+
 
 const StaffList = () => {
   const [staffList, setStaffList] = useState([]);
@@ -196,17 +198,38 @@ const StaffList = () => {
     setIsSliderOpen(true);
   };
 
-  //Delete Staff 
-  const handleDelete = async (id) => {
-      if (window.confirm("Are you sure you want to delete this product?")) {
+ // Delete Staff
+const handleDelete = async (id) => {
+  const swalWithTailwindButtons = Swal.mixin({
+    customClass: {
+      actions: "space-x-2", // gap between buttons
+      confirmButton:
+        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+      cancelButton:
+        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+    },
+    buttonsStyling: false,
+  });
+
+  swalWithTailwindButtons
+    .fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    })
+    .then(async (result) => {
+      if (result.isConfirmed) {
         try {
           const token = userInfo?.token;
-    
           if (!token) {
             toast.error("Authorization token missing!");
             return;
           }
-    
+
           await axios.delete(
             `${import.meta.env.VITE_API_BASE_URL}/staff/${id}`,
             {
@@ -215,15 +238,33 @@ const StaffList = () => {
               },
             }
           );
-    
+
+          // Update UI
           setStaffList(staffList.filter((p) => p._id !== id));
-          toast.error("Product deleted successfully.");
+
+          swalWithTailwindButtons.fire(
+            "Deleted!",
+            "Staff deleted successfully.",
+            "success"
+          );
         } catch (error) {
           console.error("Delete error:", error);
-          toast.error("Failed to delete product.");
+          swalWithTailwindButtons.fire(
+            "Error!",
+            "Failed to delete staff.",
+            "error"
+          );
         }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire(
+          "Cancelled",
+          "Staff is safe 🙂",
+          "error"
+        );
       }
-    };
+    });
+};
+
   
 
   // Show loading spinner
