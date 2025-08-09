@@ -4,25 +4,38 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AddMeeting = () => {
-  // State for the modal
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customerList, setCustomerList] = useState([]);
-
+  const [meetings, setMeetings] = useState([
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Follow Up Required" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Not Interested" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "All Ready Installed" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Phone Number Responding" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "All Ready Installed" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Follow Up Required" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Not Interested" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Phone Number Responding" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Follow Up Required" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "All Ready Installed" },
+    { logo: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y", companyName: "John Doe", person: "Social", products: "Zain", status: "Phone Number Responding" },
+  ]);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [companyName, setCompanyName] = useState("");
   const [personName, setPersonName] = useState("");
   const [designation, setDesignation] = useState("");
   const [products, setProducts] = useState("");
   const [followUpStatus, setFollowUpStatus] = useState("Follow Up Required");
-  const [nextFollowUpDate, setNextFollowUpDate] = useState("Tue 29 Jul, 2025");
-  const [nextFollowUpTime, setNextFollowUpTime] = useState("11:00 am");
+  const [nextFollowUpDate, setNextFollowUpDate] = useState("Sat 09 Aug, 2025");
+  const [nextFollowUpTime, setNextFollowUpTime] = useState("11:36 AM");
   const [nextVisitDetails, setNextVisitDetails] = useState("");
   const [detailsOption, setDetailsOption] = useState("Send Profile");
   const [referenceProvidedBy, setReferenceProvidedBy] = useState("");
   const [referToStaff, setReferToStaff] = useState("");
   const [contactMethod, setContactMethod] = useState("By Visit");
 
-  // Fetch Customer Data
+   
+
   const fetchCustomerData = useCallback(async () => {
     try {
       setLoading(true);
@@ -44,36 +57,71 @@ const AddMeeting = () => {
     fetchCustomerData();
   }, [fetchCustomerData]);
 
-  // Handle opening the modal
   const handleAddClick = () => {
+    setSelectedMeeting(null);
     setShowModal(true);
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Simulate saving data
-    setTimeout(() => {
-      toast.success("Meeting added successfully!");
-      setShowModal(false);
-      setLoading(false);
-    }, 1000);
-  };
-
-  // Handle closing the modal
-  const handleCloseModal = () => {
-    console.log("Closing modal");
-    setShowModal(false);
-    // Reset form fields
     setCompanyName("");
     setPersonName("");
     setDesignation("");
     setProducts("");
     setFollowUpStatus("Follow Up Required");
-    setNextFollowUpDate("Tue 29 Jul, 2025");
-    setNextFollowUpTime("11:00 am");
+    setNextFollowUpDate("Sat 09 Aug, 2025");
+    setNextFollowUpTime("11:36 AM");
+    setNextVisitDetails("");
+    setDetailsOption("Send Profile");
+    setReferenceProvidedBy("");
+    setReferToStaff("");
+    setContactMethod("By Visit");
+  };
+
+  const handleEditClick = (meeting) => {
+    setSelectedMeeting(meeting);
+    setCompanyName(meeting.companyName);
+    setPersonName(meeting.person);
+    setProducts(meeting.products);
+    setFollowUpStatus(meeting.status);
+    setShowModal(true);
+  };
+
+  const handleDeleteClick = (index) => {
+    setMeetings(meetings.filter((_, i) => i !== index));
+    toast.success("Meeting deleted successfully!");
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    setTimeout(() => {
+      const newMeeting = {
+        logo: "https://via.placeholder.com/40",
+        companyName,
+        personName,
+        products,
+        status: followUpStatus,
+      };
+      if (selectedMeeting) {
+        setMeetings(meetings.map((m, i) => i === meetings.indexOf(selectedMeeting) ? newMeeting : m));
+        toast.success("Meeting updated successfully!");
+      } else {
+        setMeetings([...meetings, newMeeting]);
+        toast.success("Meeting added successfully!");
+      }
+      setShowModal(false);
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedMeeting(null);
+    setCompanyName("");
+    setPersonName("");
+    setDesignation("");
+    setProducts("");
+    setFollowUpStatus("Follow Up Required");
+    setNextFollowUpDate("Sat 09 Aug, 2025");
+    setNextFollowUpTime("11:36 AM");
     setNextVisitDetails("");
     setDetailsOption("Send Profile");
     setReferenceProvidedBy("");
@@ -91,9 +139,8 @@ const AddMeeting = () => {
 
   return (
     <div className="container mx-auto px-4 py-10 min-h-screen">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Meetings</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Meeting Details</h1>
         <button
           onClick={handleAddClick}
           className="bg-purple-600 text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-purple-700 transition-all"
@@ -103,12 +150,74 @@ const AddMeeting = () => {
         </button>
       </div>
 
-      {/* Modal for Add Meeting */}
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="p-4">
+          {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Meeting Details</h2> */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-white">
+                  <th className="px-4 py-2 text-left text-gray-900">Logo</th>
+                  <th className="px-4 py-2 text-left text-gray-900">Company Name</th>
+                  <th className="px-4 py-2 text-left text-gray-900">Person</th>
+                  <th className="px-4 py-2 text-left text-gray-900">Products</th>
+                  <th className="px-4 py-2 text-left text-gray-900">Status</th>
+                  <th className="px-4 py-2 text-left text-gray-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {meetings.map((meeting, index) => (
+                  <tr key={index} className="border-t">
+                    <td className="px-4 py-2">
+                      <img src={meeting.logo} alt="Logo" className="w-10 h-10 rounded-full" />
+                    </td>
+                    <td className="px-4 py-2">{meeting.companyName}</td>
+                    <td className="px-4 py-2">{meeting.person}</td>
+                    <td className="px-4 py-2">{meeting.products}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-white text-sm ${
+                          meeting.status === "Follow Up Required"
+                            ? "bg-yellow-500"
+                            : meeting.status === "Not Interested"
+                            ? "bg-red-500"
+                            : meeting.status === "All Ready Installed"
+                            ? "bg-green-500"
+                            : "bg-blue-500"
+                        }`}
+                      >
+                        {meeting.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 flex space-x-2">
+                      <button
+                        onClick={() => handleEditClick(meeting)}
+                        className="text-blue-500 hover:text-blue-700 text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-xl shadow-lg w-full max-w-[1400px] flex flex-col max-h-800px]">
+          <div className="bg-white p-4 rounded-xl shadow-lg w-full max-w-[1400px] flex flex-col max-h-[800px]">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Add Meeting</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {selectedMeeting ? "Edit Meeting" : "Add Meeting"}
+              </h2>
               <button
                 onClick={handleCloseModal}
                 className="text-gray-500 hover:text-gray-700 text-2xl focus:outline-none"
@@ -117,7 +226,6 @@ const AddMeeting = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Company Name and Person */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-2 font-medium">Company Name</label>
@@ -149,8 +257,6 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              {/* Rest of your form remains the same */}
-              {/* Designation and Products */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-2 font-medium">Designation</label>
@@ -170,13 +276,12 @@ const AddMeeting = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
                     <option value="">Select</option>
-                    <option value="Product 1">Product 1</option>
+                    <option value="Zain">Zain</option>
                     <option value="Product 2">Product 2</option>
                   </select>
                 </div>
               </div>
 
-              {/* Follow Up Status */}
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Details</label>
                 <div className="flex flex-wrap space-x-4">
@@ -223,7 +328,6 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              {/* Followup and Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-2 font-medium">Next Followup</label>
@@ -232,8 +336,8 @@ const AddMeeting = () => {
                     onChange={(e) => setNextFollowUpDate(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
-                    <option value="Tue 29 Jul, 2025">Tue 29 Jul, 2025</option>
-                    <option value="Wed 30 Jul, 2025">Wed 30 Jul, 2025</option>
+                    <option value="Sat 09 Aug, 2025">Sat 09 Aug, 2025</option>
+                    <option value="Sun 10 Aug, 2025">Sun 10 Aug, 2025</option>
                   </select>
                 </div>
                 <div>
@@ -243,13 +347,12 @@ const AddMeeting = () => {
                     onChange={(e) => setNextFollowUpTime(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600"
                   >
-                    <option value="11:00 am">11:00 am</option>
-                    <option value="12:00 pm">12:00 pm</option>
+                    <option value="11:36 AM">11:36 AM</option>
+                    <option value="12:00 PM">12:00 PM</option>
                   </select>
                 </div>
               </div>
 
-              {/* Next Visit Details */}
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Next Visit Details</label>
                 <input
@@ -261,7 +364,6 @@ const AddMeeting = () => {
                 />
               </div>
 
-              {/* Details Options */}
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Details</label>
                 <div className="flex flex-wrap space-x-4">
@@ -308,7 +410,6 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              {/* Reference Provided By and Refer To Staff */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700 mb-2 font-medium">Reference Provided By</label>
@@ -336,7 +437,6 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              {/* Contact Method */}
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">Contact Method</label>
                 <div className="flex space-x-4">
@@ -373,13 +473,12 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              {/* Save Button */}
               <button
                 type="submit"
                 disabled={loading}
                 className="w-1/4 mx-auto bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md font-semibold transition-all mt-4 block"
               >
-                {loading ? "Saving..." : "Save"}
+                {loading ? "Saving..." : selectedMeeting ? "Update" : "Save"}
               </button>
             </form>
           </div>
