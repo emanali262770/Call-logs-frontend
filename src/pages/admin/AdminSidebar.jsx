@@ -6,7 +6,7 @@ const links = [
   { to: "/admin/products", label: "Products List" },
   { to: "/admin/staff", label: "Staff List" },
   { to: "/admin/customers", label: "Customer Data" },
-  { to: "/admin/promotion", label: "Meeting Details" },
+  { to: "/admin/meetings/add", label: "Meeting Details" },
   { to: "/admin/followup", label: "Follow Up" },
    { to: "/admin/calendar", label: "Calendar" },  
   { to: "/admin/report", label: "Report" },
