@@ -15,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Promotion from "./pages/admin/Promotion";
 import Category from "./pages/admin/Category";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MeetingFollowPage from "./components/Dashboard/followupmodel";
 
 function AppContent() {
   return (
@@ -22,16 +23,17 @@ function AppContent() {
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<MeetingFollowPage/>} />
           <Route path="/signup" element={<Signup />} />
 
           {/* Admin Routes */}
           <Route
             path="/admin/*"
             element={
-              <ProtectedRoute >
+              <ProtectedRoute>
                 <AdminLayout />
-               </ProtectedRoute>
+              </ProtectedRoute>
+               
             }
           >
             <Route index element={<AdminDashboard />} />
@@ -41,6 +43,9 @@ function AppContent() {
             <Route path="customers" element={<CustomerData />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="followup" element={<FollowUp />} />
+            {/* new added meetingup page */}
+            <Route path="meetingup" element={<MeetingFollowPage />} />
+            
             <Route path="products/add" element={<AddProduct />} />
             <Route path="promotion" element={<Promotion />} />
             <Route path="category" element={<Category />} />
