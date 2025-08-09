@@ -23,7 +23,7 @@ function AppContent() {
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<MeetingFollowPage/>} />
+          <Route path="/" element={<Login/>} />
           <Route path="/signup" element={<Signup />} />
 
           {/* Admin Routes */}
