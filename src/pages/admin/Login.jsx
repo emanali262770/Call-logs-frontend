@@ -22,8 +22,11 @@ const Login = () => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
+
         { email, password }
+
       );
+      console.log("Login response:", response.data);
   
       const { token, user } = response.data;
   
