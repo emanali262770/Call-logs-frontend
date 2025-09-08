@@ -11,7 +11,7 @@ const Users = () => {
   const [userList, setUserList] = useState([]);
   const [groupList, setGroupList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [isChangePassword, setIsChangePassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,7 +64,7 @@ const Users = () => {
   const fetchCompanyUser = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/company-users`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/group-users`);
       const result = await response.json();
       console.log("Company User ", result);
       setUserList(result);
@@ -75,7 +75,7 @@ const Users = () => {
     }
   }, []);
 
-    // Fetch users Data
+  // Fetch users Data
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
@@ -108,6 +108,7 @@ const Users = () => {
       number: mobileNumber,
       designation,
       password,
+      groupName: selectedGroup,
     };
 
     console.log("Payload", payload);
@@ -122,14 +123,14 @@ const Users = () => {
       let response;
       if (isEdit && editId) {
         response = await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/company-users/${editId}`,
+          `${import.meta.env.VITE_API_BASE_URL}/group-users/${editId}`,
           payload,
           { headers }
         );
         toast.success("Company User updated successfully!");
       } else {
         response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/company-users`,
+          `${import.meta.env.VITE_API_BASE_URL}/group-users`,
           payload,
           { headers }
         );
@@ -145,6 +146,7 @@ const Users = () => {
       setEmail("");
       setMobileNumber("");
       setDesignation("");
+      setSelectedGroup(""); // reset group
       setPassword("");
     } catch (error) {
       console.error("Error creating company user:", error.response?.data || error.message);
@@ -186,19 +188,24 @@ const Users = () => {
   };
 
   // Edit User
-  const handleEdit = (user) => {
-    setIsChangePassword(false);
-    setIsEdit(true);
-    setEditId(user._id);
-    setSelectedGroup(group.groupList.map(u => u._id) || userList);
-    setName(user.name || "");
-    setEmail(user.email || "");
-    setMobileNumber(user.mobileNumber || "");
-    setDesignation(user.designation || "");
-    setPassword(""); // Password is typically not pre-filled for security
-    setIsSliderOpen(true);
-    console.log("Editing User Data", user);
-  };
+const handleEdit = (user) => {
+  setIsChangePassword(false);
+  setIsEdit(true);
+  setEditId(user._id);
+
+  // ✅ Fix: set single group id
+  setSelectedGroup(user.groupName?._id || "");
+
+  setName(user.name || "");
+  setEmail(user.email || "");
+  setMobileNumber(user.number || ""); // backend field is "number", not "mobileNumber"
+  setDesignation(user.designation || "");
+  setPassword(user.password || ""); // never prefill password
+  setIsSliderOpen(true);
+
+  console.log("Editing User Data", user);
+};
+
 
   // Open Change Password Form
   const handleOpenChangePassword = (user) => {
@@ -335,6 +342,11 @@ const Users = () => {
                   key={index}
                   className="grid grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
                 >
+                  {/* Group */}
+                  <div className="text-sm font-medium text-gray-900">
+                    {user.groupName?.groupName}
+                  </div>
+
                   {/* Name */}
                   <div className="text-sm font-medium text-gray-900">
                     {user.name}
@@ -446,22 +458,22 @@ const Users = () => {
                     <>
 
                       <div>
-                      <label className="block text-gray-700 mb-1">Groups</label>
-                      <select
-                        value={selectedGroup}
-                        onChange={(e) =>
-                          setSelectedGroup(Array.from(e.target.selectedOptions, (option) => option.value))
-                        }
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      >
-                        {groupList.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.groupName || ""}
-                          </option>
-                        ))}
-                      </select>
+                        <label className="block text-gray-700 mb-1">Groups</label>
+                        <select
+                          value={selectedGroup}
+                          onChange={(e) => setSelectedGroup(e.target.value)}
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        >
+                          <option value="">Select Group</option>
+                          {groupList.map((group) => (
+                            <option key={group._id} value={group._id}>
+                              {group.groupName || ""}
+                            </option>
+                          ))}
+                        </select>
 
-                    </div>
+
+                      </div>
                       <div>
                         <label className="block text-gray-700 mb-1">Name</label>
                         <input

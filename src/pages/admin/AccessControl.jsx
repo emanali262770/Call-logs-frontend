@@ -58,26 +58,23 @@ const AssignRights = () => {
   // Fetch Assign Rights Data
   const fetchRights = useCallback(async () => {
     try {
-      setLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/rights`, { headers });
-      if (!res.ok) throw new Error("Failed to fetch rights");
-      const result = await res.json();
-      console.log("Fetched Rights:", result);
-      setAssignRightsList(result);
-    } catch (error) {
-      console.error("Error fetching rights:", error);
-      toast.error("Failed to fetch rights");
-      setAssignRightsList([]);
-    } finally {
-      setLoading(false);
+      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/rights`);
+      // check if data is array or nested
+      console.log("Data ", data);
+      
+      setAssignRightsList(data?.data || []);
+    } catch (err) {
+      console.error("Error fetching rights:", err);
+      setAssignRightsList([]); // fallback safe
     }
-  }, []);
+  });
+
 
   // Fetch Group Data
   const fetchGroupData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/groups`, { headers });
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/groups`);
       if (!response.ok) throw new Error("Failed to fetch groups");
       const result = await response.json();
       setGroups(result);
@@ -96,7 +93,7 @@ const AssignRights = () => {
   const fetchFunctionalityData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/functionality`, { headers });
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/functionality`);
       if (!response.ok) throw new Error("Failed to fetch functionalities");
       const result = await response.json();
       console.log("Functionalities Response:", result);
@@ -114,7 +111,7 @@ const AssignRights = () => {
   const fetchModuleData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/modules`, { headers });
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/modules`);
       if (!response.ok) throw new Error("Failed to fetch modules");
       const result = await response.json();
       console.log("Modules:", result);
@@ -172,7 +169,7 @@ const AssignRights = () => {
     fetchModuleData();
     fetchFunctionalityData();
     fetchRights();
-  }, [fetchGroupData, fetchModuleData, fetchFunctionalityData, fetchRights]);
+  }, [fetchGroupData, fetchModuleData, fetchFunctionalityData]);
 
 
 
@@ -358,7 +355,7 @@ const AssignRights = () => {
     );
   };
 
- 
+
 
   // Show loading spinner
   if (loading) {
@@ -406,42 +403,47 @@ const AssignRights = () => {
             {/* Assign Rights Table */}
             <div className="mt-4 flex flex-col gap-[14px] pb-14">
               {assignRightsList.map((right) => (
-                <div
-                  key={right._id}
-                  className="grid grid-cols-4 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                >
-                  <div className="text-sm font-medium text-gray-900">{right?.group?.groupName}</div>
-                  <div className="text-sm font-semibold text-green-600">{right?.module?.moduleName}</div>
-                  <div className="text-sm text-gray-500">
-                    {right?.functionalities?.map((func) => (
-                      <div key={func._id}>{func.name}</div>
-                    ))}
-
+                <div key={right._id} className="grid grid-cols-4 ...">
+                  <div className="text-sm font-medium text-gray-900">
+                    {right?.group?.groupName}
                   </div>
+                  <div className="text-sm font-semibold text-green-600">
+                    {right?.module?.moduleName || "—"}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {right?.functionalities?.length > 0
+                      ? right.functionalities.map((func) => (
+                        <div key={func._id}>{func.name}</div>
+                      ))
+                      : "—"}
 
+                      {/* Actions */}
                   {userInfo?.isAdmin && (
                     <div className="text-right relative group">
                       <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-                      <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col justify-between">
+                      <div className="absolute right-0 top-6 w-32 h-18 bg-white border border-gray-200 rounded-md shadow-lg 
+                        opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+                        transition-opacity duration-300 z-50 flex flex-col justify-between">
                         <button
-                          onClick={() => handleEdit(right)}
+                          onClick={() => handleEdit(user)}
                           className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
                         >
-                          <FaEdit />
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(right._id)}
+                          onClick={() => handleDelete(user._id)}
                           className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
                         >
-                          <FaTrash />
                           Delete
                         </button>
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
               ))}
+
+
             </div>
           </div>
         </div>
