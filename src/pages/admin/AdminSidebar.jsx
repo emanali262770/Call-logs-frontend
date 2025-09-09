@@ -15,6 +15,7 @@ import {
   FaUserCog,
   FaUsersCog,
   FaSignOutAlt,
+  FaPhone,
 } from "react-icons/fa";
 
 const links = [
@@ -42,45 +43,48 @@ const links = [
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/");
   };
 
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <aside className="bg-white shadow min-h-screen w-16 sm:w-20 md:w-60 flex flex-col py-8 px-2 sm:px-4 justify-between transition-all duration-300">
+    <aside className={`bg-gradient-to-b from-gray-900 to-gray-800 shadow-lg min-h-screen ${isCollapsed ? 'w-20' : 'w-64'} flex flex-col py-6 px-2 justify-between transition-all duration-300 relative`}>
+      {/* Collapse Toggle Button */}
+      <button 
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-20 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-1 z-10 shadow-md"
+      >
+        {isCollapsed ? 
+          <FaChevronDown className="w-4 h-4 transform rotate-90" /> : 
+          <FaChevronUp className="w-4 h-4 transform -rotate-90" />
+        }
+      </button>
+
       {/* Logo / Title */}
       <div>
-        <div className="flex items-center justify-center mb-12 space-x-2 md:space-x-4">
-          <div className="relative">
-            <svg
-              className="w-10 h-10 text-newPrimary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 
-                01-.502 1.21l-2.257 1.13a11.042 11.042 0 
-                005.516 5.516l1.13-2.257a1 1 0 
-                011.21-.502l4.493 1.498a1 1 0 
-                01.684.949V19a2 2 0 01-2 2h-1C9.716 
-                21 3 14.284 3 6V5z"
-              />
-            </svg>
-            <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+        <div className="flex items-center justify-center mb-8 px-2">
+          <div className="relative flex items-center justify-center p-2 bg-newPrimary/20 rounded-lg">
+            <div className="relative p-2 bg-newPrimary rounded-lg">
+              <FaPhone className="w-6 h-6 text-white" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+            </div>
+            {!isCollapsed && (
+              <h1 className="ml-3 text-lg font-bold text-white truncate">
+                Call Logs Dashboard
+              </h1>
+            )}
           </div>
-          <h1 className="hidden md:block text-xl font-bold bg-gradient-to-r from-newPrimary to-primaryDark bg-clip-text text-transparent">
-            Call Logs Dashboard
-          </h1>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-1">
           {links.map((link, idx) =>
             link.children ? (
               <div key={idx}>
@@ -89,34 +93,42 @@ const AdminSidebar = () => {
                   onClick={() =>
                     setOpenDropdown(openDropdown === idx ? null : idx)
                   }
-                  className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-secondary/30 w-full text-left"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-gray-200 font-medium hover:bg-newPrimary/30 w-full text-left transition-all duration-200 group ${
+                    openDropdown === idx ? "bg-newPrimary/20" : ""
+                  }`}
                 >
-                  <span className="text-lg">{link.icon}</span>
-                  <span className="hidden md:block">{link.label}</span>
-                  {openDropdown === idx ? (
-                    <FaChevronUp className="ml-auto w-4 h-4 hidden sm:block" />
-                  ) : (
-                    <FaChevronDown className="ml-auto w-4 h-4 hidden sm:block" />
+                  <span className="text-lg text-newPrimary group-hover:text-white transition-colors">
+                    {link.icon}
+                  </span>
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1">{link.label}</span>
+                      {openDropdown === idx ? (
+                        <FaChevronUp className="w-3 h-3 text-gray-400" />
+                      ) : (
+                        <FaChevronDown className="w-3 h-3 text-gray-400" />
+                      )}
+                    </>
                   )}
                 </button>
 
                 {/* Sub-links */}
-                {openDropdown === idx && (
-                  <div className="ml-6 flex flex-col gap-1 mt-1">
+                {openDropdown === idx && !isCollapsed && (
+                  <div className="ml-6 flex flex-col gap-1 mt-1 border-l-2 border-gray-700 pl-2">
                     {link.children.map((child) => (
                       <NavLink
                         key={child.to}
                         to={child.to}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-1 rounded-md text-sm transition ${
+                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                             isActive
-                              ? "bg-secondary text-white"
-                              : "text-gray-600 hover:bg-secondary/30"
+                              ? "bg-newPrimary/20 text-white border-l-2 border-newPrimary"
+                              : "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
                           }`
                         }
                       >
                         <span className="text-base">{child.icon}</span>
-                        <span className="hidden md:block">{child.label}</span>
+                        <span>{child.label}</span>
                       </NavLink>
                     ))}
                   </div>
@@ -127,16 +139,18 @@ const AdminSidebar = () => {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group ${
                     isActive
-                      ? "bg-secondary text-white"
-                      : "text-gray-700 hover:bg-secondary/30"
+                      ? "bg-newPrimary/20 text-white"
+                      : "text-gray-300 hover:bg-newPrimary/30 hover:text-white"
                   }`
                 }
                 end={link.to === "/admin"}
               >
-                <span className="text-lg">{link.icon}</span>
-                <span className="hidden md:block">{link.label}</span>
+                <span className="text-lg text-newPrimary group-hover:text-white transition-colors">
+                  {link.icon}
+                </span>
+                {!isCollapsed && <span>{link.label}</span>}
               </NavLink>
             )
           )}
@@ -146,10 +160,10 @@ const AdminSidebar = () => {
       {/* Logout */}
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-600 hover:text-white font-semibold transition"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-red-900/30 hover:text-red-400 font-medium transition-all duration-200 group mt-4"
       >
-        <FaSignOutAlt className="text-lg" />
-        <span className="hidden md:block">Logout</span>
+        <FaSignOutAlt className="text-lg group-hover:text-red-400 transition-colors" />
+        {!isCollapsed && <span>Logout</span>}
       </button>
     </aside>
   );
