@@ -296,22 +296,20 @@ const AddMeeting = () => {
                       </div>
                       <div className="text-sm font-medium text-gray-900">{meeting.companyName}</div>
                     </div>
-                    <div className="text-right relative group">
-                      <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-                      <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col">
-                        <button
-                          onClick={() => handleEditClick(meeting)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
-                        >
-                          <FiEdit size={14} /> Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(index)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
-                        >
-                          <FiTrash2 size={14} /> Delete
-                        </button>
-                      </div>
+                    <div className="text-right">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          meeting.status === "Follow Up Required"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : meeting.status === "Not Interested"
+                            ? "bg-red-100 text-red-800"
+                            : meeting.status === "All Ready Installed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {meeting.status}
+                      </span>
                     </div>
                   </div>
                   
@@ -348,39 +346,27 @@ const AddMeeting = () => {
                     <div className="text-xs text-gray-500">Products:</div>
                     <div className="text-sm">{meeting.products}</div>
                     
-                    <div className="text-xs text-gray-500">Status:</div>
-                    <div className="text-sm">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          meeting.status === "Follow Up Required"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : meeting.status === "Not Interested"
-                            ? "bg-red-100 text-red-800"
-                            : meeting.status === "All Ready Installed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {meeting.status}
-                      </span>
-                    </div>
+                    <div className="text-xs text-gray-500">Date:</div>
+                    <div className="text-sm">Sat 09 Aug, 2025</div>
+                    
+                    <div className="text-xs text-gray-500">Time:</div>
+                    <div className="text-sm">11:36 AM</div>
                   </div>
                   
-                  {/* Desktop actions */}
-                  <div className="hidden md:flex justify-end col-span-2 relative group">
-                    <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-                    <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col">
+                  {/* Actions - visible on both mobile and desktop */}
+                  <div className="flex justify-end md:justify-end col-span-1 md:col-span-2 mt-2 md:mt-0">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => handleEditClick(meeting)}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                       >
-                        <FiEdit size={14} /> Edit
+                        <FiEdit size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(index)}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                       >
-                        <FiTrash2 size={14} /> Delete
+                        <FiTrash2 size={16} />
                       </button>
                     </div>
                   </div>

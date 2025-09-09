@@ -4,10 +4,12 @@ import gsap from "gsap";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-
+import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUser, FiPhone, FiMail, FiMapPin, FiBriefcase, FiX } from "react-icons/fi";
 
 const StaffList = () => {
   const [staffList, setStaffList] = useState([]);
+  const [filteredStaffList, setFilteredStaffList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [staffName, setStaffName] = useState("");
@@ -38,6 +40,22 @@ const StaffList = () => {
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   console.log("Admin", userInfo.isAdmin);
+
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = staffList.filter(staff => 
+        staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.number.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredStaffList(filtered);
+    } else {
+      setFilteredStaffList(staffList);
+    }
+  }, [searchQuery, staffList]);
 
   // slider styling 
   useEffect(() => {
@@ -77,6 +95,7 @@ const StaffList = () => {
         }));
 
         setStaffList(mappedStaff);
+        setFilteredStaffList(mappedStaff);
         
       }
     } catch (error) {
@@ -145,6 +164,7 @@ const StaffList = () => {
     setAddress("");
     setNumber("");
     setEmail("");
+    setPassword("");
     setImage(null);
     setImagePreview(null);
     setEditId(null);
@@ -159,7 +179,6 @@ const StaffList = () => {
     toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
   }
 };
-
 
  
   // Image Upload
@@ -241,6 +260,7 @@ const handleDelete = async (id) => {
 
           // Update UI
           setStaffList(staffList.filter((p) => p._id !== id));
+          setFilteredStaffList(filteredStaffList.filter((p) => p._id !== id));
 
           swalWithTailwindButtons.fire(
             "Deleted!",
@@ -265,8 +285,6 @@ const handleDelete = async (id) => {
     });
 };
 
-  
-
   // Show loading spinner
   if (loading) {
     return (
@@ -284,26 +302,43 @@ const handleDelete = async (id) => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">Staff List</h1>
-          <p className="text-gray-500 text-sm">Call Logs Dashboard</p>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Staff List</h1>
+          <p className="text-gray-500 text-sm">Manage your staff members</p>
         </div>
-        <button
-          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark"
-          onClick={handleAddStaff}
-        >
-          + Add Staff
-        </button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search staff..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+            />
+          </div>
+          
+          <button
+            onClick={handleAddStaff}
+            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+          >
+            <FiPlus className="text-lg" />
+            <span>Add Staff</span>
+          </button>
+        </div>
       </div>
 
       {/* Staff Table */}
-      <div className="rounded-xl shadow p-6 border border-gray-100 w-full  overflow-hidden">
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
-          <div className="w-full">
+          <div className="min-w-full">
             {/* Table Headers */}
-            <div className="hidden lg:grid grid-cols-7 gap-20 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Name</div>
               <div>Department</div>
               <div>Designation</div>
@@ -314,81 +349,141 @@ const handleDelete = async (id) => {
             </div>
 
             {/* Staff in Table */}
-            <div className="mt-4 flex flex-col gap-[14px] pb-14">
-              {staffList.map((staff, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-7 items-center gap-20 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                >
-                  {/* Name */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
-                      <img
-                        src={staff.image?.url || "https://via.placeholder.com/40"}
-                        alt="Staff"
-                        className="w-7 h-7 object-cover rounded-full"
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {staff.name}
-                    </span>
-                  </div>
-
-                  {/* Department */}
-                  <div className="text-sm text-gray-500">{staff.department}</div>
-
-                  {/* Designation */}
-                  <div className="text-sm text-gray-500">{staff.designation}</div>
-
-                  {/* Address */}
-                  <div className="text-sm font-semibold text-green-600">{staff.address}</div>
-
-                  {/* Number */}
-                  <div className="text-sm font-semibold text-green-600">{staff.number}</div>
-
-                  {/* Email */}
-                  <div className="text-sm font-semibold text-green-600">{staff.email}</div>
-
-                  {/* Actions */}
-                  {userInfo?.isAdmin && (
-                    <div className="text-right relative group">
-                      <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-
-                      {/* Dropdown */}
-                      <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
-                  opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-                  transition-opacity duration-300 z-50 flex flex-col justify-between">
-                        <button
-                          onClick={() => handleEdit(staff)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(staff._id)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
-                          Delete
-                        </button>
+            <div className="mt-4 flex flex-col gap-3">
+              {filteredStaffList.length > 0 ? (
+                filteredStaffList.map((staff, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  >
+                    {/* Mobile view header */}
+                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                          <img
+                            src={staff.image?.url || "https://via.placeholder.com/40"}
+                            alt="Staff"
+                            className="w-7 h-7 object-cover rounded-full"
+                          />
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {staff.name}
+                        </div>
                       </div>
                     </div>
-                  )}
+                    
+                    {/* Desktop view cells */}
+                    <div className="hidden md:flex items-center gap-3">
+                      <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                        <img
+                          src={staff.image?.url || "https://via.placeholder.com/40"}
+                          alt="Staff"
+                          className="w-7 h-7 object-cover rounded-full"
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {staff.name}
+                      </span>
+                    </div>
+
+                    {/* Department */}
+                    <div className="hidden md:flex items-center text-sm text-gray-500">
+                      <FiBriefcase className="mr-2 text-gray-400" />
+                      {staff.department}
+                    </div>
+
+                    {/* Designation */}
+                    <div className="hidden md:block text-sm text-gray-500 truncate">{staff.designation}</div>
+
+                    {/* Address */}
+                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                      <FiMapPin className="mr-2 text-gray-400" />
+                      {staff.address}
+                    </div>
+
+                    {/* Number */}
+                    <div className="hidden md:flex items-center text-sm text-gray-500">
+                      <FiPhone className="mr-2 text-gray-400" />
+                      {staff.number}
+                    </div>
+
+                    {/* Email */}
+                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                      <FiMail className="mr-2 text-gray-400" />
+                      {staff.email}
+                    </div>
+
+                    {/* Mobile view content */}
+                    <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
+                      <div className="text-xs text-gray-500">Department:</div>
+                      <div className="text-sm flex items-center">
+                        <FiBriefcase className="mr-1 text-gray-400" size={14} />
+                        {staff.department}
+                      </div>
+                      
+                      <div className="text-xs text-gray-500">Designation:</div>
+                      <div className="text-sm">{staff.designation}</div>
+                      
+                      <div className="text-xs text-gray-500">Address:</div>
+                      <div className="text-sm flex items-center">
+                        <FiMapPin className="mr-1 text-gray-400" size={14} />
+                        {staff.address}
+                      </div>
+                      
+                      <div className="text-xs text-gray-500">Number:</div>
+                      <div className="text-sm flex items-center">
+                        <FiPhone className="mr-1 text-gray-400" size={14} />
+                        {staff.number}
+                      </div>
+                      
+                      <div className="text-xs text-gray-500">Email:</div>
+                      <div className="text-sm flex items-center">
+                        <FiMail className="mr-1 text-gray-400" size={14} />
+                        {staff.email}
+                      </div>
+                    </div>
+                    
+                    {/* Actions - visible on both mobile and desktop */}
+                    {userInfo?.isAdmin && (
+                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(staff)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(staff._id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No staff members found
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
       </div>
-
 
       {/* Slider */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
           <div
             ref={sliderRef}
-            className="w-1/3 bg-white p-6 h-full overflow-y-auto shadow-lg">
-            <div className="flex justify-between items-center mb-4">
+            className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
+            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Update Staff" : "Add a New Staff"}</h2>
               <button
-                className="text-gray-500 hover:text-gray-700"
+                className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
                 onClick={() => {
                     setIsSliderOpen(false);
                     setIsEdit(false);
@@ -397,155 +492,181 @@ const handleDelete = async (id) => {
                     setImagePreview(null);
                   }}
               >
-                ×
+                &times;
               </button>
             </div>
-            <div>
-              <div className="mb-4">
-               
-                <label className="block text-gray-700">Name {}
-                <span className="text-newPrimary">*</span></label>
-                <input
-                  type="text"
-                  value={staffName}
-                  onChange={(e) => setStaffName(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
+            <div className="p-4 md:p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Name <span className="text-newPrimary">*</span></label>
+                <div className="relative">
+                  <FiUser className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={staffName}
+                    onChange={(e) => setStaffName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter staff name"
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Department {}
-                <span className="text-newPrimary">*</span></label>
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Department <span className="text-newPrimary">*</span></label>
+                <div className="relative">
+                  <FiBriefcase className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter department"
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Designation {}
-                <span className="text-newPrimary">*</span></label>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Designation <span className="text-newPrimary">*</span></label>
                 <input
                   type="text"
                   value={designation}
                   onChange={(e) => setDesignation(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                  placeholder="Enter designation"
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Address {}
-                <span className="text-newPrimary">*</span></label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Address <span className="text-newPrimary">*</span></label>
+                <div className="relative">
+                  <FiMapPin className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter address"
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Number {}
-                <span className="text-newPrimary">*</span></label>
-                <input
-                  type="text"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Number <span className="text-newPrimary">*</span></label>
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter phone number"
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Email {}
-                <span className="text-newPrimary">*</span></label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Email <span className="text-newPrimary">*</span></label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter email address"
+                  />
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-gray-700">Password {}
-                <span className="text-newPrimary">*</span></label>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Password <span className="text-newPrimary">*</span></label>
                 <input
-                  type="text"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                  placeholder="Enter password"
                 />
               </div>
               
               {/* Image Upload */}
-              <div className="mb-10">
-                    <label className="block text-gray-700 mb-4 ">
-                      Staff Image {}
-                      <span className="text-newPrimary">*</span>
-                    </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                      <div className="space-y-1 text-center">
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
-                          stroke="currentColor"
-                          fill="none"
-                          viewBox="0 0 48 48"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <div className="flex text-sm text-gray-600 justify-center">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-newPrimary hover:text-newPrimary focus-within:outline-none"
-                          >
-                            <span>Upload files</span>
-                            <input
-                              id="file-upload"
-                              name="file-upload"
-                              type="file"
-                              onChange={handleImageUpload}
-                              className="sr-only"
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 10MB
-                        </p>
-                      </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Staff Image <span className="text-newPrimary">*</span>
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-newPrimary hover:text-newPrimary focus-within:outline-none"
+                      >
+                        <span>Upload files</span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          onChange={handleImageUpload}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
                     </div>
-
-                    {/* Image Preview */}
-
-                    {imagePreview && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
-                        <div className="relative group w-48 h-32">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover rounded-md border border-gray-200"
-                          />
-                          <button
-                            onClick={removeImage}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
+                    <p className="text-xs text-gray-500">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
                   </div>
-              <button
-                className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 w-full"
-                onClick={handleSave}
-              >
-              {isEdit ? "Update Staff" : "Save Staff"}
-              </button>
+                </div>
+
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                    <div className="relative group w-48 h-32">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-md border border-gray-200"
+                      />
+                      <button
+                        onClick={removeImage}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setIsSliderOpen(false);
+                    setIsEdit(false);
+                    setEditId(null);
+                    setImage(null);
+                    setImagePreview(null);
+                  }}
+                  className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-newPrimary text-white px-4 md:px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
+                >
+                  {isEdit ? "Update Staff" : "Save Staff"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
