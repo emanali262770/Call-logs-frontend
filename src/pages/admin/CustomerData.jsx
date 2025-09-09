@@ -1,15 +1,16 @@
 import React, { useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
-import axios from 'axios'
+import axios from 'axios';
 import { PuffLoader } from "react-spinners";
 import Swal from "sweetalert2";
+import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUser, FiPhone, FiMapPin, FiBriefcase, FiMail } from "react-icons/fi";
 
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [staffMembers, setStaffMember] = useState([]);
   const [productList, setProductList] = useState([]);
-
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -20,65 +21,82 @@ const CustomerData = () => {
   const [persons, setPersons] = useState([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
-  const [image, setImage] = useState([]);
+  const [image, setImage] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(true)
-  const [imagePreview, setImagePreview] = useState(null);;
+  const [loading, setLoading] = useState(true);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddCustomer = () => {
     setIsSliderOpen(true);
   };
 
-
   // Token
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("Admin", userInfo.isAdmin);
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
-  //  Fetch Customer Data
+  // Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/clients`);
       const result = await response.json();
-      console.log("Clients ", result);
-
-
-      // Use result.data if your API wraps the array inside `data`
-      setCustomerData(result || []);
+      setCustomerData(result);
+      setFilteredCustomers(result);
     } catch (error) {
-      console.error("Error fetching staff data:", error);
+      console.error("Error fetching customer data:", error);
+      toast.error("Failed to fetch customer data");
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   }, []);
-
-  console.log("Customer", customerList);
-
 
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
 
-  console.log("Customer Data", customerList);
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredCustomers(customerList);
+    } else {
+      const filtered = customerList.filter(customer => 
+        customer.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.businessType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.persons?.some(person => 
+          person.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          person.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          person.department?.toLowerCase().includes(searchQuery.toLowerCase())
+        ) ||
+        (customer.assignToStaffId && typeof customer.assignToStaffId === 'object' && 
+          customer.assignToStaffId.username?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (customer.assignToProductId && typeof customer.assignToProductId === 'object' && 
+          customer.assignToProductId.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setFilteredCustomers(filtered);
+    }
+  }, [searchQuery, customerList]);
 
-
-
-  //  Fetch Staff Member Data
+  // Fetch Staff and Product Data
   const fetchAssignedData = useCallback(async () => {
     try {
       setLoading(true);
-      const staffRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/staff`);
-      const productRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products`);
+      const [staffRes, productRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/staff`),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/products`),
+      ]);
       const staff = await staffRes.json();
       const product = await productRes.json();
-      setStaffMember(staff.data);
-      setProductList(product.data);
-
+      setStaffMember(staff.data || []);
+      setProductList(product.data || []);
     } catch (error) {
-      console.error("Error fetching staff data:", error);
+      console.error("Error fetching assigned data:", error);
+      toast.error("Failed to fetch staff/product data");
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(false);
     }
   }, []);
 
@@ -86,12 +104,7 @@ const CustomerData = () => {
     fetchAssignedData();
   }, [fetchAssignedData]);
 
-
-
-  // console.log("Product List ", productList);
-  // console.log("Staff List  ", staffMembers);
-
-  // Customer Data Saved
+  // Save Customer Data
   const handleSave = async () => {
     const formData = new FormData();
     formData.append("email", customerEmail);
@@ -109,57 +122,51 @@ const CustomerData = () => {
       formData.append(`persons[${index}].department`, person.department);
     });
 
-
     formData.append("assignToStaffId", assignedStaff);
     formData.append("assignToProductId", assignedProduct);
 
     if (image) {
-      formData.append("companyLogo", image); // Correct
+      formData.append("companyLogo", image);
     }
 
-    console.log("Form Data", formData);
-
     try {
-      const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
       const headers = {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${userInfo?.token}`,
         "Content-Type": "multipart/form-data",
       };
 
       if (isEdit && editId) {
-        await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/clients/${editId}`,
-          formData,
-          { headers }
-        );
+        await axios.put(`${import.meta.env.VITE_API_BASE_URL}/clients/${editId}`, formData, { headers });
         toast.success("✅ Customer updated successfully");
       } else {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/clients`,
-          formData,
-          { headers }
-        );
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/clients`, formData, { headers });
         toast.success("✅ Customer added successfully");
       }
 
-      // Reset fields
+      // Reset form
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+      setCustomerCity("");
+      setCompanyName("");
+      setBusinessType("");
+      setPersons([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
+      setAssignedStaff("");
+      setAssignedProduct("");
       setImage(null);
       setImagePreview(null);
       setEditId(null);
       setIsEdit(false);
       setIsSliderOpen(false);
 
-      // Refresh list
       fetchCustomerData();
-
     } catch (error) {
       console.error(error);
-      toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
+      toast.error(`❌ ${isEdit ? "Update" : "Add"} customer failed`);
     }
   };
 
-
-  //  Image Upload
+  // Image Upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -168,28 +175,29 @@ const CustomerData = () => {
     }
   };
 
-  // Image Remove 
+  // Remove Image
   const removeImage = () => {
+    setImage(null);
     setImagePreview(null);
   };
 
-
+  // Add Person
   const handleAddPerson = () => {
     setPersons([...persons, { fullName: "", phone: "", email: "", designation: "", department: "" }]);
   };
 
+  // Update Person
   const handlePersonChange = (index, field, value) => {
     const newPersons = [...persons];
     newPersons[index][field] = value;
     setPersons(newPersons);
   };
 
-  // Open the edit modal and populate the form
+  // Edit Customer
   const handleEdit = (client) => {
     setIsEdit(true);
-    setEditId(client._id); // Save client ID for update
+    setEditId(client._id);
 
-    // Prefill customer section
     setCustomerEmail(client.email || "");
     setCustomerPhone(client.mobileNumber || "");
     setCustomerAddress(client.address || "");
@@ -197,48 +205,39 @@ const CustomerData = () => {
     setCompanyName(client.companyName || "");
     setBusinessType(client.businessType || "");
 
-    // Prefill persons array
     setPersons(
-      client.persons?.map(person => ({
+      client.persons?.map((person) => ({
         fullName: person.name || "",
         phone: person.phoneNumber || "",
         email: person.email || "",
         designation: person.designation || "",
-        department: person.department || ""
-      })) || []
+        department: person.department || "",
+      })) || [{ fullName: "", phone: "", email: "", designation: "", department: "" }]
     );
 
-    // Prefill assign section (fix: extract _id if object)
     setAssignedStaff(
-      typeof client.assignToStaffId === "object"
-        ? client.assignToStaffId._id || ""
-        : client.assignToStaffId || ""
+      typeof client.assignToStaffId === "object" ? client.assignToStaffId?._id || "" : client.assignToStaffId || ""
     );
-
     setAssignedProduct(
-      typeof client.assignToProductId === "object"
-        ? client.assignToProductId._id || ""
-        : client.assignToProductId || ""
+      typeof client.assignToProductId === "object" ? client.assignToProductId?._id || "" : client.assignToProductId || ""
     );
 
-    // Prefill image
     if (client.companyLogo?.url) {
       setImagePreview(client.companyLogo.url);
-      setImage([client.companyLogo.url]); // keep array for preview loop
+      setImage(null); // Reset file input for editing
     } else {
       setImagePreview(null);
-      setImage([]);
+      setImage(null);
     }
 
-    setIsSliderOpen(true); // Open the form modal
-    console.log("Editing Client Data", client);
+    setIsSliderOpen(true);
   };
 
   // Delete Customer
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
-        actions: "space-x-2", // ensures gap between buttons
+        actions: "space-x-2",
         confirmButton:
           "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
         cancelButton:
@@ -266,103 +265,93 @@ const CustomerData = () => {
               return;
             }
 
-            await axios.delete(
-              `${import.meta.env.VITE_API_BASE_URL}/clients/${id}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
+            await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/clients/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-            // Update UI after deletion
             setCustomerData(customerList.filter((p) => p._id !== id));
+            setFilteredCustomers(filteredCustomers.filter((p) => p._id !== id));
 
-            swalWithTailwindButtons.fire(
-              "Deleted!",
-              "Customer deleted successfully.",
-              "success"
-            );
+            swalWithTailwindButtons.fire("Deleted!", "Customer deleted successfully.", "success");
           } catch (error) {
             console.error("Delete error:", error);
-            swalWithTailwindButtons.fire(
-              "Error!",
-              "Failed to delete Customer.",
-              "error"
-            );
+            swalWithTailwindButtons.fire("Error!", "Failed to delete Customer.", "error");
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          swalWithTailwindButtons.fire(
-            "Cancelled",
-            "Customer is safe 🙂",
-            "error"
-          );
+          swalWithTailwindButtons.fire("Cancelled", "Customer is safe 🙂", "error");
         }
       });
   };
 
-
-
-
-  // Show loading spinner
+  // Loading Spinner
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <PuffLoader
-            height="150"
-            width="150"
-            radius={1}
-            color="#00809D"
-          />
+          <PuffLoader height="150" width="150" radius={1} color="#00809D" />
         </div>
       </div>
     );
   }
 
-
-
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">Customer List</h1>
-          <p className="text-gray-500 text-sm">Call Logs Dashboard</p>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Customer List</h1>
+          <p className="text-gray-500 text-sm">Manage your customer database</p>
         </div>
-        <button
-          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
-          onClick={handleAddCustomer}
-        >
-          + Add Customer
-        </button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+            />
+          </div>
+          
+          <button
+            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+            onClick={handleAddCustomer}
+          >
+            <FiPlus className="text-lg" />
+            <span>Add Customer</span>
+          </button>
+        </div>
       </div>
 
-
       {/* Customer Table */}
-      <div className="rounded-xl shadow p-6 border border-gray-100 w-full  overflow-hidden">
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
-          <div className="w-full">
-            {/* Table Headers */}
-            <div className="hidden lg:grid grid-cols-8 gap-4 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+          <div className="min-w-full">
+            {/* Table headers - hidden on mobile */}
+            <div className="hidden md:grid grid-cols-8 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Name</div>
               <div>Email</div>
               <div>Designation</div>
               <div>Address</div>
               <div>Department</div>
-              <div>Assign to Staff</div>
-              <div>Assign Product</div>
+              <div>Assigned Staff</div>
+              <div>Assigned Product</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
-            {/* Customer Table */}
-            <div className="mt-4 flex flex-col gap-[14px] pb-14">
-              {Array.isArray(customerList) &&
-                customerList.map((client, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-8 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                  >
-                    {/* Name */}
+            <div className="mt-4 flex flex-col gap-3">
+              {filteredCustomers.map((client, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-8 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                >
+                  {/* Mobile view header */}
+                  <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
                         <img
@@ -371,68 +360,137 @@ const CustomerData = () => {
                           className="w-7 h-7 object-cover rounded-full"
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {client.companyName}
-                      </span>
+                      <div className="text-sm font-medium text-gray-900">{client.companyName}</div>
                     </div>
-
-                    {/* Email */}
-                    <div className="text-sm font-semibold text-green-600">{client.email}</div>
-
-                    {/* Designation (first person if exists) */}
-                    <div className="text-sm text-gray-500">
-                      {client?.persons?.[0]?.designation || "—"}
-                    </div>
-
-                    {/* Address */}
-                    <div className="text-sm font-semibold text-green-600">{client.address}</div>
-
-                    {/* Department */}
-                    <div className="text-sm text-gray-500">{client.department || "—"}</div>
-
-                    {/* Assign to Staff */}
-                    <div className="text-sm text-gray-500">
-                      {client?.assignToStaffId?.username || "—"}
-                    </div>
-
-                    {/* Assign Product */}
-                    <div className="text-sm text-gray-500">
-                      {client?.assignToProductId?.name || "—"}
-                    </div>
-
-                    {/* Actions */}
                     {userInfo?.isAdmin && (
                       <div className="text-right relative group">
                         <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-
-                        {/* Dropdown */}
-                        <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg 
-            opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-            transition-opacity duration-300 z-50 flex flex-col justify-between">
+                        <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col">
                           <button
                             onClick={() => handleEdit(client)}
                             className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
                           >
-                            Edit
+                            <FiEdit size={14} /> Edit
                           </button>
                           <button
                             onClick={() => handleDelete(client._id)}
                             className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
                           >
-                            Delete
+                            <FiTrash2 size={14} /> Delete
                           </button>
                         </div>
                       </div>
                     )}
                   </div>
-                ))}
-
+                  
+                  {/* Desktop view cells */}
+                  <div className="hidden md:flex items-center gap-3">
+                    <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                      <img
+                        src={client.companyLogo?.url || "https://via.placeholder.com/40"}
+                        alt="Company Logo"
+                        className="w-7 h-7 object-cover rounded-full"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 truncate">{client.companyName}</span>
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-green-600 truncate">
+                    <FiMail className="mr-2 text-gray-400" size={14} />
+                    {client.email || "N/A"}
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                    <FiBriefcase className="mr-2 text-gray-400" size={14} />
+                    {client.persons?.[0]?.designation || "N/A"}
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                    <FiMapPin className="mr-2 text-gray-400" size={14} />
+                    {client.address || "N/A"}
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                    <FiUser className="mr-2 text-gray-400" size={14} />
+                    {client.persons?.[0]?.department || "N/A"}
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                    <FiUser className="mr-2 text-gray-400" size={14} />
+                    {client?.assignToStaffId?.username || "N/A"}
+                  </div>
+                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                    <FiBriefcase className="mr-2 text-gray-400" size={14} />
+                    {client?.assignToProductId?.name || "N/A"}
+                  </div>
+                  
+                  {/* Mobile view content */}
+                  <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-xs text-gray-500">Email:</div>
+                    <div className="text-sm flex items-center">
+                      <FiMail className="mr-1 text-gray-400" size={14} />
+                      {client.email || "N/A"}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">Designation:</div>
+                    <div className="text-sm flex items-center">
+                      <FiBriefcase className="mr-1 text-gray-400" size={14} />
+                      {client.persons?.[0]?.designation || "N/A"}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">Address:</div>
+                    <div className="text-sm flex items-center">
+                      <FiMapPin className="mr-1 text-gray-400" size={14} />
+                      {client.address || "N/A"}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">Department:</div>
+                    <div className="text-sm flex items-center">
+                      <FiUser className="mr-1 text-gray-400" size={14} />
+                      {client.persons?.[0]?.department || "N/A"}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">Assigned Staff:</div>
+                    <div className="text-sm flex items-center">
+                      <FiUser className="mr-1 text-gray-400" size={14} />
+                      {client?.assignToStaffId?.username || "N/A"}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">Assigned Product:</div>
+                    <div className="text-sm flex items-center">
+                      <FiBriefcase className="mr-1 text-gray-400" size={14} />
+                      {client?.assignToProductId?.name || "N/A"}
+                    </div>
+                  </div>
+                  
+                  {/* Actions - visible on desktop only (mobile actions are in header) */}
+                  {userInfo?.isAdmin && (
+                    <div className="hidden md:flex justify-end">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(client)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(client._id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {filteredCustomers.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  {searchQuery ? "No customers found matching your search" : "No customers available"}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Centered Modal/Slider */}
+      {/* Modal */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -444,7 +502,6 @@ const CustomerData = () => {
               >
                 &times;
               </button>
-
             </div>
             <div className="p-6 space-y-6">
               {/* Customer Section */}
@@ -452,26 +509,26 @@ const CustomerData = () => {
                 <h3 className="text-lg font-semibold mb-4">Customer</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Enter email"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-1">Phone Number</label>
+                    <label className="block text-gray-700 mb-1">Business Type</label>
                     <input
                       type="text"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      value={businessType}
+                      onChange={(e) => setBusinessType(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Enter phone number"
+                      placeholder="Enter business type"
                     />
                   </div>
                   <div>
+                    <label className="block text-gray-700 mb-1">Company Name</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                      placeholder="Enter company name"
+                    />
+                  </div>
+                   <div>
                     <label className="block text-gray-700 mb-1">Address</label>
                     <input
                       type="text"
@@ -492,24 +549,58 @@ const CustomerData = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Company Name</label>
+                    <label className="block text-gray-700 mb-1">Email</label>
                     <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Enter company name"
+                      placeholder="Enter email"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Business Type</label>
+                    <label className="block text-gray-700 mb-1">Phone Number</label>
                     <input
                       type="text"
-                      value={businessType}
-                      onChange={(e) => setBusinessType(e.target.value)}
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Enter business type"
+                      placeholder="Enter phone number"
                     />
+                  </div>
+                 
+                  {/* Company Logo Upload */}
+                  <div className="col-span-2">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo Upload</h3>
+                    <input
+                      type="file"
+                      onChange={handleImageUpload}
+                      className="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-newPrimary file:text-white
+                        hover:file:bg-primaryDark
+                        file:transition-colors file:duration-200"
+                    />
+                    {imagePreview && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo Preview</h3>
+                        <div className="relative group w-48 h-32">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-md border border-gray-200"
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -519,108 +610,105 @@ const CustomerData = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Person</h3>
                   <button
-                    className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
+                    className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200 flex items-center gap-2"
                     onClick={handleAddPerson}
                   >
-                    + Add New Person
+                    <FiPlus /> Add New Person
                   </button>
                 </div>
-
-                {Array.isArray(persons) &&
-                  persons.map((person, index) => (
-                    <div
-                      key={index}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 last:mb-0"
-                    >
-                      {/* Person Inputs */}
-                      <div>
-                        <label className="block text-gray-700 mb-1">Full Name</label>
-                        <input
-                          type="text"
-                          value={person.fullName}
-                          onChange={(e) => handlePersonChange(index, "fullName", e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter full name"
-                        />
-                      </div>
-                      {/* ... other fields (phone, email, designation, department) */}
+                {persons.map((person, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 last:mb-0">
+                    <div>
+                      <label className="block text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={person.fullName}
+                        onChange={(e) => handlePersonChange(index, "fullName", e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        placeholder="Enter full name"
+                      />
                     </div>
-                  ))}
+                   
+                    <div>
+                      <label className="block text-gray-700 mb-1">Designation</label>
+                      <input
+                        type="text"
+                        value={person.designation}
+                        onChange={(e) => handlePersonChange(index, "designation", e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        placeholder="Enter designation"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-1">Department</label>
+                      <input
+                        type="text"
+                        value={person.department}
+                        onChange={(e) => handlePersonChange(index, "department", e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        placeholder="Enter department"
+                      />
+                    </div>
+                     <div>
+                      <label className="block text-gray-700 mb-1">Phone Number</label>
+                      <input
+                        type="text"
+                        value={person.phone}
+                        onChange={(e) => handlePersonChange(index, "phone", e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={person.email}
+                        onChange={(e) => handlePersonChange(index, "email", e.target.value)}
+                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                        placeholder="Enter email"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Assign to Staff Dropdown */}
-              <div>
-                <label className="block text-gray-700 mb-1">Assign to Staff</label>
-                <select
-                  value={assignedStaff}
-                  onChange={(e) => setAssignedStaff(e.target.value)}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                >
-                  <option value="">Select Staff</option>
-                  {Array.isArray(staffMembers) &&
-                    staffMembers.map((staff) => (
-                      <option key={staff._id} value={staff._id}>
-                        {staff.username}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Assign Product Dropdown */}
-              <div>
-                <label className="block text-gray-700 mb-1">Assign Product</label>
-                <select
-                  value={assignedProduct}
-                  onChange={(e) => setAssignedProduct(e.target.value)}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                >
-                  <option value="">Select Product</option>
-                  {Array.isArray(productList) &&
-                    productList.map((product) => (
-                      <option key={product._id} value={product._id}>
-                        {product.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Image Upload Section */}
+              {/* Assign Section */}
               <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Company Logo Upload</h3>
-                <input
-                  type="file"
-                  onChange={handleImageUpload}
-                  className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-md file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-newPrimary file:text-white
-                    hover:file:bg-primaryDark
-                    file:transition-colors file:duration-200"
-                />
-
-              </div>
-
-              {/* Image Preview */}
-
-              {imagePreview && (
-                <div className="mt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo</h3>
-                  <div className="relative group w-48 h-32">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover rounded-md border border-gray-200"
-                    />
-                    <button
-                      onClick={removeImage}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                <h3 className="text-lg font-semibold mb-4">Assign</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 mb-1">Assign to Staff</label>
+                    <select
+                      value={assignedStaff}
+                      onChange={(e) => setAssignedStaff(e.target.value)}
+                      className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
                     >
-                      ×
-                    </button>
+                      <option value="">Select Staff</option>
+                      {staffMembers.map((staff) => (
+                        <option key={staff._id} value={staff._id}>
+                          {staff.username}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Assign Product</label>
+                    <select
+                      value={assignedProduct}
+                      onChange={(e) => setAssignedProduct(e.target.value)}
+                      className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                    >
+                      <option value="">Select Product</option>
+                      {productList.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
