@@ -1,17 +1,16 @@
-import React, { useEffect,useCallback, useState, useRef } from "react";
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from 'axios'
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { FiEdit, FiTrash, FiSearch, FiX, FiTrendingUp, FiTrendingDown, FiPlus, FiDollarSign, FiBarChart2 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { PuffLoader } from "react-spinners";
 
-
 const ProductsPage = () => {
-
   // State for slider
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [productsByMonths, setProductsByMonths] = useState([]);
   const [orders, setOrders] = useState([]);
   const [formState, setEditFormState] = useState({
@@ -21,43 +20,47 @@ const ProductsPage = () => {
   });
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null); 
-
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
   const [image, setImage] = useState(null);           
   const [imagePreview, setImagePreview] = useState(null); 
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Get User from the LocalStorage
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("Admin", userInfo.isAdmin);
 
+  // Search functionality
+  useEffect(() => {
+    if (searchTerm === "") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchTerm, products]);
 
-
-// slider styling 
+  // slider styling 
   useEffect(() => {
     if (isSliderOpen && sliderRef.current) {
       gsap.fromTo(
         sliderRef.current,
-        { x: "100%", opacity: 0 },  // offscreen right
+        { x: "100%", opacity: 0 },
         {
           x: "0%",
           opacity: 1,
           duration: 1.2,
-          ease: "expo.out",          // smoother easing
+          ease: "expo.out",
         }
       );
     }
   }, [isSliderOpen]);
 
-
-
   // Handlers
   const handleAddProduct = () => {
     setIsSliderOpen(true);
   };
-
-
 
   // Fetch All Products
   const fetchProducts = useCallback(async () => {
@@ -83,9 +86,8 @@ const ProductsPage = () => {
       }
   
       const result = await response.json();
-      console.log("Product Response ", result.data);
-  
       setProducts(result.data);
+      setFilteredProducts(result.data);
   
       setTimeout(() => {
         setLoading(false);
@@ -94,14 +96,11 @@ const ProductsPage = () => {
       console.error("Fetch products error:", err);
       toast.error("Failed to fetch products!");
     }
-  }, []); // ✅ empty dependency array so it doesn't re-create every render
+  }, []);
   
-  // ✅ Only run on mount
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-
 
   // Fetch All Product Add by Month
   const fetchProductsAddMonths = useCallback(async () => {
@@ -126,87 +125,82 @@ const ProductsPage = () => {
       }
   
       const result = await response.json();
-      console.log("ProductsByMonths", result.data);
-  
       setProductsByMonths(result.data);
     } catch (err) {
       console.error("Fetch product analytics error:", err);
       toast.error("Failed to fetch product analytics!");
     }
-  }, []); // no dependencies since nothing dynamic used
+  }, []);
   
   useEffect(() => {
     fetchProductsAddMonths();
   }, [fetchProductsAddMonths]);
 
-  
- // Delete Product
-const handleDelete = async (id) => {
-  const swalWithTailwindButtons = Swal.mixin({
-    customClass: {
-      actions: "space-x-2", // gap between buttons
-      confirmButton:
-        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
-      cancelButton:
-        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
-    },
-    buttonsStyling: false,
-  });
+  // Delete Product
+  const handleDelete = async (id) => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        actions: "space-x-2",
+        confirmButton:
+          "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+        cancelButton:
+          "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+      },
+      buttonsStyling: false,
+    });
 
-  swalWithTailwindButtons
-    .fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, cancel!",
-      reverseButtons: true,
-    })
-    .then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const token = userInfo?.token;
-          if (!token) {
-            toast.error("Authorization token missing!");
-            return;
-          }
-
-          await axios.delete(
-            `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+    swalWithTailwindButtons
+      .fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true,
+      })
+      .then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const token = userInfo?.token;
+            if (!token) {
+              toast.error("Authorization token missing!");
+              return;
             }
-          );
 
-          // Update UI
-          setProducts(products.filter((p) => p._id !== id));
+            await axios.delete(
+              `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
+            setProducts(products.filter((p) => p._id !== id));
+
+            swalWithTailwindButtons.fire(
+              "Deleted!",
+              "Product deleted successfully.",
+              "success"
+            );
+          } catch (error) {
+            console.error("Delete error:", error);
+            swalWithTailwindButtons.fire(
+              "Error!",
+              "Failed to delete product.",
+              "error"
+            );
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
-            "Deleted!",
-            "Product deleted successfully.",
-            "success"
-          );
-        } catch (error) {
-          console.error("Delete error:", error);
-          swalWithTailwindButtons.fire(
-            "Error!",
-            "Failed to delete product.",
+            "Cancelled",
+            "Product is safe 🙂",
             "error"
           );
         }
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        swalWithTailwindButtons.fire(
-          "Cancelled",
-          "Product is safe 🙂",
-          "error"
-        );
-      }
-    });
-};
-
+      });
+  };
 
   // Get Currently Month 
   const getCurrentMonth = () => {
@@ -225,8 +219,6 @@ const handleDelete = async (id) => {
 
         const res = response.data.data;
         setOrders(res)
-        console.log("Order", res);
-        // filtered order list
       } catch (error) {
         console.error("Error fetching orders by month:", error);
         return [];
@@ -236,7 +228,6 @@ const handleDelete = async (id) => {
     fetchOrdersByMonth(month);
   }, []);
 
-
   // Product Save
   const handleSave = async () => {
     const formData = new FormData();
@@ -244,7 +235,7 @@ const handleDelete = async (id) => {
     formData.append("price", formState.price);
   
     if (image) {
-      formData.append("image", image); // New image if uploaded
+      formData.append("image", image);
     }
   
     try {
@@ -257,7 +248,6 @@ const handleDelete = async (id) => {
       let response;
   
       if (isEdit && editId) {
-        // 🔁 Update Existing Product
         response = await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/products/${editId}`,
           formData,
@@ -267,7 +257,6 @@ const handleDelete = async (id) => {
         fetchProducts();
         fetchProductsAddMonths()
       } else {
-        // ➕ Add New Product
         response = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/products`,
           formData,
@@ -278,7 +267,6 @@ const handleDelete = async (id) => {
         fetchProductsAddMonths()
       }
   
-      // Reset form and close slider
       setEditFormState({ name: "", price: "", image: "" });
       setImage(null);
       setImagePreview(null);
@@ -291,21 +279,19 @@ const handleDelete = async (id) => {
       toast.error(`❌ ${isEdit ? "Update" : "Add"} product failed`);
     }
   };
-  
 
   // Image Upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file); // For upload
+      setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result); // For preview
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
-  
 
   const removeImage = () => {
     setImagePreview("");
@@ -317,7 +303,6 @@ const handleDelete = async (id) => {
     return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
   };
 
-
   // Capital 1st letter 
   function capitalizeFirstLetter(string) {
     if (!string) return '';
@@ -327,7 +312,7 @@ const handleDelete = async (id) => {
   // Open the edit modal and populate the form
   const handleEdit = (product) => {
     setIsEdit(true);
-    setEditId(product._id); // save product ID
+    setEditId(product._id);
     setEditFormState({
       name: product.name || "",
       price: product.price || "",
@@ -335,11 +320,7 @@ const handleDelete = async (id) => {
     });
     setImagePreview(product.image?.[0]?.url || "");
     setIsSliderOpen(true);
-    console.log("Edit Data", formState);
-    
   };
-  
-
 
   // Show loading spinner
   if (loading) {
@@ -357,34 +338,143 @@ const handleDelete = async (id) => {
     );
   }
 
+  // Calculate analytics data
+  const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
+  const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+  const totalOrdersCount = orders.length;
+  const confirmedPercent = totalOrdersCount > 0 ? Math.round((totalConfirmed / totalOrdersCount) * 100) : 0;
+  const canceledPercent = totalOrdersCount > 0 ? Math.round((totalCanceled / totalOrdersCount) * 100) : 0;
+  const totalSales = orders.reduce((sum, order) => sum + (order.totalSales || 0), 0);
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Page Header with Add Product Button */}
-      <div className="flex justify-between items-center mb-6">
+      <style>
+        {`
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          .animate-shimmer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.4),
+              transparent
+            );
+            animation: shimmer 1.5s infinite;
+          }
+          .progress-bar-glow {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+          }
+        `}
+      </style>
+      
+      {/* Page Header with Add Product Button and Search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">Products List</h1>
-          <p className="text-gray-500 text-sm">Manage your products inventory</p>
+          <h1 className="text-3xl font-bold text-newPrimary">Manage Products</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage your products inventory</p>
         </div>
-        <button
-          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary transition-colors duration-200 flex items-center"
-          onClick={handleAddProduct}
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Product
-        </button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {/* Search Input */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none  focus:ring-2 focus:ring-newPrimary focus:border-newPrimary w-full shadow-sm"
+              placeholder="Search products..."
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <FiX className="text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+          </div>
+          
+          <button
+            className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+            onClick={handleAddProduct}
+          >
+            <FiPlus className="w-5 h-5 mr-2" />
+            Add Product
+          </button>
+        </div>
+      </div>
+
+      {/* Results count */}
+      {searchTerm && (
+        <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+          Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} matching "{searchTerm}"
+        </div>
+      )}
+
+      {/* Stats Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 rounded-lg bg-blue-100 mr-4">
+              <FiBarChart2 className="text-newPrimarytext-xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm">Total Products</p>
+              <h3 className="text-2xl font-bold text-gray-800">{products.length}</h3>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 rounded-lg bg-green-100 mr-4">
+              <FiDollarSign className="text-green-600 text-xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm">Total Sales</p>
+              <h3 className="text-2xl font-bold text-gray-800">${totalSales.toLocaleString()}</h3>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 rounded-lg bg-purple-100 mr-4">
+              <FiTrendingUp className="text-purple-600 text-xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm">Confirmed Orders</p>
+              <h3 className="text-2xl font-bold text-gray-800">{totalConfirmed}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content with Table and Cards */}
       <div className="flex flex-col lg:flex-row gap-6">
 
         {/* Product List Table */}
-        <div className="rounded-xl shadow p-6  border border-gray-100 w-full lg:w-2/3  overflow-hidden ">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 w-full lg:w-2/3 overflow-hidden">
+        
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
+            <span className="text-sm text-gray-500">{filteredProducts.length} items</span>
+          </div>
+          
           <div className="overflow-x-auto scrollbar-hide">
             <div className="w-full">
               {/* Table Headers */}
-              <div className="hidden lg:grid grid-cols-5 gap-20 bg-gray-50 py-3 px-6  text-xs font-medium text-gray-500 uppercase rounded-lg ">
+              <div className="hidden lg:grid grid-cols-5 gap-4 py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider rounded-lg">
                 <div>Name</div>
                 <div>Price</div>
                 <div>Total Orders</div>
@@ -393,114 +483,144 @@ const handleDelete = async (id) => {
               </div>
 
               {/* Product Rows */}
-              <div className="mt-4 flex flex-col gap-[14px] pb-14">
-                {products.map((product, index) => {
-                  const price = parseCurrency(product.price);
-                  const totalOrders = parseCurrency(product.totalOrders);
-                  const totalSales = price * totalOrders;
+              <div className="mt-4 flex flex-col gap-3 pb-4">
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product, index) => {
+                    const price = parseCurrency(product.price);
+                    const totalOrders = parseCurrency(product.totalOrders);
+                    const totalSales = price * totalOrders;
 
-                  return (
-                    <div
-                      key={index}
-                      className="grid grid-cols-5 items-center gap-20 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                    >
-                      {/* Name */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
-                          <img
-                            src={product.image[0]?.url}
-                            alt="Product Icon"
-                            className="w-7 h-7 object-cover rounded-full"
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {capitalizeFirstLetter(product.name)}
-                        </span>
-                      </div>
-
-                      {/* Price */}
-                      <div className="text-sm text-gray-500">${price.toLocaleString()}</div>
-
-                      {/* Orders */}
-                      <div className="text-sm text-gray-500">{totalOrders} Orders</div>
-
-                      {/* Sales */}
-                      <div className="text-sm font-semibold text-green-600">${totalSales.toLocaleString()}</div>
-
-                      {/* Actions */}
-                      {userInfo?.isAdmin &&
-                        <div className="text-right relative group">
-                          <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-
-                          {/* Dropdown */}
-                          <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
-              opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-              transition-opacity duration-300 z-50 flex flex-col justify-between">
-                            <button
-                              onClick={() => handleEdit(product)}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2">
-                              <FiEdit className="text-base text-blue-400" />
-                              Edit
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(product._id)}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2">
-                              <FiTrash className="text-base text-red-400" />
-                              Delete
-                            </button>
+                    return (
+                      <div
+                        key={index}
+                        className="grid grid-cols-5 items-center gap-4 bg-white p-4 rounded-lg shadow-xs hover:shadow-md transition-all border border-gray-100"
+                      >
+                        {/* Name */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+                            <img
+                              src={product.image[0]?.url}
+                              alt="Product Icon"
+                              className="w-full h-full object-cover"
+                            />
                           </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {capitalizeFirstLetter(product.name)}
+                          </span>
                         </div>
-                      }
-                    </div>
-                  );
-                })}
+
+                        {/* Price */}
+                        <div className="text-sm font-medium text-gray-900">${price.toLocaleString()}</div>
+
+                        {/* Orders */}
+                        <div className="text-sm text-gray-500">{totalOrders} Orders</div>
+
+                        {/* Sales */}
+                        <div className="text-sm font-semibold text-green-600">${totalSales.toLocaleString()}</div>
+
+                        {/* Actions */}
+                        {userInfo?.isAdmin &&
+                          <div className="text-right relative group">
+                            <button className="text-gray-400 hover:text-gray-600 text-xl p-2 rounded-lg hover:bg-gray-100 transition-colors">⋯</button>
+
+                            {/* Dropdown */}
+                            <div className="absolute right-0 top-10 w-32 bg-white border border-gray-200 rounded-lg shadow-lg 
+                opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
+                transition-all duration-300 z-50 flex flex-col overflow-hidden">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-gray-700 flex items-center gap-2 transition-colors">
+                                <FiEdit className="text-blue-500" />
+                                Edit
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(product._id)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-gray-700 flex items-center gap-2 transition-colors">
+                                <FiTrash className="text-red-500" />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
+                    <div className="mb-2 text-4xl">📦</div>
+                    {searchTerm ? 'No products found matching your search' : 'No products available'}
+                  </div>
+                )}
               </div>
             </div>
-
           </div>
         </div>
-
-
 
         {/* Cards Section */}
         <div className="flex flex-col gap-6 w-full lg:w-1/3">
           {/* Monthly Data */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Add by Month</h2>
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+              <FiBarChart2 className="text-blue-500" />
+              Products Added by Month
+            </h2>
             <div className="space-y-4">
               {productsByMonths.map((item, index) => {
                 const count = item.count || 0;
-                // First: Find the maximum count value across all months
                 const maxCount = Math.max(...productsByMonths.map(item => item.count || 0));
                 const percentage = maxCount ? (count / maxCount) * 100 : 0;
-
+                
+                // Color variations for different bars
+                const barColors = [
+                  "from-blue-500 to-blue-600",
+                  "from-purple-500 to-purple-600",
+                  "from-pink-500 to-pink-600",
+                  "from-orange-500 to-orange-600",
+                  "from-green-500 to-green-600",
+                  "from-red-500 to-red-600",
+                ];
+                
+                const colorIndex = index % barColors.length;
+                
                 return (
-                  <div key={index} className="flex items-center">
-                    <span className="w-16 text-gray-600 font-medium">{item.month}</span>
-                    <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${index % 2 === 0
-                          ? "bg-gradient-to-r from-[#FF8F6B] to-[#FF8F6B]"
-                          : "bg-gradient-to-r from-blue-500 to-blue-600"
-                          }`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
+                  <div key={index} className="flex items-center space-x-3">
+                    <span className="w-16 text-gray-600 font-medium text-sm">{item.month.slice(0, 3)}</span>
+                    
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>{count} Products</span>
+                        <span>{Math.round(percentage)}%</span>
+                      </div>
+                      
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden relative">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ease-out 
+                            bg-gradient-to-r ${barColors[colorIndex]} progress-bar-glow`}
+                          style={{ width: `${percentage}%` }}
+                        >
+                          {/* Animated shimmer effect */}
+                          <div className="animate-shimmer"></div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="w-20 text-right text-sm text-gray-700">{count}</span>
                   </div>
                 );
               })}
-
-
             </div>
           </div>
 
-          {/* Analytics with Circular Progress Bar */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Product Sales Analytics (This Month)</h2>
+          {/* Enhanced Analytics Card */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <FiTrendingUp className="text-green-500" />
+                Sales Analytics
+              </h2>
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{month}</span>
+            </div>
 
-            <div className="flex flex-col items-center">
-              <div className="relative w-40 h-40 mb-4">
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative w-40 h-40">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
                   {/* Base Circle */}
                   <circle
@@ -508,112 +628,141 @@ const handleDelete = async (id) => {
                     cy="18"
                     r="15.9155"
                     fill="none"
-                    stroke="#e0e0e0"
+                    stroke="#f3f4f6"
                     strokeWidth="3"
                   />
-
-                  {/* Circle Segments */}
-                  {(() => {
-                    const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
-                    const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
-                    const total = totalConfirmed + totalCanceled;
-
-                    const confirmedPercent = total ? (totalConfirmed / total) * 100 : 0;
-                    const canceledPercent = total ? (totalCanceled / total) * 100 : 0;
-
-                    return (
-                      <>
-                        {/* Confirmed */}
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15.9155"
-                          fill="none"
-                          stroke="#4CAF50"
-                          strokeWidth="3"
-                          strokeDasharray={`${confirmedPercent} 100`}
-                          strokeDashoffset="0"
-                          transform="rotate(-90 18 18)"
-                        />
-                        {/* Canceled */}
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15.9155"
-                          fill="none"
-                          stroke="#F44336"
-                          strokeWidth="3"
-                          strokeDasharray={`${canceledPercent} 100`}
-                          strokeDashoffset={confirmedPercent}
-                          transform="rotate(-90 18 18)"
-                        />
-                      </>
-                    );
-                  })()}
-
-                  {/* Center Text: Total Sales */}
-                  <text x="18" y="20" textAnchor="middle" fontSize="6" fill="#333" fontWeight="bold">
-                    $
-                    {orders.reduce((sum, order) => sum + (order.totalSales || 0), 0).toLocaleString()}
+                  
+                  {/* Confirmed Orders Arc */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke="url(#confirmedGradient)"
+                    strokeWidth="3"
+                    strokeDasharray={`${confirmedPercent} ${100 - confirmedPercent}`}
+                    strokeDashoffset="25"
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                  />
+                  
+                  {/* Canceled Orders Arc */}
+                  {canceledPercent > 0 && (
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="15.9155"
+                      fill="none"
+                      stroke="url(#canceledGradient)"
+                      strokeWidth="3"
+                      strokeDasharray={`${canceledPercent} ${100 - canceledPercent}`}
+                      strokeDashoffset={25 - confirmedPercent}
+                      strokeLinecap="round"
+                      transform="rotate(-90 18 18)"
+                    />
+                  )}
+                  
+                  {/* Center Text */}
+                  <text x="18" y="16" textAnchor="middle" fontSize="4" fill="#6b7280" fontWeight="bold">
+                    Total Sales
                   </text>
+                  <text x="18" y="21" textAnchor="middle" fontSize="6" fill="#1f2937" fontWeight="bold">
+                    ${totalSales.toLocaleString()}
+                  </text>
+                  
+                  {/* Gradients for the arcs */}
+                  <defs>
+                    <linearGradient id="confirmedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                    
+                    <linearGradient id="canceledGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+                  </defs>
                 </svg>
               </div>
+            </div>
 
-              {/* Legend */}
-              <ul className="w-full space-y-2 text-sm">
-                {(() => {
-                  const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
-                  const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
-                  const total = totalConfirmed + totalCanceled;
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-green-800 font-medium">Confirmed</span>
+                  <FiTrendingUp className="text-green-600" />
+                </div>
+                <div className="text-xl font-bold text-green-900">{totalConfirmed}</div>
+                <div className="text-xs text-green-600 mt-1">{confirmedPercent}% success rate</div>
+              </div>
+              
+              <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-red-800 font-medium">Canceled</span>
+                  <FiTrendingDown className="text-red-600" />
+                </div>
+                <div className="text-xl font-bold text-red-900">{totalCanceled}</div>
+                <div className="text-xs text-red-600 mt-1">{canceledPercent}% cancel rate</div>
+              </div>
+            </div>
 
-                  const confirmedPercent = total ? ((totalConfirmed / total) * 100).toFixed(1) : 0;
-                  const canceledPercent = total ? ((totalCanceled / total) * 100).toFixed(1) : 0;
+            {/* Progress bars */}
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Confirmed Orders</span>
+                  <span>{confirmedPercent}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500"
+                    style={{ width: `${confirmedPercent}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Canceled Orders</span>
+                  <span>{canceledPercent}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all duration-500"
+                    style={{ width: `${canceledPercent}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
 
-                  return (
-                    <>
-                      <li className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                          <span className="text-gray-600">Confirmed Orders</span>
-                        </div>
-                        <span className="font-medium text-gray-700">{confirmedPercent}%</span>
-                      </li>
-                      <li className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-                          <span className="text-gray-600">Canceled Orders</span>
-                        </div>
-                        <span className="font-medium text-gray-700">{canceledPercent}%</span>
-                      </li>
-                      <li className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
-                          <span className="text-gray-600">Total Orders</span>
-                        </div>
-                        <span className="font-medium text-gray-700">{total}</span>
-                      </li>
-                    </>
-                  );
-                })()}
-              </ul>
+            {/* Summary */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-600">Total Orders</span>
+                <span className="text-lg font-bold text-gray-800">{totalOrdersCount}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Revenue</span>
+                <span className="text-lg font-bold text-green-600">${totalSales.toLocaleString()}</span>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
 
       {/* Enhanced Right-Side Slider */}
       {isSliderOpen && (
-        <div className="fixed inset-0 bg-gray-600/50 backdrop-blur-sm z-50 transition-opacity duration-300">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity duration-300 flex justify-end">
           <div
             ref={sliderRef}
-            className="absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            className="h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col">
             <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
+              <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <h2 className="text-xl font-bold text-newPrimary"> {isEdit ? "Edit Product" : "Add New Product"}</h2>
                 <button
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-500 hover:text-gray-700 text-2xl p-1 rounded-full hover:bg-gray-100 transition-colors"
                   onClick={() => {
                     setIsSliderOpen(false);
                     setIsEdit(false);
@@ -632,9 +781,9 @@ const handleDelete = async (id) => {
                 <div className="space-y-6">
                   {/* Product Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Product Name {}
-                      <span className="text-newPrimary">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Product Name
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
                     <input
                       type="text"
@@ -642,28 +791,28 @@ const handleDelete = async (id) => {
                       onChange={(e) =>
                         setEditFormState({ ...formState, name: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       placeholder="Enter product name"
                     />
                   </div>
 
                   {/* Price */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Price {}
-                      <span className="text-newPrimary">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <div className="relative rounded-md shadow-sm">
+                    <div className="relative rounded-lg shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span className="text-gray-500">$</span>
                       </div>
                       <input
                         type="text"
                         value={formState.price}
-  onChange={(e) =>
-    setEditFormState({ ...formState, price: e.target.value })
-  }
-                        className="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary focus:border-blue-500"
+                        onChange={(e) =>
+                          setEditFormState({ ...formState, price: e.target.value })
+                        }
+                        className="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="0.00"
                       />
                     </div>
@@ -671,11 +820,11 @@ const handleDelete = async (id) => {
 
                   {/* Image Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Product Images {}
-                      <span className="text-newPrimary">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Product Image
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
                       <div className="space-y-1 text-center">
                         <svg
                           className="mx-auto h-12 w-12 text-gray-400"
@@ -694,9 +843,9 @@ const handleDelete = async (id) => {
                         <div className="flex text-sm text-gray-600 justify-center">
                           <label
                             htmlFor="file-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-newPrimary hover:text-newPrimary focus-within:outline-none"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
                           >
-                            <span>Upload files</span>
+                            <span>Upload a file</span>
                             <input
                               id="file-upload"
                               name="file-upload"
@@ -714,35 +863,33 @@ const handleDelete = async (id) => {
                     </div>
 
                     {/* Image Preview */}
-
                     {imagePreview && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
-                        <div className="relative group w-48 h-32">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Image Preview</h3>
+                        <div className="relative group w-full h-48">
                           <img
                             src={imagePreview}
                             alt="Preview"
-                            className="w-full h-full object-cover rounded-md border border-gray-200"
+                            className="w-full h-full object-contain rounded-lg border border-gray-200"
                           />
                           <button
                             onClick={removeImage}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity shadow-md"
                           >
                             ×
                           </button>
                         </div>
                       </div>
                     )}
-
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t flex justify-end space-x-3">
+              <div className="p-6 border-t border-gray-200 flex justify-end space-x-3 bg-gray-50">
                 <button
                   type="button"
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   onClick={() => {
                     setIsSliderOpen(false);
                     setIsEdit(false);
@@ -756,7 +903,7 @@ const handleDelete = async (id) => {
                 </button>
                 <button
                   type="button"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-newPrimary transition-colors"
                   onClick={handleSave}
                 >
                   {isEdit ? "Update Product" : "Save Product"}
