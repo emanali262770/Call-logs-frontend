@@ -28,6 +28,7 @@ const links = [
   { to: "/admin/report", label: "Report", icon: <FaFileAlt /> },
   {
     label: "Security",
+    adminOnly: true, // 
     icon: <FaUserShield />,
     children: [
       { to: "/admin/groups", label: "Group Management", icon: <FaUsersCog /> },
@@ -42,6 +43,10 @@ const links = [
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const [openDropdown, setOpenDropdown] = useState(null);
+
+
+  const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+  const isAdmin = userInfo?.isAdmin === true;
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -81,65 +86,65 @@ const AdminSidebar = () => {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2">
-          {links.map((link, idx) =>
-            link.children ? (
-              <div key={idx}>
-                {/* Parent */}
-                <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === idx ? null : idx)
+          {links
+            .filter((link) => !link.adminOnly || isAdmin) // 🔹 filter out admin-only items
+            .map((link, idx) =>
+              link.children ? (
+                <div key={idx}>
+                  {/* Parent */}
+                  <button
+                    onClick={() =>
+                      setOpenDropdown(openDropdown === idx ? null : idx)
+                    }
+                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-secondary/30 w-full text-left"
+                  >
+                    <span className="text-lg">{link.icon}</span>
+                    <span className="hidden md:block">{link.label}</span>
+                    {openDropdown === idx ? (
+                      <FaChevronUp className="ml-auto w-4 h-4 hidden sm:block" />
+                    ) : (
+                      <FaChevronDown className="ml-auto w-4 h-4 hidden sm:block" />
+                    )}
+                  </button>
+
+                  {/* Sub-links */}
+                  {openDropdown === idx && (
+                    <div className="ml-6 flex flex-col gap-1 mt-1">
+                      {link.children.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-1 rounded-md text-sm transition ${isActive
+                              ? "bg-secondary text-white"
+                              : "text-gray-600 hover:bg-secondary/30"
+                            }`
+                          }
+                        >
+                          <span className="text-base">{child.icon}</span>
+                          <span className="hidden md:block">{child.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition ${isActive
+                      ? "bg-secondary text-white"
+                      : "text-gray-700 hover:bg-secondary/30"
+                    }`
                   }
-                  className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-secondary/30 w-full text-left"
+                  end={link.to === "/admin"}
                 >
                   <span className="text-lg">{link.icon}</span>
                   <span className="hidden md:block">{link.label}</span>
-                  {openDropdown === idx ? (
-                    <FaChevronUp className="ml-auto w-4 h-4 hidden sm:block" />
-                  ) : (
-                    <FaChevronDown className="ml-auto w-4 h-4 hidden sm:block" />
-                  )}
-                </button>
-
-                {/* Sub-links */}
-                {openDropdown === idx && (
-                  <div className="ml-6 flex flex-col gap-1 mt-1">
-                    {link.children.map((child) => (
-                      <NavLink
-                        key={child.to}
-                        to={child.to}
-                        className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-1 rounded-md text-sm transition ${
-                            isActive
-                              ? "bg-secondary text-white"
-                              : "text-gray-600 hover:bg-secondary/30"
-                          }`
-                        }
-                      >
-                        <span className="text-base">{child.icon}</span>
-                        <span className="hidden md:block">{child.label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition ${
-                    isActive
-                      ? "bg-secondary text-white"
-                      : "text-gray-700 hover:bg-secondary/30"
-                  }`
-                }
-                end={link.to === "/admin"}
-              >
-                <span className="text-lg">{link.icon}</span>
-                <span className="hidden md:block">{link.label}</span>
-              </NavLink>
-            )
-          )}
+                </NavLink>
+              )
+            )}
         </nav>
       </div>
 
