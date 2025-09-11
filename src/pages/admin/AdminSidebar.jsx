@@ -35,9 +35,9 @@ const links = [
     children: [
       { to: "/admin/groups", label: "Group Management", icon: <FaUsersCog /> },
       { to: "/admin/users", label: "Users", icon: <FaUserCog /> },
-      { to: "/admin/modules", label: "Modules", icon: <FaCubes /> },
-      { to: "/admin/modules-functionalities", label: "Modules Functionalities", icon: <FaTasks /> },
-      { to: "/admin/access-rights", label: "Access Control", icon: <FaUserShield /> },
+      // { to: "/admin/modules", label: "Modules", icon: <FaCubes /> },
+      { to: "/admin/modules-functionalities", label: "Access Control", icon: <FaUserShield /> },
+      // { to: "/admin/access-rights", label: "Access Control", icon: <FaUserShield /> },
     ],
   },
 ];
@@ -127,7 +127,7 @@ const filteredLinks = links.filter((link) => {
                         key={child.to}
                         to={child.to}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-1 rounded-md text-sm transition ${
+                          `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition ${
                             isActive
                               ? "bg-secondary text-white"
                               : "text-gray-600 hover:bg-secondary/30"

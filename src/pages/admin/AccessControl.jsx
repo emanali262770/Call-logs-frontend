@@ -22,37 +22,7 @@ const AssignRights = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const sliderRef = useRef(null);
 
-  // Static data for demonstration
-  const staticRightsData = [
-    { 
-      _id: "1", 
-      group: { _id: "1", groupName: "Administrators" }, 
-      module: { _id: "1", moduleName: "User Management" }, 
-      functionalities: [
-        { _id: "1", name: "Create User" },
-        { _id: "2", name: "Edit User" }
-      ] 
-    },
-    { 
-      _id: "2", 
-      group: { _id: "2", groupName: "Managers" }, 
-      module: { _id: "2", moduleName: "Reports" }, 
-      functionalities: [
-        { _id: "3", name: "View Reports" },
-        { _id: "4", name: "Export Reports" }
-      ] 
-    },
-    { 
-      _id: "3", 
-      group: { _id: "3", groupName: "Editors" }, 
-      module: { _id: "3", moduleName: "Content" }, 
-      functionalities: [
-        { _id: "5", name: "Create Content" },
-        { _id: "6", name: "Edit Content" },
-        { _id: "7", name: "Delete Content" }
-      ] 
-    }
-  ];
+  
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
   const headers = {
@@ -99,7 +69,6 @@ const AssignRights = () => {
       // setAssignRightsList(data?.data || []);
     } catch (err) {
       console.error("Error fetching rights:", err);
-      setAssignRightsList(staticRightsData); // fallback to static data
     }
   }, []);
 
@@ -107,20 +76,14 @@ const AssignRights = () => {
   const fetchGroupData = useCallback(async () => {
     try {
       setLoading(true);
-      // For demo purposes, use static data
-      const staticGroups = [
-        { _id: "1", groupName: "Administrators" },
-        { _id: "2", groupName: "Managers" },
-        { _id: "3", groupName: "Editors" },
-        { _id: "4", groupName: "Viewers" }
-      ];
-      setGroups(staticGroups);
       
       // Uncomment for real API call
-      // const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/groups`);
-      // if (!response.ok) throw new Error("Failed to fetch groups");
-      // const result = await response.json();
-      // setGroups(result);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/groups`);
+      
+      // setGroups(response);
+      if (!response.ok) throw new Error("Failed to fetch groups");
+      const result = await response.json();
+      setGroups(result);
     } catch (error) {
       console.error("Error fetching group data:", error);
       toast.error("Failed to fetch groups");
@@ -135,15 +98,7 @@ const AssignRights = () => {
     try {
       setLoading(true);
       // For demo purposes, use static data
-      const staticFunctionalities = [
-        { _id: "1", name: "Create User", module: "1" },
-        { _id: "2", name: "Edit User", module: "1" },
-        { _id: "3", name: "View Reports", module: "2" },
-        { _id: "4", name: "Export Reports", module: "2" },
-        { _id: "5", name: "Create Content", module: "3" },
-        { _id: "6", name: "Edit Content", module: "3" },
-        { _id: "7", name: "Delete Content", module: "3" }
-      ];
+      
       setFunctionalityList(staticFunctionalities);
       
       // Uncomment for real API call
@@ -164,13 +119,7 @@ const AssignRights = () => {
   const fetchModuleData = useCallback(async () => {
     try {
       setLoading(true);
-      // For demo purposes, use static data
-      const staticModules = [
-        { _id: "1", moduleName: "User Management" },
-        { _id: "2", moduleName: "Reports" },
-        { _id: "3", moduleName: "Content" },
-        { _id: "4", moduleName: "Settings" }
-      ];
+   
       setModuleList(staticModules);
       
       // Uncomment for real API call
