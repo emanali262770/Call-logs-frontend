@@ -243,7 +243,7 @@ const Users = () => {
             }
 
             await axios.delete(
-              `${import.meta.env.VITE_API_BASE_URL}/company-users/${id}`,
+              `${import.meta.env.VITE_API_BASE_URL}/group-users/${id}`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,

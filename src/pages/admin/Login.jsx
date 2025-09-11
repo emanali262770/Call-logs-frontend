@@ -35,7 +35,7 @@ const Login = () => {
   
       // ✅ Store in Redux (will also store in localStorage via authSlice)
       dispatch(loginSuccess(userInfo));
-  
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
       // ✅ Toast and redirect
       toast.success("Logged in successfully 🎉");
       console.log("Stored userInfo:", userInfo);

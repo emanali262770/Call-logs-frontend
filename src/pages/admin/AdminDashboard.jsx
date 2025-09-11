@@ -294,8 +294,8 @@ const AdminDashboard = () => {
                 <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
               </div>
               <div className="hidden md:block text-right">
-                <div className="text-sm font-medium">{userName}</div>
-                <div className="text-xs text-gray-500">{userRole}</div>
+                <div className="text-sm font-medium uppercase">{userName}</div>
+                <div className="text-xs text-gray-500 uppercase">{userRole}</div>
               </div>
             </div>
           </div>

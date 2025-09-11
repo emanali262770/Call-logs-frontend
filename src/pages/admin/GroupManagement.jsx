@@ -5,14 +5,18 @@ import axios from "axios";
 import { HashLoader } from "react-spinners";
 import Swal from "sweetalert2";
 import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUsers, FiX } from "react-icons/fi";
+import { FaTimes } from "react-icons/fa";
+
 
 const GroupManagement = () => {
   const [groupList, setGroupList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [isEdit, setIsEdit] = useState(false);
+
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedFunctionalities, setSelectedFunctionalities] = useState([]);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const sliderRef = useRef(null);
@@ -21,7 +25,7 @@ const GroupManagement = () => {
   const getUserInfo = () => {
     try {
       const info = JSON.parse(localStorage.getItem("userInfo") || "{}");
-      console.log("Parsed userInfo:", info);
+      // console.log("Parsed userInfo:", info);
       return info;
     } catch (error) {
       console.error("Error parsing userInfo:", error);
@@ -31,8 +35,30 @@ const GroupManagement = () => {
 
   const userInfo = getUserInfo();
 
+  const functionalityModuleList = [
+    "Products List",
+    "Staff List",
+    "Customer Data",
+    "Meeting Details",
+    "Follow Up",
+    "Calendar",
+    "Security",
+    "Group Management",
+    "Users",
+    "Modules",
+    "Modules Functionalities",
+    "Access Control"
+  ];
+
+  // Convert strings to objects with _id and name
+  const functionalityOptions = functionalityModuleList.map((name, index) => ({
+    _id: index + 1, // or any unique id
+    name
+  }));
+
+
   // Filter groups based on search query
-  const filteredGroups = groupList.filter(group => 
+  const filteredGroups = groupList.filter(group =>
     group.groupName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -59,6 +85,23 @@ const GroupManagement = () => {
       }
     }
   }, [isSliderOpen]);
+
+
+  const handleFunctionalitySelect = (e) => {
+    const selectedId = parseInt(e.target.value);
+    const selectedFunc = functionalityOptions.find((f) => f._id === selectedId);
+    if (selectedFunc && !selectedFunctionalities.some(f => f._id === selectedId)) {
+      setSelectedFunctionalities([...selectedFunctionalities, selectedFunc]);
+    }
+  };
+
+  const removeFunctionality = (funcId) => {
+    setSelectedFunctionalities(
+      selectedFunctionalities.filter((func) => func._id !== funcId)
+    );
+  };
+
+
 
   // ✅ Fetch Group Data (silent fallback)
   const fetchGroupData = useCallback(async () => {
@@ -115,7 +158,13 @@ const GroupManagement = () => {
         "Content-Type": "application/json",
       };
 
-      const payload = { groupName };
+      const payload = {
+        groupName,
+        functionalities: selectedFunctionalities.map(f => f.name), // send names to backend
+      };
+
+      console.log("Payload ", payload);
+
 
       if (isEdit && editId) {
         await axios.put(`${import.meta.env.VITE_API_BASE_URL}/groups/${editId}`, payload, { headers });
@@ -130,6 +179,7 @@ const GroupManagement = () => {
       setIsSliderOpen(false);
       setGroupName("");
       fetchGroupData();
+      setSelectedFunctionalities([])
     } catch (error) {
       console.error("Save error:", error.response?.data || error.message);
       toast.error(`❌ ${isEdit ? "Update" : "Add"} group failed: ${error.response?.data?.message || error.message}`);
@@ -138,10 +188,17 @@ const GroupManagement = () => {
 
   // Edit Group
   const handleEdit = (group) => {
+    console.log("Edit", group);
+
     setIsEdit(true);
     setEditId(group._id);
     setGroupName(group.groupName || "");
-    setIsSliderOpen(true);
+    setSelectedFunctionalities(
+      (group.functionalities || []).map((name, index) => ({
+        _id: index + 1,
+        name,
+      }))
+    );
   };
 
   // Delete Group
@@ -214,13 +271,13 @@ const GroupManagement = () => {
           Error: {error}. Data is using fallback values.
         </div>
       )}
-      
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Group List</h1>
           <p className="text-gray-500 text-sm">Group Management Dashboard</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -234,7 +291,7 @@ const GroupManagement = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          
+
           <button
             onClick={() => {
               setGroupName("");
@@ -257,6 +314,7 @@ const GroupManagement = () => {
             {/* Table Headers - hidden on mobile */}
             <div className="hidden md:grid grid-cols-3 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Group Name</div>
+              <div>Functionalities</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
@@ -279,13 +337,43 @@ const GroupManagement = () => {
                         <div className="text-sm font-medium text-gray-900">{group.groupName}</div>
                       </div>
                     </div>
-                    
+
+
+
                     {/* Desktop view cells */}
                     <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
                       <FiUsers className="mr-2 text-gray-400" />
                       {group.groupName}
                     </div>
-                    
+
+                    <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
+                      {group.functionalities && group.functionalities.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {group.functionalities.slice(0, 6).map((func, index) => {
+                            // Check if func is a string or object
+                            const name = typeof func === "string" ? func : func.name;
+                            return (
+                              <span
+                                key={index}
+                                className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                              >
+                                {name}
+                              </span>
+                            );
+                          })}
+                          {group.functionalities.length > 5 && (
+                            <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                              +{group.functionalities.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </div>
+
+
+
                     {/* Actions - visible on both mobile and desktop */}
                     {userInfo?.isAdmin && (
                       <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
@@ -324,7 +412,11 @@ const GroupManagement = () => {
               <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Edit Group" : "Add Group"}</h2>
               <button
                 className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
-                onClick={() => setIsSliderOpen(false)}
+                onClick={() => {
+                  setIsSliderOpen(false)
+                  setSelectedFunctionalities([])
+                  setEditId(null)
+                }}
               >
                 &times;
               </button>
@@ -346,6 +438,42 @@ const GroupManagement = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Functionalities</label>
+                <select
+                  onChange={handleFunctionalitySelect}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                  value=""
+                >
+                  <option value="">Select functionality</option>
+                  {functionalityOptions
+                    .filter((func) => !selectedFunctionalities.some(f => f._id === func._id))
+                    .map((func) => (
+                      <option key={func._id} value={func._id}>
+                        {func.name}
+                      </option>
+                    ))}
+                </select>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedFunctionalities.map((func) => (
+                    <div
+                      key={func._id}
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center"
+                    >
+                      {func.name}
+                      <button
+                        type="button"
+                        onClick={() => removeFunctionality(func._id)}
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                      >
+                        <FaTimes className="text-xs" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
@@ -353,6 +481,7 @@ const GroupManagement = () => {
                     setGroupName("");
                     setIsEdit(false);
                     setEditId(null);
+                    setSelectedFunctionalities([])
                     setIsSliderOpen(false);
                   }}
                 >
