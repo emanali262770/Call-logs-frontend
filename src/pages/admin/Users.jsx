@@ -5,7 +5,7 @@ import axios from 'axios';
 import { HashLoader } from "react-spinners";
 import Swal from "sweetalert2";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-
+import { FiSearch, FiPlus, FiEdit, FiTrash2, FiKey } from "react-icons/fi";
 
 const Users = () => {
   const [userList, setUserList] = useState([]);
@@ -23,8 +23,19 @@ const Users = () => {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const sliderRef = useRef(null); // Ref for the slider element
+  const sliderRef = useRef(null);
+
+  // Filter user list based on search query
+  const filteredUserList = userList.filter(
+    (user) =>
+      user?.groupName?.groupName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.designation?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddUser = () => {
     setIsChangePassword(false);
@@ -35,7 +46,7 @@ const Users = () => {
   useEffect(() => {
     if (isSliderOpen) {
       if (sliderRef.current) {
-        sliderRef.current.style.display = "block"; // show again when opening
+        sliderRef.current.style.display = "block";
         gsap.fromTo(
           sliderRef.current,
           { x: "100%", opacity: 0 },
@@ -59,14 +70,12 @@ const Users = () => {
     }
   }, [isSliderOpen]);
 
-
   // Fetch users Data
   const fetchCompanyUser = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/group-users`);
       const result = await response.json();
-      console.log("Company User ", result);
       setUserList(result);
     } catch (error) {
       console.error("Error fetching expense head data:", error);
@@ -81,7 +90,6 @@ const Users = () => {
       setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/groups`);
       const result = await response.json();
-      console.log("Groups ", result);
       setGroupList(result);
     } catch (error) {
       console.error("Error fetching expense head data:", error);
@@ -95,10 +103,8 @@ const Users = () => {
     fetchGroups()
   }, [fetchCompanyUser, fetchGroups]);
 
-
   // Token
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("Admin", userInfo.isAdmin);
 
   // Save User Data
   const handleSave = async () => {
@@ -111,13 +117,11 @@ const Users = () => {
       groupName: selectedGroup,
     };
 
-    console.log("Payload", payload);
-
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
       const headers = {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json", // ✅ JSON
+        "Content-Type": "application/json",
       };
 
       let response;
@@ -146,7 +150,7 @@ const Users = () => {
       setEmail("");
       setMobileNumber("");
       setDesignation("");
-      setSelectedGroup(""); // reset group
+      setSelectedGroup("");
       setPassword("");
     } catch (error) {
       console.error("Error creating company user:", error.response?.data || error.message);
@@ -154,13 +158,10 @@ const Users = () => {
     }
   };
 
-
   // Change Password
   const handleChangePassword = async () => {
     const formData = new FormData();
     formData.append("password", newPassword);
-
-    console.log("Change Password Form Data", formData);
 
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
@@ -188,24 +189,18 @@ const Users = () => {
   };
 
   // Edit User
-const handleEdit = (user) => {
-  setIsChangePassword(false);
-  setIsEdit(true);
-  setEditId(user._id);
-
-  // ✅ Fix: set single group id
-  setSelectedGroup(user.groupName?._id || "");
-
-  setName(user.name || "");
-  setEmail(user.email || "");
-  setMobileNumber(user.number || ""); // backend field is "number", not "mobileNumber"
-  setDesignation(user.designation || "");
-  setPassword(user.password || ""); // never prefill password
-  setIsSliderOpen(true);
-
-  console.log("Editing User Data", user);
-};
-
+  const handleEdit = (user) => {
+    setIsChangePassword(false);
+    setIsEdit(true);
+    setEditId(user._id);
+    setSelectedGroup(user.groupName?._id || "");
+    setName(user.name || "");
+    setEmail(user.email || "");
+    setMobileNumber(user.number || "");
+    setDesignation(user.designation || "");
+    setPassword("");
+    setIsSliderOpen(true);
+  };
 
   // Open Change Password Form
   const handleOpenChangePassword = (user) => {
@@ -213,7 +208,6 @@ const handleEdit = (user) => {
     setEditId(user._id);
     setName(user.name || "");
     setIsSliderOpen(true);
-    console.log("Opening Change Password for User", user);
   };
 
   // Delete User
@@ -284,10 +278,9 @@ const handleEdit = (user) => {
   const togglePasswordVisibility = (userId) => {
     setVisiblePasswords((prev) => ({
       ...prev,
-      [userId]: !prev[userId], // flip only that user's password state
+      [userId]: !prev[userId],
     }));
   };
-
 
   // Show loading spinner
   if (loading) {
@@ -306,26 +299,43 @@ const handleEdit = (user) => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">User List</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">User List</h1>
           <p className="text-gray-500 text-sm">User Management Dashboard</p>
         </div>
-        <button
-          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
-          onClick={handleAddUser}
-        >
-          + Add User
-        </button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+            />
+          </div>
+          
+          <button
+            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+            onClick={handleAddUser}
+          >
+            <FiPlus className="text-lg" />
+            <span>Add User</span>
+          </button>
+        </div>
       </div>
 
       {/* User Table */}
-      <div className="rounded-xl shadow p-6 border border-gray-100 w-full overflow-hidden">
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
-          <div className="w-full">
+          <div className="min-w-full">
             {/* Table Headers */}
-            <div className="hidden lg:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Group</div>
               <div>Name</div>
               <div>Email</div>
@@ -336,74 +346,104 @@ const handleEdit = (user) => {
             </div>
 
             {/* User Table */}
-            <div className="mt-4 flex flex-col gap-[14px] pb-14">
-              {userList.map((user, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                >
-                  {/* Group */}
-                  <div className="text-sm font-medium text-gray-900">
-                    {user.groupName?.groupName}
-                  </div>
-
-                  {/* Name */}
-                  <div className="text-sm font-medium text-gray-900">
-                    {user.name}
-                  </div>
-
-                  {/* Email */}
-                  <div className="text-sm text-gray-500">{user.email}</div>
-
-                  {/* Mobile Number */}
-                  <div className="text-sm text-gray-500">{user.number}</div>
-
-                  {/* Designation */}
-                  <div className="text-sm text-gray-500">{user.designation}</div>
-
-                  {/* Password */}
-                  <div className="flex items-center text-sm text-gray-500">
-                    {visiblePasswords[user._id] ? user.password : "•••••"}
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility(user._id)}
-                      className="ml-2 text-gray-600 hover:text-gray-800"
-                    >
-                      {visiblePasswords[user._id] ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-                    </button>
-                  </div>
-
-
-                  {/* Actions */}
-                  {userInfo?.isAdmin && (
-                    <div className="text-right relative group">
-                      <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-                      <div className="absolute right-0 top-6 w-36 h-28 bg-white border border-gray-200 rounded-md shadow-lg 
-                        opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-                        transition-opacity duration-300 z-50 flex flex-col justify-between">
+            <div className="mt-4 flex flex-col gap-3">
+              {filteredUserList.length > 0 ? (
+                filteredUserList.map((user) => (
+                  <div
+                    key={user._id}
+                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  >
+                    {/* Mobile view header */}
+                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {user.groupName?.groupName}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Desktop view cells */}
+                    <div className="hidden md:block text-sm font-medium text-gray-900 truncate">
+                      {user.groupName?.groupName}
+                    </div>
+                    <div className="hidden md:block text-sm font-medium text-gray-900 truncate">
+                      {user.name}
+                    </div>
+                    <div className="hidden md:block text-sm text-gray-500 truncate">{user.email}</div>
+                    <div className="hidden md:block text-sm text-gray-500 truncate">{user.number}</div>
+                    <div className="hidden md:block text-sm text-gray-500 truncate">{user.designation}</div>
+                    
+                    {/* Mobile view content */}
+                    <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
+                      <div className="text-xs text-gray-500">Email:</div>
+                      <div className="text-sm">{user.email}</div>
+                      
+                      <div className="text-xs text-gray-500">Mobile:</div>
+                      <div className="text-sm">{user.number}</div>
+                      
+                      <div className="text-xs text-gray-500">Designation:</div>
+                      <div className="text-sm">{user.designation}</div>
+                      
+                      <div className="text-xs text-gray-500">Password:</div>
+                      <div className="flex items-center text-sm">
+                        {visiblePasswords[user._id] ? user.password : "•••••"}
                         <button
-                          onClick={() => handleEdit(user)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
+                          type="button"
+                          onClick={() => togglePasswordVisibility(user._id)}
+                          className="ml-2 text-gray-600 hover:text-gray-800"
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleOpenChangePassword(user)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 text-yellow-600 flex items-center gap-2"
-                        >
-                          Change Password
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user._id)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
-                        >
-                          Delete
+                          {visiblePasswords[user._id] ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                         </button>
                       </div>
                     </div>
-                  )}
+                    
+                    {/* Password - Desktop */}
+                    <div className="hidden md:flex items-center text-sm text-gray-500">
+                      {visiblePasswords[user._id] ? user.password : "•••••"}
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility(user._id)}
+                        className="ml-2 text-gray-600 hover:text-gray-800"
+                      >
+                        {visiblePasswords[user._id] ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+                      </button>
+                    </div>
+                    
+                    {/* Actions - visible on both mobile and desktop */}
+                    {userInfo?.isAdmin && (
+                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleOpenChangePassword(user)}
+                            className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors"
+                          >
+                            <FiKey size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user._id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No users found {searchQuery && `matching "${searchQuery}"`}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -411,12 +451,8 @@ const handleEdit = (user) => {
 
       {/* Right-Side Slider */}
       {isSliderOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50">
-          <div
-            ref={sliderRef}
-            className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl overflow-y-auto"
-            style={{ display: "block" }}
-          >
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
+          <div className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">
                 {isChangePassword ? "Change Password" : isEdit ? "Edit User" : "Add User"}
@@ -428,116 +464,111 @@ const handleEdit = (user) => {
                 &times;
               </button>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-5">
               {/* User Section */}
-              <div className="border rounded-lg p-4">
-                <div className="grid grid-cols-1 gap-4">
-                  {isChangePassword ? (
-                    <>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={name}
-                          disabled
-                          className="w-full p-2 border rounded bg-gray-100 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">New Password</label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter new password"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-
-                      <div>
-                        <label className="block text-gray-700 mb-1">Groups</label>
-                        <select
-                          value={selectedGroup}
-                          onChange={(e) => setSelectedGroup(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        >
-                          <option value="">Select Group</option>
-                          {groupList.map((group) => (
-                            <option key={group._id} value={group._id}>
-                              {group.groupName || ""}
-                            </option>
-                          ))}
-                        </select>
-
-
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Email</label>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter email"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Mobile Number</label>
-                        <input
-                          type="text"
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter mobile number"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Designation</label>
-                        <input
-                          type="text"
-                          value={designation}
-                          onChange={(e) => setDesignation(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder="Enter designation"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-700 mb-1">Password</label>
-                        <input
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                          placeholder={isEdit ? "Enter new password (optional)" : "Enter password"}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
+              <div className="space-y-5">
+                {isChangePassword ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={name}
+                        disabled
+                        className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-100 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Groups</label>
+                      <select
+                        value={selectedGroup}
+                        onChange={(e) => setSelectedGroup(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                      >
+                        <option value="">Select Group</option>
+                        {groupList.map((group) => (
+                          <option key={group._id} value={group._id}>
+                            {group.groupName || ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Enter name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Enter email"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Mobile Number</label>
+                      <input
+                        type="text"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Enter mobile number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Designation</label>
+                      <input
+                        type="text"
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Enter designation"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Password</label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder={isEdit ? "Enter new password (optional)" : "Enter password"}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                  className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => setIsSliderOpen(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="bg-newPrimary text-white px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
+                  className="bg-newPrimary text-white px-4 md:px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
                   onClick={isChangePassword ? handleChangePassword : handleSave}
                 >
                   {isChangePassword ? "Change Password" : isEdit ? "Update User" : "Save User"}

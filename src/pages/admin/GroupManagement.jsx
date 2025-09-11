@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { HashLoader } from "react-spinners";
 import Swal from "sweetalert2";
-
+import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUsers, FiX } from "react-icons/fi";
 
 const GroupManagement = () => {
   const [groupList, setGroupList] = useState([]);
@@ -13,7 +13,8 @@ const GroupManagement = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // Store detailed fetch errors
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const sliderRef = useRef(null);
 
   // Safe userInfo parsing
@@ -29,6 +30,11 @@ const GroupManagement = () => {
   };
 
   const userInfo = getUserInfo();
+
+  // Filter groups based on search query
+  const filteredGroups = groupList.filter(group => 
+    group.groupName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // GSAP Animation for Slider
   useEffect(() => {
@@ -63,14 +69,12 @@ const GroupManagement = () => {
 
       const response = await fetch(apiUrl);
 
-
       let result = [];
       if (response.ok) {
         result = await response.json();
       }
 
       const list = Array.isArray(result) ? result : result?.data || [];
-      // console.log("Response ", list);
       setGroupList(list);
 
     } catch {
@@ -84,7 +88,6 @@ const GroupManagement = () => {
   useEffect(() => {
     fetchGroupData();
   }, [fetchGroupData]);
-  console.log("Group and User data fetched");
 
   // Validate form
   const validateForm = () => {
@@ -112,7 +115,7 @@ const GroupManagement = () => {
         "Content-Type": "application/json",
       };
 
-      const payload = { groupName};
+      const payload = { groupName };
 
       if (isEdit && editId) {
         await axios.put(`${import.meta.env.VITE_API_BASE_URL}/groups/${editId}`, payload, { headers });
@@ -135,14 +138,9 @@ const GroupManagement = () => {
 
   // Edit Group
   const handleEdit = (group) => {
-    console.log("Edit   ", group.users);
-
     setIsEdit(true);
     setEditId(group._id);
     setGroupName(group.groupName || "");
-    console.log("Selected users", selectedUsers);
-
-    setSelectedUsers(group.users.map(u => u._id) || userList);
     setIsSliderOpen(true);
   };
 
@@ -210,69 +208,99 @@ const GroupManagement = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {error && (
         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
           Error: {error}. Data is using fallback values.
         </div>
       )}
-      <div className="flex justify-between items-center mb-6">
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">Group List</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Group List</h1>
           <p className="text-gray-500 text-sm">Group Management Dashboard</p>
         </div>
-        <button
-          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
-          onClick={() => {
-            setGroupName("");
-            setIsEdit(false);
-            setEditId(null);
-            setIsSliderOpen(true);
-          }}
-        >
-          + Add Group
-        </button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search groups..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+            />
+          </div>
+          
+          <button
+            onClick={() => {
+              setGroupName("");
+              setIsEdit(false);
+              setEditId(null);
+              setIsSliderOpen(true);
+            }}
+            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+          >
+            <FiPlus className="text-lg" />
+            <span>Add Group</span>
+          </button>
+        </div>
       </div>
 
       {/* Group Table */}
-      <div className="rounded-xl shadow p-6 border border-gray-100 w-full overflow-hidden">
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
         <div className="overflow-x-auto scrollbar-hide">
-          <div className="w-full">
-            {/* Table Headers */}
-            <div className="hidden lg:grid grid-cols-3 gap-4 bg-gray-50 py-3 px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+          <div className="min-w-full">
+            {/* Table Headers - hidden on mobile */}
+            <div className="hidden md:grid grid-cols-3 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Group Name</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
             {/* Group Table */}
-            {groupList.length === 0 ? (
+            {filteredGroups.length === 0 ? (
               <div className="text-center text-gray-500 py-4">No groups found.</div>
             ) : (
-              <div className="mt-4 flex flex-col gap-[14px] pb-14">
-                {groupList.map((group) => (
+              <div className="mt-4 flex flex-col gap-3">
+                {filteredGroups.map((group) => (
                   <div
                     key={group._id}
-                    className="grid grid-cols-3 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                    className="grid grid-cols-1 md:grid-cols-3 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
                   >
-                    <div className="text-sm font-medium text-gray-900">{group.groupName}</div>
+                    {/* Mobile view header */}
+                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
+                          <FiUsers className="text-blue-600" />
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">{group.groupName}</div>
+                      </div>
+                    </div>
                     
+                    {/* Desktop view cells */}
+                    <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
+                      <FiUsers className="mr-2 text-gray-400" />
+                      {group.groupName}
+                    </div>
+                    
+                    {/* Actions - visible on both mobile and desktop */}
                     {userInfo?.isAdmin && (
-                      <div className="text-right relative group">
-                        <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
-                        <div className="absolute right-0 top-6 w-28 h-20 bg-white border border-gray-200 rounded-md shadow-lg 
-                          opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-                          transition-opacity duration-300 z-50 flex flex-col justify-between">
+                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => handleEdit(group)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                           >
-                            Edit
+                            <FiEdit size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(group._id)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                           >
-                            Delete
+                            <FiTrash2 size={16} />
                           </button>
                         </div>
                       </div>
@@ -287,10 +315,10 @@ const GroupManagement = () => {
 
       {/* Right-Side Slider */}
       {isSliderOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
           <div
             ref={sliderRef}
-            className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl overflow-y-auto"
+            className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg"
           >
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Edit Group" : "Add Group"}</h2>
@@ -301,30 +329,28 @@ const GroupManagement = () => {
                 &times;
               </button>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="border rounded-lg p-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-1">
-                      Group Name <span className="text-newPrimary">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={groupName}
-                      onChange={(e) => setGroupName(e.target.value)}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                      placeholder="Enter group name"
-                    />
-                  </div>
+            <div className="p-4 md:p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Group Name <span className="text-newPrimary">*</span>
+                </label>
+                <div className="relative">
+                  <FiUsers className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter group name"
+                  />
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                  className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => {
                     setGroupName("");
-                    setSelectedUsers([]);
                     setIsEdit(false);
                     setEditId(null);
                     setIsSliderOpen(false);
@@ -333,7 +359,7 @@ const GroupManagement = () => {
                   Cancel
                 </button>
                 <button
-                  className="bg-newPrimary text-white px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
+                  className="bg-newPrimary text-white px-4 md:px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
                   onClick={handleSave}
                 >
                   {isEdit ? "Update Group" : "Save Group"}
