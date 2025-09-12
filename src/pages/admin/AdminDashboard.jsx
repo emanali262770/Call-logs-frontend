@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { PuffLoader } from "react-spinners";
 import {
@@ -18,11 +18,11 @@ import {
   RadialBar,
   Legend
 } from "recharts";
-import { 
-  FiBell, 
-  FiCalendar, 
-  FiClock, 
-  FiUser, 
+import {
+  FiBell,
+  FiCalendar,
+  FiClock,
+  FiUser,
   FiSearch,
   FiMessageSquare,
   FiShoppingBag,
@@ -43,6 +43,9 @@ const AdminDashboard = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [users, setUsers] = useState([]);
+   const [customers, setCustomers] = useState(0);
+   const [items, setItems] = useState(0);
+   const [sales, setSales] = useState(0);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -54,12 +57,14 @@ const AdminDashboard = () => {
   const [dayData, setDayData] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [radialData, setRadialData] = useState([]);
-  
+ const abortRef = useRef(null);
   // Get user info from localStorage
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const userName = userInfo?.name || "Admin User";
   const userEmail = userInfo?.email || "admin@example.com";
   const userRole = userInfo?.role || "Administrator";
+ const base = import.meta.env.VITE_API_BASE_URL;
+
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -157,27 +162,138 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  
+  useEffect(() => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const fetchCustomers = async () => {
+      try {
+        const res = await axios.get(`${base}/clients/count`, { signal: controller.signal });
+        setCustomers(res.data?.totalClients ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Customer fetch failed:", err);
+      }
+    };
+
+    const fetchItems = async () => {
+      try {
+        const res = await axios.get(`${base}/products/count`, { signal: controller.signal });
+        setItems(res.data?.totalProducts ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Items fetch failed:", err);
+      }
+    };
+
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(`${base}/group-users/count`, { signal: controller.signal });
+        setUsers(res.data?.totalUsers ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Users fetch failed:", err);
+      }
+    };
+
+
+    const fetchNotifcations = async () => {
+      try {
+        const res = await axios.get(`${base}/notifications`, {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          }, signal: controller.signal
+        });
+        console.log("No ", res.data);
+        
+        setNotifications(res.data);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+
+    const fetchSales = async () => {
+      try {
+        const res = await axios.get(`${base}/orders/total`, { signal: controller.signal });
+        setSales(res.data?.totalSales ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Sales fetch failed:", err);
+      }
+    };
+
+
+    const fetchAll = async () => {
+      setLoading(true);
+      await Promise.allSettled([
+        fetchCustomers(),
+        fetchItems(),
+        fetchUsers(),
+        fetchSales(),
+        // fetchRevenue(),
+        fetchNotifcations(),
+      ]);
+      // Add a slight delay to show loading animation
+      setTimeout(() => setLoading(false), 1000);
+    };
+
+    fetchAll();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+
+console.log("Notification ", notifications);
+
+
+  // ✅ Mark single notification as read
+  const clearNotification = async (id) => {
+    try {
+      await axios.put(`${base}/notifications/${id}/read`);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error("Clear failed:", err);
+    }
+  };
+
+  // ✅ Mark all notifications as read
+  const clearAll = async () => {
+    try {
+      await axios.put(`${base}/notifications/mark-all`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setNotifications([]);
+    } catch (err) {
+      console.error("Clear all failed:", err);
+    }
+  };
+
+
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, []);
 
   // Dynamic data for summary cards based on API responses
+  console.log(customers);
+  
   const summaryData = [
-    { name: "Customers", value: users.length, icon: <FiUsers className="text-blue-500 text-xl" />, change: "+12%", color: "bg-blue-100" },
-    { name: "Products", value: allProducts.length, icon: <FiShoppingBag className="text-green-500 text-xl" />, change: "+5%", color: "bg-green-100" },
-    { name: "Staff", value: users.filter(user => user.role === 'staff').length, icon: <FiUser className="text-purple-500 text-xl" />, change: "+2%", color: "bg-purple-100" },
-    { name: "Transactions", value: transactions.length, icon: <FiFileText className="text-amber-500 text-xl" />, change: "+8%", color: "bg-amber-100" },
+    { name: "Customers", value: customers, icon: <FiUsers className="text-blue-500 text-xl" />, change: "+12%", color: "bg-blue-100" },
+    { name: "Products", value: items, icon: <FiShoppingBag className="text-green-500 text-xl" />, change: "+5%", color: "bg-green-100" },
+    { name: "Staff", value: users, icon: <FiUser className="text-purple-500 text-xl" />, change: "+2%", color: "bg-purple-100" },
+    { name: "Transactions", value: sales, icon: <FiFileText className="text-amber-500 text-xl" />, change: "+8%", color: "bg-amber-100" },
   ];
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markNotificationAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
+    setNotifications(notifications.map(notification =>
       notification.id === id ? { ...notification, read: true } : notification
     ));
   };
@@ -199,7 +315,7 @@ const AdminDashboard = () => {
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="flex justify-between items-center px-4 py-3 md:px-6">
           <div className="flex items-center">
-            <button 
+            <button
               className="md:hidden mr-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
@@ -215,21 +331,21 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2 md:space-x-4">
             {/* Search - hidden on mobile */}
             <div className="relative hidden md:block">
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                placeholder="Search..."
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-48 transition-all duration-300 focus:w-56"
               />
             </div>
-            
+
             {/* Notifications Bell */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="p-2 rounded-full hover:bg-gray-100 relative transition-colors duration-200"
               >
@@ -240,51 +356,49 @@ const AdminDashboard = () => {
                   </span>
                 )}
               </button>
-              
+
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 md:w-80 bg-white rounded-lg shadow-xl z-10 border border-gray-200 animate-fadeIn">
-                  <div className="p-3 border-b border-gray-200 font-semibold flex justify-between items-center">
-                    <span>Notifications</span>
-                    <button 
-                      className="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800 transition-colors duration-200"
-                      onClick={() => setNotifications(notifications.map(n => ({...n, read: true})))}
-                    >
-                      Mark all as read
-                    </button>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map(notification => (
-                        <div 
-                          key={notification.id} 
-                          className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-200 ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
-                          onClick={() => markNotificationAsRead(notification.id)}
-                        >
-                          <div className="flex justify-between">
-                            <p className={`text-sm ${notification.read ? 'text-gray-600' : 'text-gray-800 font-medium'}`}>
-                              {notification.message}
-                            </p>
-                            {!notification.read && (
-                              <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 flex-shrink-0 ml-2"></span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">No notifications</div>
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="flex justify-between items-center p-2 border-b">
+                    <h3 className="font-semibold text-sm">Notifications</h3>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearAll}
+                        className="text-xs text-blue-500 hover:underline"
+                      >
+                        Clear All
+                      </button>
                     )}
                   </div>
-                  <div className="p-3 border-t border-gray-200 text-center">
-                    <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
-                      View all notifications
-                    </button>
+
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500">No new notifications</p>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif._id}
+                          className="flex justify-between items-start p-3 border-b hover:bg-gray-50"
+                        >
+                          <div>
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            <p className="text-xs text-gray-600">{notif.message}</p>
+                          </div>
+                          <button
+                            onClick={() => clearNotification(notif._id)}
+                            className="ml-2 text-gray-400 hover:text-red-500"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
             </div>
-            
+
             {/* User Profile */}
             <div className="flex items-center space-x-2">
               <div className="relative">
@@ -294,7 +408,7 @@ const AdminDashboard = () => {
                 <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
               </div>
               <div className="hidden md:block text-right">
-                <div className="text-sm font-medium uppercase">{userName}</div>
+                <div className="text-sm font-medium capitalize">{userName}</div>
                 <div className="text-xs text-gray-500 uppercase">{userRole}</div>
               </div>
             </div>
@@ -305,9 +419,9 @@ const AdminDashboard = () => {
         <div className="px-4 pb-3 md:hidden transition-all duration-300 ease-in-out">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
+            <input
+              type="text"
+              placeholder="Search..."
               className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full transition-all duration-300"
             />
           </div>
@@ -336,7 +450,7 @@ const AdminDashboard = () => {
             <div key={index} className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group">
               {/* Animated background element */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
+
               <div className="flex justify-between items-start relative z-10">
                 <div className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}>
                   {item.icon}
@@ -380,14 +494,14 @@ const AdminDashboard = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                           <Cell key={`cell-bg-${index}`} fill="#e5e7eb" />
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [`${value}%`, 'Percentage']}
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
-                            border: '1px solid #e5e7eb', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
                             borderRadius: '6px',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                          }} 
+                          }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -415,13 +529,13 @@ const AdminDashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e5e7eb', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
                       borderRadius: '6px',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                    }} 
+                    }}
                   />
                   <Bar dataKey="calls" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -449,13 +563,13 @@ const AdminDashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e5e7eb', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
                       borderRadius: '6px',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                    }} 
+                    }}
                   />
                   <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
                 </BarChart>
