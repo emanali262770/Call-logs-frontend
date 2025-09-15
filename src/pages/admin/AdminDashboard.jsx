@@ -38,6 +38,8 @@ import {
   FiStar,
   FiTarget
 } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
+
 
 const AdminDashboard = () => {
   const [recentProducts, setRecentProducts] = useState([]);
@@ -389,7 +391,7 @@ console.log("Notification ", notifications);
                             onClick={() => clearNotification(notif._id)}
                             className="ml-2 text-gray-400 hover:text-red-500"
                           >
-                            <X size={14} />
+                            <IoClose size={14} />
                           </button>
                         </div>
                       ))
