@@ -101,7 +101,7 @@ const ProductsPage = () => {
 
       setTimeout(() => {
         setLoading(false);
-      }, 1000);
+      }, 3000);
     } catch (err) {
       console.error("Fetch products error:", err);
       toast.error("Failed to fetch products!");
