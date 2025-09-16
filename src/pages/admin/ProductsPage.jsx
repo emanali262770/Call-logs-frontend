@@ -1,8 +1,18 @@
 import React, { useEffect, useCallback, useState, useRef } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
-import axios from 'axios'
-import { FiEdit, FiTrash, FiSearch, FiX, FiTrendingUp, FiTrendingDown, FiPlus, FiDollarSign, FiBarChart2 } from "react-icons/fi";
+import axios from "axios";
+import {
+  FiEdit,
+  FiSearch,
+  FiX,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiPlus,
+  FiDollarSign,
+  FiBarChart2,
+  FiTrash2,
+} from "react-icons/fi";
 import Swal from "sweetalert2";
 import { PuffLoader } from "react-spinners";
 
@@ -19,11 +29,11 @@ const ProductsPage = () => {
     image: "",
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null); 
+  const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
-  const [image, setImage] = useState(null);           
-  const [imagePreview, setImagePreview] = useState(null); 
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Get User from the LocalStorage
@@ -34,14 +44,14 @@ const ProductsPage = () => {
     if (searchTerm === "") {
       setFilteredProducts(products);
     } else {
-      const filtered = products.filter(product =>
+      const filtered = products.filter((product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredProducts(filtered);
     }
   }, [searchTerm, products]);
 
-  // slider styling 
+  // slider styling
   useEffect(() => {
     if (isSliderOpen && sliderRef.current) {
       gsap.fromTo(
@@ -70,7 +80,7 @@ const ProductsPage = () => {
       if (!userInfo?.token) {
         throw new Error("Token not found");
       }
-  
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/products`,
         {
@@ -80,24 +90,24 @@ const ProductsPage = () => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
-  
+
       const result = await response.json();
       setProducts(result.data);
       setFilteredProducts(result.data);
-  
+
       setTimeout(() => {
         setLoading(false);
-      }, 1000);
+      }, 3000);
     } catch (err) {
       console.error("Fetch products error:", err);
       toast.error("Failed to fetch products!");
     }
   }, []);
-  
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -109,7 +119,7 @@ const ProductsPage = () => {
       if (!userInfo?.token) {
         throw new Error("Token not found");
       }
-  
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/products/analytics/monthly`,
         {
@@ -119,11 +129,11 @@ const ProductsPage = () => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch product analytics");
       }
-  
+
       const result = await response.json();
       setProductsByMonths(result.data);
     } catch (err) {
@@ -131,7 +141,7 @@ const ProductsPage = () => {
       toast.error("Failed to fetch product analytics!");
     }
   }, []);
-  
+
   useEffect(() => {
     fetchProductsAddMonths();
   }, [fetchProductsAddMonths]);
@@ -202,7 +212,7 @@ const ProductsPage = () => {
       });
   };
 
-  // Get Currently Month 
+  // Get Currently Month
   const getCurrentMonth = () => {
     const date = new Date();
     return date.toLocaleString("default", { month: "long" });
@@ -214,11 +224,11 @@ const ProductsPage = () => {
     const fetchOrdersByMonth = async (month) => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/orders?month=${month}`,
+          `${import.meta.env.VITE_API_BASE_URL}/orders?month=${month}`
         );
 
         const res = response.data.data;
-        setOrders(res)
+        setOrders(res);
       } catch (error) {
         console.error("Error fetching orders by month:", error);
         return [];
@@ -233,20 +243,20 @@ const ProductsPage = () => {
     const formData = new FormData();
     formData.append("name", formState.name);
     formData.append("price", formState.price);
-  
+
     if (image) {
       formData.append("image", image);
     }
-  
+
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       };
-  
+
       let response;
-  
+
       if (isEdit && editId) {
         response = await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/products/${editId}`,
@@ -255,7 +265,7 @@ const ProductsPage = () => {
         );
         toast.success("✅ Product updated successfully");
         fetchProducts();
-        fetchProductsAddMonths()
+        fetchProductsAddMonths();
       } else {
         response = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/products`,
@@ -264,16 +274,15 @@ const ProductsPage = () => {
         );
         toast.success("✅ Product added successfully");
         fetchProducts();
-        fetchProductsAddMonths()
+        fetchProductsAddMonths();
       }
-  
+
       setEditFormState({ name: "", price: "", image: "" });
       setImage(null);
       setImagePreview(null);
       setIsSliderOpen(false);
       setIsEdit(false);
       setEditId(null);
-  
     } catch (error) {
       console.error(error);
       toast.error(`❌ ${isEdit ? "Update" : "Add"} product failed`);
@@ -297,15 +306,15 @@ const ProductsPage = () => {
     setImagePreview("");
     setEditFormState({ ...formState, image: "" });
   };
-  
+
   const parseCurrency = (value) => {
     if (value == null) return 0;
     return parseFloat(String(value).replace(/[^0-9.]/g, "")) || 0;
   };
 
-  // Capital 1st letter 
+  // Capital 1st letter
   function capitalizeFirstLetter(string) {
-    if (!string) return '';
+    if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
@@ -327,24 +336,32 @@ const ProductsPage = () => {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <PuffLoader
-            height="150"
-            width="150"
-            radius={1}
-            color="#00809D"
-          />
+          <PuffLoader height="150" width="150" radius={1} color="#1d4ed8" />
         </div>
       </div>
     );
   }
 
   // Calculate analytics data
-  const totalConfirmed = orders.filter(o => o.orderStatus === "Confirmed").length;
-  const totalCanceled = orders.filter(o => o.orderStatus === "Canceled").length;
+  const totalConfirmed = orders.filter(
+    (o) => o.orderStatus === "Confirmed"
+  ).length;
+  const totalCanceled = orders.filter(
+    (o) => o.orderStatus === "Canceled"
+  ).length;
   const totalOrdersCount = orders.length;
-  const confirmedPercent = totalOrdersCount > 0 ? Math.round((totalConfirmed / totalOrdersCount) * 100) : 0;
-  const canceledPercent = totalOrdersCount > 0 ? Math.round((totalCanceled / totalOrdersCount) * 100) : 0;
-  const totalSales = orders.reduce((sum, order) => sum + (order.totalSales || 0), 0);
+  const confirmedPercent =
+    totalOrdersCount > 0
+      ? Math.round((totalConfirmed / totalOrdersCount) * 100)
+      : 0;
+  const canceledPercent =
+    totalOrdersCount > 0
+      ? Math.round((totalCanceled / totalOrdersCount) * 100)
+      : 0;
+  const totalSales = orders.reduce(
+    (sum, order) => sum + (order.totalSales || 0),
+    0
+  );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -373,14 +390,18 @@ const ProductsPage = () => {
           }
         `}
       </style>
-      
+
       {/* Page Header with Add Product Button and Search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-newPrimary">Manage Products</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your products inventory</p>
+          <h1 className="text-3xl font-bold text-newPrimary">
+            Manage Products
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage your products inventory
+          </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           {/* Search Input */}
           <div className="relative">
@@ -403,7 +424,7 @@ const ProductsPage = () => {
               </button>
             )}
           </div>
-          
+
           <button
             className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
             onClick={handleAddProduct}
@@ -417,7 +438,8 @@ const ProductsPage = () => {
       {/* Results count */}
       {searchTerm && (
         <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-          Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} matching "{searchTerm}"
+          Found {filteredProducts.length} product
+          {filteredProducts.length !== 1 ? "s" : ""} matching "{searchTerm}"
         </div>
       )}
 
@@ -430,11 +452,13 @@ const ProductsPage = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Total Products</p>
-              <h3 className="text-2xl font-bold text-gray-800">{products.length}</h3>
+              <h3 className="text-2xl font-bold text-gray-800">
+                {products.length}
+              </h3>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center">
             <div className="p-3 rounded-lg bg-green-100 mr-4">
@@ -442,11 +466,13 @@ const ProductsPage = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Total Sales</p>
-              <h3 className="text-2xl font-bold text-gray-800">${totalSales.toLocaleString()}</h3>
+              <h3 className="text-2xl font-bold text-gray-800">
+                ${totalSales.toLocaleString()}
+              </h3>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center">
             <div className="p-3 rounded-lg bg-purple-100 mr-4">
@@ -454,7 +480,9 @@ const ProductsPage = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Confirmed Orders</p>
-              <h3 className="text-2xl font-bold text-gray-800">{totalConfirmed}</h3>
+              <h3 className="text-2xl font-bold text-gray-800">
+                {totalConfirmed}
+              </h3>
             </div>
           </div>
         </div>
@@ -462,15 +490,17 @@ const ProductsPage = () => {
 
       {/* Main Content with Table and Cards */}
       <div className="flex flex-col lg:flex-row gap-6">
-
         {/* Product List Table */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 w-full lg:w-2/3 overflow-hidden">
-        
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
-            <span className="text-sm text-gray-500">{filteredProducts.length} items</span>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Product List
+            </h2>
+            <span className="text-sm text-gray-500">
+              {filteredProducts.length} items
+            </span>
           </div>
-          
+
           <div className="overflow-x-auto scrollbar-hide">
             <div className="w-full">
               {/* Table Headers */}
@@ -510,45 +540,50 @@ const ProductsPage = () => {
                         </div>
 
                         {/* Price */}
-                        <div className="text-sm font-medium text-gray-900">${price.toLocaleString()}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          ${price.toLocaleString()}
+                        </div>
 
                         {/* Orders */}
-                        <div className="text-sm text-gray-500">{totalOrders} Orders</div>
+                        <div className="text-sm text-gray-500">
+                          {totalOrders} Orders
+                        </div>
 
                         {/* Sales */}
-                        <div className="text-sm font-semibold text-green-600">${totalSales.toLocaleString()}</div>
+                        <div className="text-sm font-semibold text-green-600">
+                          ${totalSales.toLocaleString()}
+                        </div>
 
                         {/* Actions */}
-                        {userInfo?.isAdmin &&
-                          <div className="text-right relative group">
-                            <button className="text-gray-400 hover:text-gray-600 text-xl p-2 rounded-lg hover:bg-gray-100 transition-colors">⋯</button>
-
-                            {/* Dropdown */}
-                            <div className="absolute right-0 top-10 w-32 bg-white border border-gray-200 rounded-lg shadow-lg 
-                opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
-                transition-all duration-300 z-50 flex flex-col overflow-hidden">
-                              <button
-                                onClick={() => handleEdit(product)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 text-gray-700 flex items-center gap-2 transition-colors">
-                                <FiEdit className="text-blue-500" />
-                                Edit
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(product._id)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-gray-700 flex items-center gap-2 transition-colors">
-                                <FiTrash className="text-red-500" />
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        }
+                        
+                        {userInfo?.isAdmin && (
+                                            <div className="hidden md:flex justify-end">
+                                              <div className="flex space-x-2">
+                                                <button
+                                                  onClick={() => handleEdit(product)}
+                                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                                >
+                                                  <FiEdit size={16} />
+                                                </button>
+                                                <button
+                                                  onClick={() => handleDelete(product._id)}
+                                                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                                >
+                                                  <FiTrash2 size={16} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          )}
+                       
                       </div>
                     );
                   })
                 ) : (
                   <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
                     <div className="mb-2 text-4xl">📦</div>
-                    {searchTerm ? 'No products found matching your search' : 'No products available'}
+                    {searchTerm
+                      ? "No products found matching your search"
+                      : "No products available"}
                   </div>
                 )}
               </div>
@@ -567,9 +602,11 @@ const ProductsPage = () => {
             <div className="space-y-4">
               {productsByMonths.map((item, index) => {
                 const count = item.count || 0;
-                const maxCount = Math.max(...productsByMonths.map(item => item.count || 0));
+                const maxCount = Math.max(
+                  ...productsByMonths.map((item) => item.count || 0)
+                );
                 const percentage = maxCount ? (count / maxCount) * 100 : 0;
-                
+
                 // Color variations for different bars
                 const barColors = [
                   "from-blue-500 to-blue-600",
@@ -579,19 +616,21 @@ const ProductsPage = () => {
                   "from-green-500 to-green-600",
                   "from-red-500 to-red-600",
                 ];
-                
+
                 const colorIndex = index % barColors.length;
-                
+
                 return (
                   <div key={index} className="flex items-center space-x-3">
-                    <span className="w-16 text-gray-600 font-medium text-sm">{item.month.slice(0, 3)}</span>
-                    
+                    <span className="w-16 text-gray-600 font-medium text-sm">
+                      {item.month.slice(0, 3)}
+                    </span>
+
                     <div className="flex-1">
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>{count} Products</span>
                         <span>{Math.round(percentage)}%</span>
                       </div>
-                      
+
                       <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden relative">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ease-out 
@@ -616,7 +655,9 @@ const ProductsPage = () => {
                 <FiTrendingUp className="text-green-500" />
                 Sales Analytics
               </h2>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{month}</span>
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                {month}
+              </span>
             </div>
 
             <div className="flex flex-col items-center mb-6">
@@ -631,7 +672,7 @@ const ProductsPage = () => {
                     stroke="#f3f4f6"
                     strokeWidth="3"
                   />
-                  
+
                   {/* Confirmed Orders Arc */}
                   <circle
                     cx="18"
@@ -640,12 +681,14 @@ const ProductsPage = () => {
                     fill="none"
                     stroke="url(#confirmedGradient)"
                     strokeWidth="3"
-                    strokeDasharray={`${confirmedPercent} ${100 - confirmedPercent}`}
+                    strokeDasharray={`${confirmedPercent} ${
+                      100 - confirmedPercent
+                    }`}
                     strokeDashoffset="25"
                     strokeLinecap="round"
                     transform="rotate(-90 18 18)"
                   />
-                  
+
                   {/* Canceled Orders Arc */}
                   {canceledPercent > 0 && (
                     <circle
@@ -655,29 +698,57 @@ const ProductsPage = () => {
                       fill="none"
                       stroke="url(#canceledGradient)"
                       strokeWidth="3"
-                      strokeDasharray={`${canceledPercent} ${100 - canceledPercent}`}
+                      strokeDasharray={`${canceledPercent} ${
+                        100 - canceledPercent
+                      }`}
                       strokeDashoffset={25 - confirmedPercent}
                       strokeLinecap="round"
                       transform="rotate(-90 18 18)"
                     />
                   )}
-                  
+
                   {/* Center Text */}
-                  <text x="18" y="16" textAnchor="middle" fontSize="4" fill="#6b7280" fontWeight="bold">
+                  <text
+                    x="18"
+                    y="16"
+                    textAnchor="middle"
+                    fontSize="4"
+                    fill="#6b7280"
+                    fontWeight="bold"
+                  >
                     Total Sales
                   </text>
-                  <text x="18" y="21" textAnchor="middle" fontSize="6" fill="#1f2937" fontWeight="bold">
+                  <text
+                    x="18"
+                    y="21"
+                    textAnchor="middle"
+                    fontSize="6"
+                    fill="#1f2937"
+                    fontWeight="bold"
+                  >
                     ${totalSales.toLocaleString()}
                   </text>
-                  
+
                   {/* Gradients for the arcs */}
                   <defs>
-                    <linearGradient id="confirmedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient
+                      id="confirmedGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
                       <stop offset="0%" stopColor="#10b981" />
                       <stop offset="100%" stopColor="#06b6d4" />
                     </linearGradient>
-                    
-                    <linearGradient id="canceledGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+
+                    <linearGradient
+                      id="canceledGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
                       <stop offset="0%" stopColor="#ef4444" />
                       <stop offset="100%" stopColor="#f59e0b" />
                     </linearGradient>
@@ -690,20 +761,32 @@ const ProductsPage = () => {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-green-800 font-medium">Confirmed</span>
+                  <span className="text-sm text-green-800 font-medium">
+                    Confirmed
+                  </span>
                   <FiTrendingUp className="text-green-600" />
                 </div>
-                <div className="text-xl font-bold text-green-900">{totalConfirmed}</div>
-                <div className="text-xs text-green-600 mt-1">{confirmedPercent}% success rate</div>
+                <div className="text-xl font-bold text-green-900">
+                  {totalConfirmed}
+                </div>
+                <div className="text-xs text-green-600 mt-1">
+                  {confirmedPercent}% success rate
+                </div>
               </div>
-              
+
               <div className="bg-red-50 p-4 rounded-lg border border-red-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-red-800 font-medium">Canceled</span>
+                  <span className="text-sm text-red-800 font-medium">
+                    Canceled
+                  </span>
                   <FiTrendingDown className="text-red-600" />
                 </div>
-                <div className="text-xl font-bold text-red-900">{totalCanceled}</div>
-                <div className="text-xs text-red-600 mt-1">{canceledPercent}% cancel rate</div>
+                <div className="text-xl font-bold text-red-900">
+                  {totalCanceled}
+                </div>
+                <div className="text-xs text-red-600 mt-1">
+                  {canceledPercent}% cancel rate
+                </div>
               </div>
             </div>
 
@@ -715,20 +798,20 @@ const ProductsPage = () => {
                   <span>{confirmedPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500"
                     style={{ width: `${confirmedPercent}%` }}
                   ></div>
                 </div>
               </div>
-              
+
               <div>
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                   <span>Canceled Orders</span>
                   <span>{canceledPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all duration-500"
                     style={{ width: `${canceledPercent}%` }}
                   ></div>
@@ -740,11 +823,15 @@ const ProductsPage = () => {
             <div className="mt-6 pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-600">Total Orders</span>
-                <span className="text-lg font-bold text-gray-800">{totalOrdersCount}</span>
+                <span className="text-lg font-bold text-gray-800">
+                  {totalOrdersCount}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Revenue</span>
-                <span className="text-lg font-bold text-green-600">${totalSales.toLocaleString()}</span>
+                <span className="text-lg font-bold text-green-600">
+                  ${totalSales.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
@@ -756,11 +843,15 @@ const ProductsPage = () => {
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity duration-300 flex justify-end">
           <div
             ref={sliderRef}
-            className="h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col">
+            className="h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col"
+          >
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-newPrimary"> {isEdit ? "Edit Product" : "Add New Product"}</h2>
+                <h2 className="text-xl font-bold text-newPrimary">
+                  {" "}
+                  {isEdit ? "Edit Product" : "Add New Product"}
+                </h2>
                 <button
                   className="text-gray-500 hover:text-gray-700 text-2xl p-1 rounded-full hover:bg-gray-100 transition-colors"
                   onClick={() => {
@@ -810,7 +901,10 @@ const ProductsPage = () => {
                         type="text"
                         value={formState.price}
                         onChange={(e) =>
-                          setEditFormState({ ...formState, price: e.target.value })
+                          setEditFormState({
+                            ...formState,
+                            price: e.target.value,
+                          })
                         }
                         className="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="0.00"
@@ -865,7 +959,9 @@ const ProductsPage = () => {
                     {/* Image Preview */}
                     {imagePreview && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Image Preview</h3>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">
+                          Image Preview
+                        </h3>
                         <div className="relative group w-full h-48">
                           <img
                             src={imagePreview}

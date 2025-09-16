@@ -294,7 +294,7 @@ const handleDelete = async (id) => {
             height="150"
             width="150"
             radius={1}
-            color="#00809D"
+            color="#1d4ed8"
           />
         </div>
       </div>

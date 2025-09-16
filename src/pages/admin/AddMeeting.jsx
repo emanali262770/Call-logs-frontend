@@ -232,7 +232,7 @@ const AddMeeting = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[80vh]">
-        <PuffLoader color="#00c7fc" />
+        <PuffLoader color="#1d4ed8" />
       </div>
     );
   }
@@ -278,7 +278,7 @@ const AddMeeting = () => {
               <div>Company Name</div>
               <div>Person</div>
               <div>Products</div>
-              <div>Status</div>
+              <div className="pl-6 ">Status</div>
               <div className="text-right col-span-2">Actions</div>
             </div>
 
@@ -322,9 +322,9 @@ const AddMeeting = () => {
                   <div className="hidden md:block text-sm font-medium text-gray-900 truncate">{meeting.companyName}</div>
                   <div className="hidden md:block text-sm text-gray-500 truncate">{meeting.person}</div>
                   <div className="hidden md:block text-sm text-gray-500 truncate">{meeting.products}</div>
-                  <div className="hidden md:block">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  <div className="hidden md:block pl-6">
+                    <div
+                      className={`max-w-fit  truncate items-center px-3 py-1 rounded-full text-xs font-medium ${
                         meeting.status === "Follow Up Required"
                           ? "bg-yellow-100 text-yellow-800"
                           : meeting.status === "Not Interested"
@@ -335,7 +335,7 @@ const AddMeeting = () => {
                       }`}
                     >
                       {meeting.status}
-                    </span>
+                    </div>
                   </div>
                   
                   {/* Mobile view content */}
@@ -501,7 +501,9 @@ const AddMeeting = () => {
                   </label>
                 </div>
               </div>
-
+            {
+              followUpStatus ==="Follow Up Required"&&(
+                   <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <label className="block text-gray-700 mb-2 font-medium">Next Follow-up Date</label>
@@ -662,6 +664,13 @@ const AddMeeting = () => {
                   </label>
                 </div>
               </div>
+             </>
+
+              )
+            }
+          
+
+             
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
