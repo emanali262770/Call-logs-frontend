@@ -16,7 +16,7 @@ import {
   Area,
   RadialBarChart,
   RadialBar,
-  Legend
+  Legend,
 } from "recharts";
 import {
   FiBell,
@@ -36,18 +36,19 @@ import {
   FiChevronRight,
   FiActivity,
   FiStar,
-  FiTarget
+  FiTarget,
 } from "react-icons/fi";
 import { IoClose } from "react-icons/io5";
-
+import { MdOpenInNew } from "react-icons/md";
+import Swal from "sweetalert2";
 
 const AdminDashboard = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [users, setUsers] = useState([]);
-   const [customers, setCustomers] = useState(0);
-   const [items, setItems] = useState(0);
-   const [sales, setSales] = useState(0);
+  const [customers, setCustomers] = useState(0);
+  const [items, setItems] = useState(0);
+  const [sales, setSales] = useState(0);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -59,33 +60,36 @@ const AdminDashboard = () => {
   const [dayData, setDayData] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [radialData, setRadialData] = useState([]);
- const abortRef = useRef(null);
+ 
+
+  const abortRef = useRef(null);
   // Get user info from localStorage
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const userName = userInfo?.name || "Admin User";
   const userEmail = userInfo?.email || "admin@example.com";
   const userRole = userInfo?.role || "Administrator";
- const base = import.meta.env.VITE_API_BASE_URL;
-
+  const base = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
         const [
-          allProductsRes, 
-          recentProductsRes, 
-          usersRes, 
+          allProductsRes,
+          recentProductsRes,
+          usersRes,
           transactionsRes,
           notificationsRes,
           performanceRes,
           callDataRes,
           dayDataRes,
           pieDataRes,
-          radialDataRes
+          radialDataRes,
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/products?limit=5&sort=desc`),
+          axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/products?limit=5&sort=desc`
+          ),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/users`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/notifications`),
@@ -106,7 +110,7 @@ const AdminDashboard = () => {
         setDayData(dayDataRes.data.data);
         setPieData(pieDataRes.data.data);
         setRadialData(radialDataRes.data.data);
-        
+
         setTimeout(() => {
           setLoading(false);
         }, 1500);
@@ -114,15 +118,30 @@ const AdminDashboard = () => {
         console.error("Failed to fetch dashboard data:", error);
         // Fallback to static data if API calls fail
         setNotifications([
-          { id: 1, message: "New user registered", time: "2 mins ago", read: false },
-          { id: 2, message: "Order #1234 completed", time: "1 hour ago", read: false },
-          { id: 3, message: "System update available", time: "5 hours ago", read: true }
+          {
+            id: 1,
+            message: "New user registered",
+            time: "2 mins ago",
+            read: false,
+          },
+          {
+            id: 2,
+            message: "Order #1234 completed",
+            time: "1 hour ago",
+            read: false,
+          },
+          {
+            id: 3,
+            message: "System update available",
+            time: "5 hours ago",
+            read: true,
+          },
         ]);
         setPerformanceData([
-          { name: 'Week 1', efficiency: 75, satisfaction: 85 },
-          { name: 'Week 2', efficiency: 60, satisfaction: 78 },
-          { name: 'Week 3', efficiency: 85, satisfaction: 90 },
-          { name: 'Week 4', efficiency: 70, satisfaction: 82 },
+          { name: "Week 1", efficiency: 75, satisfaction: 85 },
+          { name: "Week 2", efficiency: 60, satisfaction: 78 },
+          { name: "Week 3", efficiency: 85, satisfaction: 90 },
+          { name: "Week 4", efficiency: 70, satisfaction: 82 },
         ]);
         setCallData([
           { name: "Jan", calls: 20 },
@@ -153,9 +172,9 @@ const AdminDashboard = () => {
           { name: "Follow Ups", value: 62, color: "#3b82f6" },
         ]);
         setRadialData([
-          { name: 'Goal Completion', value: 78, fill: '#8884d8' },
-          { name: 'Target Achievement', value: 65, fill: '#83a6ed' },
-          { name: 'Productivity', value: 92, fill: '#8dd1e1' },
+          { name: "Goal Completion", value: 78, fill: "#8884d8" },
+          { name: "Target Achievement", value: 65, fill: "#83a6ed" },
+          { name: "Productivity", value: 92, fill: "#8dd1e1" },
         ]);
         setLoading(false);
       }
@@ -164,14 +183,15 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
 
     const fetchCustomers = async () => {
       try {
-        const res = await axios.get(`${base}/clients/count`, { signal: controller.signal });
+        const res = await axios.get(`${base}/clients/count`, {
+          signal: controller.signal,
+        });
         setCustomers(res.data?.totalClients ?? 0);
       } catch (err) {
         if (!axios.isCancel(err)) console.error("Customer fetch failed:", err);
@@ -180,7 +200,9 @@ const AdminDashboard = () => {
 
     const fetchItems = async () => {
       try {
-        const res = await axios.get(`${base}/products/count`, { signal: controller.signal });
+        const res = await axios.get(`${base}/products/count`, {
+          signal: controller.signal,
+        });
         setItems(res.data?.totalProducts ?? 0);
       } catch (err) {
         if (!axios.isCancel(err)) console.error("Items fetch failed:", err);
@@ -189,39 +211,41 @@ const AdminDashboard = () => {
 
     const fetchUsers = async () => {
       try {
-        const res = await axios.get(`${base}/group-users/count`, { signal: controller.signal });
+        const res = await axios.get(`${base}/group-users/count`, {
+          signal: controller.signal,
+        });
         setUsers(res.data?.totalUsers ?? 0);
       } catch (err) {
         if (!axios.isCancel(err)) console.error("Users fetch failed:", err);
       }
     };
 
-
     const fetchNotifcations = async () => {
       try {
         const res = await axios.get(`${base}/notifications`, {
           headers: {
             Authorization: `Bearer ${userInfo.token}`,
-          }, signal: controller.signal
+          },
+          signal: controller.signal,
         });
-        console.log("No ", res.data);
-        
+       
+
         setNotifications(res.data);
       } catch (err) {
         if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
       }
     };
 
-
     const fetchSales = async () => {
       try {
-        const res = await axios.get(`${base}/orders/total`, { signal: controller.signal });
+        const res = await axios.get(`${base}/orders/total`, {
+          signal: controller.signal,
+        });
         setSales(res.data?.totalSales ?? 0);
       } catch (err) {
         if (!axios.isCancel(err)) console.error("Sales fetch failed:", err);
       }
     };
-
 
     const fetchAll = async () => {
       setLoading(true);
@@ -244,8 +268,6 @@ const AdminDashboard = () => {
     };
   }, []);
 
-
-console.log("Notification ", notifications);
 
 
   // ✅ Mark single notification as read
@@ -272,7 +294,6 @@ console.log("Notification ", notifications);
     }
   };
 
-
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -282,29 +303,69 @@ console.log("Notification ", notifications);
     return () => clearInterval(timer);
   }, []);
 
-  // Dynamic data for summary cards based on API responses
-  console.log(customers);
-  
+ 
   const summaryData = [
-    { name: "Customers", value: customers, icon: <FiUsers className="text-blue-500 text-xl" />, change: "+12%", color: "bg-blue-100" },
-    { name: "Products", value: items, icon: <FiShoppingBag className="text-green-500 text-xl" />, change: "+5%", color: "bg-green-100" },
-    { name: "Staff", value: users, icon: <FiUser className="text-purple-500 text-xl" />, change: "+2%", color: "bg-purple-100" },
-    { name: "Transactions", value: sales, icon: <FiFileText className="text-amber-500 text-xl" />, change: "+8%", color: "bg-amber-100" },
+    {
+      name: "Customers",
+      value: customers,
+      icon: <FiUsers className="text-blue-500 text-xl" />,
+      change: "+12%",
+      color: "bg-blue-100",
+    },
+    {
+      name: "Products",
+      value: items,
+      icon: <FiShoppingBag className="text-green-500 text-xl" />,
+      change: "+5%",
+      color: "bg-green-100",
+    },
+    {
+      name: "Staff",
+      value: users,
+      icon: <FiUser className="text-purple-500 text-xl" />,
+      change: "+2%",
+      color: "bg-purple-100",
+    },
+    {
+      name: "Transactions",
+      value: sales,
+      icon: <FiFileText className="text-amber-500 text-xl" />,
+      change: "+8%",
+      color: "bg-amber-100",
+    },
   ];
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const openNotifModal = (notif) => {
+  
+    
+  Swal.fire({
+    title: notif?.title ?? "Details",
+    text: notif?.message ?? "No description available.",
+    icon: "info",
+    confirmButtonText: "Close",
+  });
+
+ 
+ 
+};
+
+
 
   const markNotificationAsRead = (id) => {
-    setNotifications(notifications.map(notification =>
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+    setNotifications(
+      notifications.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
         <div className="text-center">
-          <PuffLoader color="#3b82f6" size={80} />
+          <PuffLoader color="#1d4ed8" size={80} />
           <p className="mt-4 text-gray-600">Loading dashboard data...</p>
         </div>
       </div>
@@ -324,10 +385,19 @@ console.log("Notification ", notifications);
               {mobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-indigo-600">Call Logs Dashboard</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-indigo-600">
+                Call Logs Dashboard
+              </h1>
               <div className="flex items-center mt-1 text-xs md:text-sm text-gray-500">
                 <FiCalendar className="mr-1 hidden sm:block" />
-                <span className="hidden sm:block">{currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span className="hidden sm:block">
+                  {currentTime.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
                 <FiClock className="ml-0 sm:ml-3 mr-1" />
                 <span>{currentTime.toLocaleTimeString()}</span>
               </div>
@@ -376,7 +446,9 @@ console.log("Notification ", notifications);
 
                   <div className="max-h-64 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <p className="p-4 text-sm text-gray-500">No new notifications</p>
+                      <p className="p-4 text-sm text-gray-500">
+                        No new notifications
+                      </p>
                     ) : (
                       notifications.map((notif) => (
                         <div
@@ -385,14 +457,25 @@ console.log("Notification ", notifications);
                         >
                           <div>
                             <p className="font-medium text-sm">{notif.title}</p>
-                            <p className="text-xs text-gray-600">{notif.message}</p>
+                            <p className="text-xs text-gray-600">
+                              {notif.message}
+                            </p>
                           </div>
-                          <button
-                            onClick={() => clearNotification(notif._id)}
-                            className="ml-2 text-gray-400 hover:text-red-500"
-                          >
-                            <IoClose size={14} />
-                          </button>
+                          <div className="flex cursor-pointer items-center gap-1">
+                            <button
+                              onClick={() => openNotifModal(notif)}
+                              className="p-1 hover:text-blue-600"
+                            >
+                              <MdOpenInNew size={12} className="text-primary" />
+                            </button>
+
+                            <button
+                              onClick={() => clearNotification(notif._id)}
+                              className=" text-gray-400  hover:text-red-500"
+                            >
+                              <IoClose size={14} />
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
@@ -411,7 +494,9 @@ console.log("Notification ", notifications);
               </div>
               <div className="hidden md:block text-right">
                 <div className="text-sm font-medium capitalize">{userName}</div>
-                <div className="text-xs text-gray-500 uppercase">{userRole}</div>
+                <div className="text-xs text-gray-500 uppercase">
+                  {userRole}
+                </div>
               </div>
             </div>
           </div>
@@ -436,8 +521,12 @@ console.log("Notification ", notifications);
         <div className="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 md:p-6 rounded-xl shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold">Welcome back, {userName}!</h1>
-              <p className="text-indigo-100 mt-1">Here's what's happening with your call logs today.</p>
+              <h1 className="text-xl md:text-2xl font-bold">
+                Welcome back, {userName}!
+              </h1>
+              <p className="text-indigo-100 mt-1">
+                Here's what's happening with your call logs today.
+              </p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-2 bg-white/20 p-2 rounded-lg">
               <FiActivity className="animate-pulse" />
@@ -449,21 +538,36 @@ console.log("Notification ", notifications);
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {summaryData.map((item, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group">
+            <div
+              key={index}
+              className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group"
+            >
               {/* Animated background element */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
               <div className="flex justify-between items-start relative z-10">
-                <div className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}>
+                <div
+                  className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                >
                   {item.icon}
                 </div>
-                <span className={`text-xs md:text-sm font-medium ${item.change.includes('+') ? 'text-green-600' : 'text-red-600'}`}>
+                <span
+                  className={`text-xs md:text-sm font-medium ${
+                    item.change.includes("+")
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
                   {item.change}
                 </span>
               </div>
               <div className="mt-4 relative z-10">
-                <div className="text-2xl md:text-3xl font-bold text-gray-800">{item.value}</div>
-                <div className="text-gray-500 text-sm md:text-base mt-1">{item.name}</div>
+                <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                  {item.value}
+                </div>
+                <div className="text-gray-500 text-sm md:text-base mt-1">
+                  {item.name}
+                </div>
               </div>
             </div>
           ))}
@@ -474,7 +578,9 @@ console.log("Notification ", notifications);
           {/* Performance Summary */}
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Performance Summary</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Performance Summary
+              </h2>
               <FiTarget className="text-indigo-500" />
             </div>
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
@@ -484,7 +590,10 @@ console.log("Notification ", notifications);
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={[{ value: entry.value }, { value: 100 - entry.value }]}
+                          data={[
+                            { value: entry.value },
+                            { value: 100 - entry.value },
+                          ]}
                           cx="50%"
                           cy="50%"
                           innerRadius={40}
@@ -497,18 +606,22 @@ console.log("Notification ", notifications);
                           <Cell key={`cell-bg-${index}`} fill="#e5e7eb" />
                         </Pie>
                         <Tooltip
-                          formatter={(value) => [`${value}%`, 'Percentage']}
+                          formatter={(value) => [`${value}%`, "Percentage"]}
                           contentStyle={{
-                            backgroundColor: '#fff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                            backgroundColor: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "6px",
+                            boxShadow:
+                              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                           }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold" style={{ color: entry.color }}>
+                      <span
+                        className="text-lg font-bold"
+                        style={{ color: entry.color }}
+                      >
                         {entry.value}%
                       </span>
                     </div>
@@ -522,7 +635,9 @@ console.log("Notification ", notifications);
           {/* Weekly Call Volume */}
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Weekly Call Volume</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Weekly Call Volume
+              </h2>
               <FiTrendingUp className="text-green-500" />
             </div>
             <div className="h-64">
@@ -533,10 +648,11 @@ console.log("Notification ", notifications);
                   <YAxis />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      boxShadow:
+                        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                     }}
                   />
                   <Bar dataKey="calls" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -551,7 +667,9 @@ console.log("Notification ", notifications);
           {/* Total Calls */}
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Monthly Call Trends</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Monthly Call Trends
+              </h2>
               <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200 flex items-center">
                 View report <FiChevronRight className="ml-1" />
               </button>
@@ -567,10 +685,11 @@ console.log("Notification ", notifications);
                   <YAxis />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                      boxShadow:
+                        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                     }}
                   />
                   <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
@@ -582,21 +701,30 @@ console.log("Notification ", notifications);
           {/* Follow up Meetings */}
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Follow up Meetings</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Follow up Meetings
+              </h2>
               <div className="text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                {currentTime.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {currentTime.toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
               </div>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
-              {["S", "M", "T", "W", "T", "F", "S"].map((day) => (
-                <div key={day} className="font-medium text-gray-500 py-2">
+              {["S", "M", "T", "W", "T", "F", "S"].map((day,idx) => (
+                <div key={day+idx} className="font-medium text-gray-500 py-2">
                   {day}
                 </div>
               ))}
               {[29, 30, 1, 2, 3, 4, 5].map((date) => (
                 <div
                   key={`row1-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${[2, 15, 25].includes(date) ? "bg-blue-100 text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                    [2, 15, 25].includes(date)
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {date}
                 </div>
@@ -604,7 +732,11 @@ console.log("Notification ", notifications);
               {[6, 7, 8, 9, 10, 11, 12].map((date) => (
                 <div
                   key={`row2-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${[2, 15, 25].includes(date) ? "bg-blue-100 text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                    [2, 15, 25].includes(date)
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {date}
                 </div>
@@ -612,7 +744,11 @@ console.log("Notification ", notifications);
               {[13, 14, 15, 16, 17, 18, 19].map((date) => (
                 <div
                   key={`row3-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${[2, 15, 25].includes(date) ? "bg-blue-100 text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                    [2, 15, 25].includes(date)
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {date}
                 </div>
@@ -620,7 +756,11 @@ console.log("Notification ", notifications);
               {[20, 21, 22, 23, 24, 25, 26].map((date) => (
                 <div
                   key={`row4-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${[2, 15, 25].includes(date) ? "bg-blue-100 text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                    [2, 15, 25].includes(date)
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {date}
                 </div>
@@ -628,7 +768,11 @@ console.log("Notification ", notifications);
               {[27, 28, 29, 30, 31, 1, 2].map((date) => (
                 <div
                   key={`row5-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${[2, 15, 25].includes(date) ? "bg-blue-100 text-blue-600 font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                    [2, 15, 25].includes(date)
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {date}
                 </div>
@@ -637,13 +781,18 @@ console.log("Notification ", notifications);
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600">Scheduled meetings</span>
+                <span className="text-sm text-gray-600">
+                  Scheduled meetings
+                </span>
               </div>
-              <span className="text-sm font-medium text-blue-600">12 meetings</span>
+              <span className="text-sm font-medium text-blue-600">
+                12 meetings
+              </span>
             </div>
           </div>
         </div>
       </main>
+     
     </div>
   );
 };

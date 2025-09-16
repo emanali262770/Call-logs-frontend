@@ -290,7 +290,7 @@ const CustomerData = () => {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <PuffLoader height="150" width="150" radius={1} color="#00809D" />
+          <PuffLoader height="150" width="150" radius={1} color="#1d4ed8" />
         </div>
       </div>
     );
