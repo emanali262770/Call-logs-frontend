@@ -244,18 +244,18 @@ const ProductsPage = () => {
     formData.append("name", formState.name);
     formData.append("price", formState.price);
 
-    if (image) {
-      formData.append("image", image);
-    }
+    formData.append("image", image); // single file
 
+
+    console.log("payload (FormData)", formState.name, formState.price, image);
+
+    let response;
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       };
-
-      let response;
 
       if (isEdit && editId) {
         response = await axios.put(
@@ -264,8 +264,6 @@ const ProductsPage = () => {
           { headers }
         );
         toast.success("✅ Product updated successfully");
-        fetchProducts();
-        fetchProductsAddMonths();
       } else {
         response = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/products`,
@@ -273,21 +271,25 @@ const ProductsPage = () => {
           { headers }
         );
         toast.success("✅ Product added successfully");
-        fetchProducts();
-        fetchProductsAddMonths();
       }
 
-      setEditFormState({ name: "", price: "", image: "" });
+      fetchProducts();
+      fetchProductsAddMonths();
+
+      // reset form
+      setEditFormState({ name: "", price: "" });
       setImage(null);
       setImagePreview(null);
       setIsSliderOpen(false);
       setIsEdit(false);
       setEditId(null);
+
     } catch (error) {
       console.error(error);
       toast.error(`❌ ${isEdit ? "Update" : "Add"} product failed`);
     }
   };
+
 
   // Image Upload
   const handleImageUpload = (e) => {
@@ -491,7 +493,7 @@ const ProductsPage = () => {
       {/* Main Content with Table and Cards */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Product List Table */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 w-full lg:w-2/3 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 w-full  overflow-hidden">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">
               Product List
@@ -555,26 +557,26 @@ const ProductsPage = () => {
                         </div>
 
                         {/* Actions */}
-                        
+
                         {userInfo?.isAdmin && (
-                                            <div className="hidden md:flex justify-end">
-                                              <div className="flex space-x-2">
-                                                <button
-                                                  onClick={() => handleEdit(product)}
-                                                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                                >
-                                                  <FiEdit size={16} />
-                                                </button>
-                                                <button
-                                                  onClick={() => handleDelete(product._id)}
-                                                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                                                >
-                                                  <FiTrash2 size={16} />
-                                                </button>
-                                              </div>
-                                            </div>
-                                          )}
-                       
+                          <div className="hidden md:flex justify-end">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                              >
+                                <FiEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product._id)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                              >
+                                <FiTrash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                       </div>
                     );
                   })
@@ -591,251 +593,7 @@ const ProductsPage = () => {
           </div>
         </div>
 
-        {/* Cards Section */}
-        <div className="flex flex-col gap-6 w-full lg:w-1/3">
-          {/* Monthly Data */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <FiBarChart2 className="text-blue-500" />
-              Products Added by Month
-            </h2>
-            <div className="space-y-4">
-              {productsByMonths.map((item, index) => {
-                const count = item.count || 0;
-                const maxCount = Math.max(
-                  ...productsByMonths.map((item) => item.count || 0)
-                );
-                const percentage = maxCount ? (count / maxCount) * 100 : 0;
-
-                // Color variations for different bars
-                const barColors = [
-                  "from-blue-500 to-blue-600",
-                  "from-purple-500 to-purple-600",
-                  "from-pink-500 to-pink-600",
-                  "from-orange-500 to-orange-600",
-                  "from-green-500 to-green-600",
-                  "from-red-500 to-red-600",
-                ];
-
-                const colorIndex = index % barColors.length;
-
-                return (
-                  <div key={index} className="flex items-center space-x-3">
-                    <span className="w-16 text-gray-600 font-medium text-sm">
-                      {item.month.slice(0, 3)}
-                    </span>
-
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>{count} Products</span>
-                        <span>{Math.round(percentage)}%</span>
-                      </div>
-
-                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden relative">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ease-out 
-                            bg-gradient-to-r ${barColors[colorIndex]} progress-bar-glow`}
-                          style={{ width: `${percentage}%` }}
-                        >
-                          {/* Animated shimmer effect */}
-                          <div className="animate-shimmer"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Enhanced Analytics Card */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <FiTrendingUp className="text-green-500" />
-                Sales Analytics
-              </h2>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                {month}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative w-40 h-40">
-                <svg className="w-full h-full" viewBox="0 0 36 36">
-                  {/* Base Circle */}
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9155"
-                    fill="none"
-                    stroke="#f3f4f6"
-                    strokeWidth="3"
-                  />
-
-                  {/* Confirmed Orders Arc */}
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9155"
-                    fill="none"
-                    stroke="url(#confirmedGradient)"
-                    strokeWidth="3"
-                    strokeDasharray={`${confirmedPercent} ${
-                      100 - confirmedPercent
-                    }`}
-                    strokeDashoffset="25"
-                    strokeLinecap="round"
-                    transform="rotate(-90 18 18)"
-                  />
-
-                  {/* Canceled Orders Arc */}
-                  {canceledPercent > 0 && (
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="15.9155"
-                      fill="none"
-                      stroke="url(#canceledGradient)"
-                      strokeWidth="3"
-                      strokeDasharray={`${canceledPercent} ${
-                        100 - canceledPercent
-                      }`}
-                      strokeDashoffset={25 - confirmedPercent}
-                      strokeLinecap="round"
-                      transform="rotate(-90 18 18)"
-                    />
-                  )}
-
-                  {/* Center Text */}
-                  <text
-                    x="18"
-                    y="16"
-                    textAnchor="middle"
-                    fontSize="4"
-                    fill="#6b7280"
-                    fontWeight="bold"
-                  >
-                    Total Sales
-                  </text>
-                  <text
-                    x="18"
-                    y="21"
-                    textAnchor="middle"
-                    fontSize="6"
-                    fill="#1f2937"
-                    fontWeight="bold"
-                  >
-                    ${totalSales.toLocaleString()}
-                  </text>
-
-                  {/* Gradients for the arcs */}
-                  <defs>
-                    <linearGradient
-                      id="confirmedGradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#06b6d4" />
-                    </linearGradient>
-
-                    <linearGradient
-                      id="canceledGradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#ef4444" />
-                      <stop offset="100%" stopColor="#f59e0b" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-green-800 font-medium">
-                    Confirmed
-                  </span>
-                  <FiTrendingUp className="text-green-600" />
-                </div>
-                <div className="text-xl font-bold text-green-900">
-                  {totalConfirmed}
-                </div>
-                <div className="text-xs text-green-600 mt-1">
-                  {confirmedPercent}% success rate
-                </div>
-              </div>
-
-              <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-red-800 font-medium">
-                    Canceled
-                  </span>
-                  <FiTrendingDown className="text-red-600" />
-                </div>
-                <div className="text-xl font-bold text-red-900">
-                  {totalCanceled}
-                </div>
-                <div className="text-xs text-red-600 mt-1">
-                  {canceledPercent}% cancel rate
-                </div>
-              </div>
-            </div>
-
-            {/* Progress bars */}
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Confirmed Orders</span>
-                  <span>{confirmedPercent}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500"
-                    style={{ width: `${confirmedPercent}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Canceled Orders</span>
-                  <span>{canceledPercent}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all duration-500"
-                    style={{ width: `${canceledPercent}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Total Orders</span>
-                <span className="text-lg font-bold text-gray-800">
-                  {totalOrdersCount}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Total Revenue</span>
-                <span className="text-lg font-bold text-green-600">
-                  ${totalSales.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       {/* Enhanced Right-Side Slider */}
