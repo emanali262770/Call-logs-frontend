@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { FiSearch, FiPlus, FiEdit, FiTrash2, FiCalendar, FiClock, FiUser, FiPhone, FiX } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiCalendar,
+  FiClock,
+  FiUser,
+  FiPhone,
+  FiX,
+} from "react-icons/fi";
+import { useCallback, useEffect } from "react";
 
 const FollowUp = () => {
-  const [followUpList, setFollowUpList] = useState([
-    { id: 1, customerName: "John Doe", customerNumber: "12345", customerDescription: "Discuss product demo", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { id: 2, customerName: "Jane Smith", customerNumber: "67890", customerDescription: "Follow up on payment", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { id: 3, customerName: "Alice Johnson", customerNumber: "11223", customerDescription: "Review contract", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { id: 4, customerName: "Bob Wilson", customerNumber: "44556", customerDescription: "Schedule meeting", date: "23 Jul, 2025", time: "12:30 PM", status: "Completed" },
-    { id: 5, customerName: "Charlie Brown", customerNumber: "77889", customerDescription: "Send proposal", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { id: 6, customerName: "Dana White", customerNumber: "99001", customerDescription: "Check availability", date: "23 Jul, 2025", time: "12:30 PM", status: "Completed" },
-    { id: 7, customerName: "Eve Davis", customerNumber: "22334", customerDescription: "Confirm order", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-    { id: 8, customerName: "Frank Miller", customerNumber: "55667", customerDescription: "Discuss feedback", date: "23 Jul, 2025", time: "12:30 PM", status: "Active" },
-  ]);
-
+  const [followUpList, setFollowUpList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -23,12 +24,40 @@ const FollowUp = () => {
   const [status, setStatus] = useState("Active");
   const [selectedFollowUp, setSelectedFollowUp] = useState(null);
 
-  const filteredFollowUps = followUpList.filter(followUp => 
-    followUp.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    followUp.customerNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    followUp.customerDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    followUp.status.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFollowUps = followUpList.filter(
+    (followUp) =>
+      followUp.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      followUp.customerNumber
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      followUp.customerDescription
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      followUp.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const fetchCustomerData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/meetings`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch meetings");
+      }
+      const result = await response.json();
+      setCustomerList(result);
+    } catch (error) {
+      console.error("Error fetching meetings data:", error);
+      toast.error("Failed to load meetings data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   const handleAddFollowUp = () => {
     setSelectedFollowUp(null);
@@ -53,17 +82,27 @@ const FollowUp = () => {
   };
 
   const handleDeleteClick = (id) => {
-    setFollowUpList(followUpList.filter(item => item.id !== id));
+    setFollowUpList(followUpList.filter((item) => item.id !== id));
   };
 
   const handleSave = () => {
     if (selectedFollowUp) {
       // Update existing follow-up
-      setFollowUpList(followUpList.map(item => 
-        item.id === selectedFollowUp.id 
-          ? { ...item, customerName, customerNumber, customerDescription, date, time, status }
-          : item
-      ));
+      setFollowUpList(
+        followUpList.map((item) =>
+          item.id === selectedFollowUp.id
+            ? {
+                ...item,
+                customerName,
+                customerNumber,
+                customerDescription,
+                date,
+                time,
+                status,
+              }
+            : item
+        )
+      );
     } else {
       // Add new follow-up
       const newFollowUp = {
@@ -73,11 +112,11 @@ const FollowUp = () => {
         customerDescription,
         date,
         time,
-        status
+        status,
       };
       setFollowUpList([...followUpList, newFollowUp]);
     }
-    
+
     setIsSliderOpen(false);
     setCustomerName("");
     setCustomerNumber("");
@@ -103,10 +142,14 @@ const FollowUp = () => {
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Follow Up</h1>
-          <p className="text-gray-500 text-sm">Manage your customer follow-ups</p>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
+            Follow Up
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Manage your customer follow-ups
+          </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -120,7 +163,7 @@ const FollowUp = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          
+
           <button
             onClick={handleAddFollowUp}
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
@@ -157,7 +200,9 @@ const FollowUp = () => {
                       <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
                         <FiUser className="text-blue-600" />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{followUp.customerName}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {followUp.customerName}
+                      </div>
                     </div>
                     <div className="text-right">
                       <span
@@ -171,7 +216,7 @@ const FollowUp = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Desktop view cells */}
                   <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
                     <FiUser className="mr-2 text-gray-400" />
@@ -181,7 +226,9 @@ const FollowUp = () => {
                     <FiPhone className="mr-2 text-gray-400" />
                     {followUp.customerNumber}
                   </div>
-                  <div className="hidden md:block text-sm text-gray-500 truncate">{followUp.customerDescription}</div>
+                  <div className="hidden md:block text-sm text-gray-500 truncate">
+                    {followUp.customerDescription}
+                  </div>
                   <div className="hidden md:flex items-center text-sm text-gray-500">
                     <FiCalendar className="mr-2 text-gray-400" />
                     {followUp.date}
@@ -201,7 +248,7 @@ const FollowUp = () => {
                       {followUp.status}
                     </span>
                   </div>
-                  
+
                   {/* Mobile view content */}
                   <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
                     <div className="text-xs text-gray-500">Number:</div>
@@ -209,23 +256,25 @@ const FollowUp = () => {
                       <FiPhone className="mr-1 text-gray-400" size={14} />
                       {followUp.customerNumber}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Description:</div>
-                    <div className="text-sm">{followUp.customerDescription}</div>
-                    
+                    <div className="text-sm">
+                      {followUp.customerDescription}
+                    </div>
+
                     <div className="text-xs text-gray-500">Date:</div>
                     <div className="text-sm flex items-center">
                       <FiCalendar className="mr-1 text-gray-400" size={14} />
                       {followUp.date}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Time:</div>
                     <div className="text-sm flex items-center">
                       <FiClock className="mr-1 text-gray-400" size={14} />
                       {followUp.time}
                     </div>
                   </div>
-                  
+
                   {/* Actions - visible on both mobile and desktop */}
                   <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
                     <div className="flex space-x-2">
@@ -265,45 +314,11 @@ const FollowUp = () => {
               </button>
             </div>
             <div className="p-4 md:p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Customer Name</label>
-                <div className="relative">
-                  <FiUser className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                    placeholder="Enter customer name"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Customer Number</label>
-                <div className="relative">
-                  <FiPhone className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    value={customerNumber}
-                    onChange={(e) => setCustomerNumber(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                    placeholder="Enter customer number"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Customer Description</label>
-                <textarea
-                  value={customerDescription}
-                  onChange={(e) => setCustomerDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                  placeholder="Enter description"
-                  rows="3"
-                />
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Date
+                  </label>
                   <div className="relative">
                     <FiCalendar className="absolute left-3 top-3 text-gray-400" />
                     <input
@@ -315,7 +330,9 @@ const FollowUp = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">Time</label>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Time
+                  </label>
                   <div className="relative">
                     <FiClock className="absolute left-3 top-3 text-gray-400" />
                     <input
@@ -328,13 +345,96 @@ const FollowUp = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Customer Name
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter customer name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Customer Number
+                </label>
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={customerNumber}
+                    onChange={(e) => setCustomerNumber(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter customer number"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Customer Description
+                </label>
+                <textarea
+                  value={customerDescription}
+                  onChange={(e) => setCustomerDescription(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                  placeholder="Enter description"
+                  rows="3"
+                />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-newPrimary mb-3">
+                  Next Follow Up
+                </h1>
+
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Date
+                      </label>
+                      <div className="relative">
+                        <FiCalendar className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="date"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Time
+                      </label>
+                      <div className="relative">
+                        <FiClock className="absolute left-3 top-3 text-gray-400" />
+                        <input
+                          type="time"
+                          value={time}
+                          onChange={(e) => setTime(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Status
+                </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
                 >
                   <option value="Active">Active</option>
+                  <option value="Hold">Hold</option>
                   <option value="Completed">Completed</option>
                 </select>
               </div>
