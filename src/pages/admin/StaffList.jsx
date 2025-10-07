@@ -345,7 +345,7 @@ console.log({filteredStaffList});
             <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Name</div>
               <div>Department</div>
-              <div>Designation</div>
+              {/* <div>Designation</div> */}
               <div>Address</div>
               <div>Number</div>
               <div>Email</div>
@@ -393,11 +393,8 @@ console.log({filteredStaffList});
                     {/* Department */}
                     <div className="hidden md:flex items-center text-sm text-gray-500">
                       <FiBriefcase className="mr-2 text-gray-400" />
-                      {staff.department}
+                      {staff.department || "NaN"}
                     </div>
-
-                    {/* Designation */}
-                    <div className="hidden md:block text-sm text-gray-500 truncate">{staff.designation}</div>
 
                     {/* Address */}
                     <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
