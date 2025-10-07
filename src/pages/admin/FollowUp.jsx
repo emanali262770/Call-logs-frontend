@@ -165,7 +165,7 @@ const FollowUp = () => {
               : item
           )
         );
-
+        await fetchFollowUpData();
         toast.success("Follow-up updated successfully!");
       } catch (error) {
         console.error("Error updating follow-up:", error);
@@ -191,7 +191,7 @@ const FollowUp = () => {
     setTime("");
     setStatus("Active");
   };
-  console.log({ followUpList });
+  console.log({ filteredFollowUps });
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -234,7 +234,7 @@ const FollowUp = () => {
           <div className="min-w-full">
             {/* Table headers - hidden on mobile */}
             <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
-              <div>Customer Name</div>
+              <div>Company Name</div>
               <div>Number</div>
               <div>Description</div>
               <div>Date</div>
@@ -244,136 +244,128 @@ const FollowUp = () => {
             </div>
 
             <div className="mt-4 flex flex-col gap-3">
-              {filteredFollowUps.map((followUp) => (
-                <div
-                  key={followUp.id}
-                  className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                >
-                  {/* Mobile view header */}
-                  <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
-                        <FiUser className="text-blue-600" />
+              {filteredFollowUps.length === 0 ? (
+                <div className="text-center py-8 bg-white rounded-xl border border-gray-200 text-gray-500 text-sm">
+                  No follow-ups found.
+                </div>
+              ) : (
+                filteredFollowUps.map((followUp) => (
+                  <div
+                    key={followUp.id}
+                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  >
+                    {/* Mobile view header */}
+                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
+                          <FiUser className="text-blue-600" />
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {followUp.customerName}
+                        </div>
                       </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {followUp.customerName}
+                      <div className="text-right">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            followUp.status === "Follow Up Required"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : followUp.status === "Not Interested"
+                              ? "bg-red-100 text-red-800"
+                              : followUp.status === "All Ready Installed"
+                              ? "bg-green-100 text-green-800"
+                              : followUp.status === "Phone Number Responding"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {followUp.status}
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
+
+                    {/* Desktop view */}
+                    <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
+                      <FiUser className="mr-2 text-gray-400" />
+                      {followUp.customerName}
+                    </div>
+                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                      <FiPhone className="mr-2 text-gray-400" />
+                      {followUp.customerNumber}
+                    </div>
+                    <div className="hidden md:block text-sm text-gray-500 truncate">
+                      {followUp.customerDescription}
+                    </div>
+                    <div className="hidden md:flex items-center text-sm text-gray-500">
+                      <FiCalendar className="mr-2 text-gray-400" />
+                      {followUp.date}
+                    </div>
+                    <div className="hidden md:flex items-center text-sm text-gray-500">
+                      <FiClock className="mr-2 text-gray-400" />
+                      {followUp.time}
+                    </div>
+                    <div className="hidden md:block">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          followUp.status === "Active"
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          followUp.status === "Follow Up Required"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : followUp.status === "Not Interested"
+                            ? "bg-red-100 text-red-800"
+                            : followUp.status === "All Ready Installed"
                             ? "bg-green-100 text-green-800"
+                            : followUp.status === "Phone Number Responding"
+                            ? "bg-blue-100 text-blue-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {followUp.status}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Desktop view cells */}
-                  <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
-                    <FiUser className="mr-2 text-gray-400" />
-                    {followUp.customerName}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiPhone className="mr-2 text-gray-400" />
-                    {followUp.customerNumber}
-                  </div>
-                  <div className="hidden md:block text-sm text-gray-500 truncate">
-                    {followUp.customerDescription}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500">
-                    <FiCalendar className="mr-2 text-gray-400" />
-                    {followUp.date}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500">
-                    <FiClock className="mr-2 text-gray-400" />
-                    {followUp.time}
-                  </div>
-                  <div className="hidden md:block">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        followUp.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {followUp.status}
-                    </span>
-                  </div>
-
-                  {/* Mobile view content */}
-                  <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
-                    <div className="text-xs text-gray-500">Number:</div>
-                    <div className="text-sm flex items-center">
-                      <FiPhone className="mr-1 text-gray-400" size={14} />
-                      {followUp.customerNumber}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Description:</div>
-                    <div className="text-sm">
-                      {followUp.customerDescription}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Date:</div>
-                    <div className="text-sm flex items-center">
-                      <FiCalendar className="mr-1 text-gray-400" size={14} />
-                      {followUp.date}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Time:</div>
-                    <div className="text-sm flex items-center">
-                      <FiClock className="mr-1 text-gray-400" size={14} />
-                      {followUp.time}
+                    {/* Actions */}
+                    <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditClick(followUp)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(followUp.id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            const found = ViewModalDatashow.find(
+                              (d) => d._id === followUp.id
+                            );
+                            if (found) {
+                              setSelectedViewData(found);
+                              setIsView(true);
+                            }
+                          }}
+                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Actions - visible on both mobile and desktop */}
-                  <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditClick(followUp)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                      >
-                        <FiEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(followUp.id)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          const found = ViewModalDatashow.find(
-                            (d) => d._id === followUp.id
-                          );
-                          if (found) {
-                            setSelectedViewData(found);
-                            setIsView(true);
-                          }
-                        }}
-                        className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
       </div>
-     {/* view modal */}
-     {isView && selectedViewData && (
-  <FollowUpViewModal
-    data={selectedViewData}
-    onClose={() => setIsView(false)}
-  />
-)}
+      {/* view modal */}
+      {isView && selectedViewData && (
+        <FollowUpViewModal
+          data={selectedViewData}
+          onClose={() => setIsView(false)}
+        />
+      )}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
           <div className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
@@ -399,6 +391,7 @@ const FollowUp = () => {
                     <input
                       type="date"
                       value={date}
+                      readOnly
                       onChange={(e) => setDate(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
                     />
@@ -413,6 +406,7 @@ const FollowUp = () => {
                     <input
                       type="time"
                       value={time}
+                      readOnly
                       onChange={(e) => setTime(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
                     />
@@ -427,6 +421,7 @@ const FollowUp = () => {
                   <FiUser className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
+                    readOnly
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
@@ -442,6 +437,7 @@ const FollowUp = () => {
                   <FiPhone className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
+                    readOnly
                     value={customerNumber}
                     onChange={(e) => setCustomerNumber(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
