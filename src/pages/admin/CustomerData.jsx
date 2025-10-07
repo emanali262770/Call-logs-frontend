@@ -119,6 +119,8 @@ const CustomerData = () => {
       const product = await productRes.json();
       setStaffMember(staff.data || []);
       setProductList(product.data || []);
+      console.log("productRes ", product.data);
+      
     } catch (error) {
       console.error("Error fetching assigned data:", error);
       toast.error("Failed to fetch staff/product data");

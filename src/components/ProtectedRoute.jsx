@@ -20,9 +20,6 @@ const ProtectedRoute = ({ children, role }) => {
             Authorization: `Bearer ${user.token}`,
           },
         });
-
-   
-       
         if (res.data.success === false) {
           localStorage.clear();
           setIsValid(false);

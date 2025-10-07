@@ -363,7 +363,7 @@ console.log({filteredStaffList});
                     {/* Mobile view header */}
                     <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full">
                           <img
                             src={staff.image?.url || "https://via.placeholder.com/40"}
                             alt="Staff"
@@ -378,11 +378,11 @@ console.log({filteredStaffList});
                     
                     {/* Desktop view cells */}
                     <div className="hidden md:flex items-center gap-3">
-                      <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-full">
                         <img
                           src={staff.image?.url || "https://via.placeholder.com/40"}
                           alt="Staff"
-                          className="w-7 h-7 object-cover rounded-full"
+                          className="w-10 h-10 object-cover rounded-full"
                         />
                       </div>
                       <span className="text-sm font-medium text-gray-900 truncate">
@@ -402,7 +402,7 @@ console.log({filteredStaffList});
                     {/* Address */}
                     <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
                       <FiMapPin className="mr-2 text-gray-400" />
-                      {staff.address}
+                      {staff?.address || "No have Location"}
                     </div>
 
                     {/* Number */}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -9,9 +9,12 @@ import {
   FiX,
   FiSearch,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date()); // December 2, 2021
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const [calendar, setCalendar] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month"); // 'day', 'week', or 'month'
   const [showEventForm, setShowEventForm] = useState(false);
@@ -53,6 +56,37 @@ const Calendar = () => {
     description: "",
     participants: "",
   });
+
+
+  // ✅ Fetch Meetings by Month
+  const fetchCustomerData = useCallback(async () => {
+    try {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const monthParam = `${year}-${month}`;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/calendar?month=${monthParam}`
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCalendar(result.data || []);
+        console.log("📅 Calendar Data:", result.data);
+      } else {
+        toast.error("Failed to load calendar data");
+      }
+    } catch (error) {
+      console.error("Error fetching calendar data:", error);
+      toast.error("Error fetching calendar data");
+    }
+  }, [currentDate]);
+
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const months = [
@@ -141,37 +175,7 @@ const Calendar = () => {
     }
   };
 
-  const handleAddEvent = () => {
-    if (!newEvent.title) {
-      alert("Please add a title for the event");
-      return;
-    }
 
-    const event = {
-      id: events.length + 1,
-      ...newEvent,
-    };
-
-    setEvents([...events, event]);
-    setShowEventForm(false);
-    setNewEvent({
-      title: "",
-      date: selectedDate,
-      startTime: "09:00",
-      endTime: "10:00",
-      description: "",
-      participants: "",
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewEvent((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (e) => {
-    setNewEvent({ ...newEvent, date: new Date(e.target.value) });
-  };
 
   const filteredEvents = events.filter(
     (event) =>
@@ -223,13 +227,12 @@ const Calendar = () => {
           miniDays.push(
             <div
               key={`day-${dayCount}`}
-              className={`h-8 flex items-center justify-center cursor-pointer rounded-full transition-all relative ${
-                isSelected
-                  ? "bg-newPrimary text-white"
-                  : isToday
+              className={`h-8 flex items-center justify-center cursor-pointer rounded-full transition-all relative ${isSelected
+                ? "bg-newPrimary text-white"
+                : isToday
                   ? "bg-blue-100 text-newPrimary font-medium"
                   : "hover:bg-gray-100"
-              }`}
+                }`}
               onClick={() => handleDateClick(dayCount)}
             >
               {dayCount}
@@ -246,189 +249,66 @@ const Calendar = () => {
   };
 
   const renderMainCalendar = () => {
-    if (viewMode === "day") {
-      const dayEvents = getEventsForDate(selectedDate);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
-      return (
-        <div className="h-screen p-4 bg-gray-50 rounded-xl ">
-          <div className="text-xl font-bold mb-4 flex items-center gap-2 text-newPrimary">
-            <FiCalendar className="text-newPrimary" />
-            {days[selectedDate.getDay()]}, {months[selectedDate.getMonth()]}{" "}
-            {selectedDate.getDate()}, {selectedDate.getFullYear()}
-          </div>
-          <div className="space-y-3">
-            {dayEvents.length > 0 ? (
-              dayEvents.map((event, index) => (
-                <div
-                  key={event.id}
-                  className="bg-blue-50 p-4 rounded-xl border border-blue-100 hover:shadow-md transition-all"
-                >
-                  <div className="font-medium text-gray-900 flex items-center gap-2">
-                    <FiUser className="text-blue-500" /> {event.title}
-                  </div>
-                  <div className="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                    <FiClock className="text-blue-500" /> {event.startTime} -{" "}
-                    {event.endTime}
-                  </div>
-                  {event.description && (
-                    <div className="text-sm text-gray-600 mt-2">
-                      {event.description}
-                    </div>
-                  )}
-                  {event.participants && (
-                    <div className="text-sm text-gray-600 mt-1">
-                      With: {event.participants}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                No events scheduled for this day
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
+    // ✅ Get first and last day of the month
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
 
-    if (viewMode === "week") {
-      const weekStart = new Date(currentDate);
-      weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay();
 
-      return (
-        <div className="h-96 overflow-y-auto bg-gray-50 rounded-xl p-2">
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 7 }).map((_, i) => {
-              const day = new Date(weekStart);
-              day.setDate(weekStart.getDate() + i);
-              const isSelected = isSameDay(selectedDate, day);
-              const isToday = isSameDay(day, new Date());
-              const dayEvents = getEventsForDate(day);
-
-              return (
-                <div
-                  key={i}
-                  className={`rounded-xl p-3 border transition-all ${
-                    isSelected
-                      ? "bg-newPrimary/10 border-newPrimary"
-                      : "bg-white border-gray-100"
-                  } ${isToday ? "ring-2 ring-blue-100" : ""}`}
-                  onClick={() => setSelectedDate(day)}
-                >
-                  <div className="font-medium text-gray-500 text-sm">
-                    {days[day.getDay()]}
-                  </div>
-                  <div
-                    className={`text-lg font-bold my-1 ${
-                      isToday ? "text-newPrimary" : "text-gray-800"
-                    }`}
-                  >
-                    {day.getDate()}
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {dayEvents.slice(0, 3).map((event, j) => (
-                      <div
-                        key={event.id}
-                        className={`text-xs p-1.5 rounded-lg truncate ${
-                          j % 2 === 0
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-pink-100 text-pink-800"
-                        }`}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 text-center">
-                        +{dayEvents.length - 3} more
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-
-    // Month view
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
     const calendarDays = [];
-    let dayCount = 1;
 
-    for (let i = 0; i < 6; i++) {
-      for (let j = 0; j < 7; j++) {
-        if ((i === 0 && j < firstDay) || dayCount > daysInMonth) {
-          calendarDays.push(
-            <div
-              key={`empty-${i}-${j}`}
-              className="h-24 border border-gray-100 rounded-lg bg-gray-50"
-            ></div>
-          );
-        } else {
-          const dayDate = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            dayCount
-          );
-          const isSelected = isSameDay(selectedDate, dayDate);
-          const isToday = isSameDay(dayDate, new Date());
-          const dayEvents = getEventsForDate(dayDate);
-
-          calendarDays.push(
-            <div
-              key={`day-${dayCount}`}
-              className={`h-24 border border-gray-100 p-2 rounded-lg transition-all ${
-                isSelected
-                  ? "bg-newPrimary/10 border-newPrimary"
-                  : "bg-white hover:bg-gray-50"
-              } ${isToday ? "ring-2 ring-blue-100" : ""}`}
-              onClick={() => handleDateClick(dayCount)}
-            >
-              <div
-                className={`text-right font-medium ${
-                  isToday ? "text-newPrimary" : "text-gray-700"
-                }`}
-              >
-                {dayCount}
-              </div>
-              <div className="space-y-1 mt-1">
-                {dayEvents.slice(0, 2).map((event, j) => (
-                  <div
-                    key={event.id}
-                    className={`text-xs p-1 rounded truncate ${
-                      j % 2 === 0
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-pink-100 text-pink-800"
-                    }`}
-                  >
-                    {event.title}
-                  </div>
-                ))}
-                {dayEvents.length > 2 && (
-                  <div className="text-xs text-gray-500">
-                    +{dayEvents.length - 2} more
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-          dayCount++;
-        }
-      }
+    // Empty boxes before the 1st
+    for (let i = 0; i < startDayOfWeek; i++) {
+      calendarDays.push(<div key={`empty-${i}`} className="p-3" />);
     }
-    return (
-      <div className="grid grid-cols-7 gap-2 flex-1 bg-gray-50 p-2 rounded-xl">
-        {calendarDays}
-      </div>
-    );
+
+    // ✅ Loop through all days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = new Date(year, month, day).toLocaleDateString("en-CA");
+
+     
+      // ✅ Filter meetings matching this date
+      const meetingsForDay = calendar.filter(meeting =>
+        meeting.dates.some(d => d.startsWith(dateStr))
+      );
+ console.log("meetingsForDay", meetingsForDay);
+      
+      calendarDays.push(
+        <div
+          key={day}
+          onClick={() => setSelectedDate(new Date(year, month, day))}
+          className={`border rounded-lg p-2 min-h-[80px] cursor-pointer hover:bg-blue-50 transition-all ${selectedDate.getDate() === day ? "bg-blue-100 border-blue-400" : "bg-white"
+            }`}
+        >
+          <div className="text-sm font-semibold text-gray-800">{day}</div>
+
+          {/* ✅ Display person & time */}
+          <div className="mt-1 space-y-1">
+            {meetingsForDay.map((m, idx) => (
+              <div
+                key={idx}
+                className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
+                title={`${m.person} - ${m.times.join(", ")}`}
+              >
+                <strong>{m.person}</strong>
+                <div className="text-[10px] text-gray-600">{m.times.join(", ")}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return <div className="grid grid-cols-7 gap-2">{calendarDays}</div>;
   };
 
+
   return (
-   <div className="p-4 md:p-6 bg-gray-50 min-h-screen flex flex-col">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen flex flex-col">
       {showEventForm && (
         <EventForm
           newEvent={newEvent}
@@ -450,24 +330,7 @@ const Calendar = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-newPrimary focus:border-newPrimary"
-            />
-          </div>
 
-          <button
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-            onClick={() => setShowEventForm(true)}
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Event</span>
-          </button>
         </div>
       </div>
 
@@ -490,33 +353,48 @@ const Calendar = () => {
           </div>
           <div className="grid grid-cols-7 gap-1">{renderMiniCalendar()}</div>
 
+          {/*  Upcoming Meetings */}
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              Upcoming Events
+              Upcoming Meetings
             </h3>
+
             <div className="space-y-2">
-              {filteredEvents.slice(0, 3).map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-blue-50 p-3 rounded-lg border border-blue-100"
-                >
-                  <div className="text-sm font-medium text-gray-900">
-                    {event.title}
-                  </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                    <FiClock size={12} />
-                    {months[event.date.getMonth()]} {event.date.getDate()},{" "}
-                    {event.startTime} - {event.endTime}
-                  </div>
-                </div>
-              ))}
-              {filteredEvents.length === 0 && (
-                <div className="text-center text-gray-500 py-2">
-                  No events found
-                </div>
+              {calendar && calendar.length > 0 ? (
+                calendar
+                  // ✅ Flatten all meetings with their individual date & time
+                  .flatMap(meeting =>
+                    meeting.dates.map((date, i) => ({
+                      person: meeting.person,
+                      date: new Date(date),
+                      time: meeting.times?.[i] || "N/A",
+                    }))
+                  )
+                  // ✅ Filter upcoming only (today or later)
+                  .filter(m => m.date >= new Date())
+                  // ✅ Sort ascending by date/time
+                  .sort((a, b) => new Date(a.date) - new Date(b.date))
+                  // ✅ Map into UI cards
+                  .map((m, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-blue-50 p-3 rounded-lg border border-blue-100 hover:bg-blue-100 transition"
+                    >
+                      <div className="text-sm font-medium text-gray-900">
+                        {m.person || "Unknown Person"}
+                      </div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                        <FiClock size={12} />
+                        {months[m.date.getMonth()]} {m.date.getDate()}, {m.date.getFullYear()} — {m.time}
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="text-center text-gray-500 py-2">No upcoming meetings</div>
               )}
             </div>
           </div>
+
         </div>
 
         {/* Main Calendar */}
@@ -531,15 +409,12 @@ const Calendar = () => {
               </button>
               <h3 className="text-lg font-semibold text-gray-800">
                 {viewMode === "month"
-                  ? `${days[selectedDate.getDay()]}, ${
-                      months[selectedDate.getMonth()]
-                    } ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
+                  ? `${days[selectedDate.getDay()]}, ${months[selectedDate.getMonth()]
+                  } ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
                   : viewMode === "week"
-                  ? `Week of ${
-                      months[currentDate.getMonth()]
+                    ? `Week of ${months[currentDate.getMonth()]
                     } ${currentDate.getDate()}, ${currentDate.getFullYear()}`
-                  : `${
-                      months[currentDate.getMonth()]
+                    : `${months[currentDate.getMonth()]
                     } ${currentDate.getFullYear()}`}
               </h3>
               <button
@@ -549,29 +424,7 @@ const Calendar = () => {
                 <FiChevronRight className="h-5 w-5 text-gray-600" />
               </button>
             </div>
-            {/* <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-              {["day", "week", "month"].map((mode) => (
-                <button
-                  key={mode}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-all ${
-                    viewMode === mode
-                      ? "bg-white shadow-sm text-newPrimary font-medium"
-                      : "hover:bg-gray-200 text-gray-600"
-                  }`}
-                  onClick={() => setViewMode(mode)}
-                >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </div> */}
-            <div className="flex space-x-1  rounded-lg p-1">
-              <button
-                className="px-3 py-1.5 text-sm rounded-md bg-white  text-newPrimary font-medium"
-                onClick={() => setViewMode("month")}
-              >
-                Month
-              </button>
-            </div>
+
           </div>
 
           {viewMode === "month" && (
@@ -593,114 +446,4 @@ const Calendar = () => {
     </div>
   );
 };
-const EventForm = ({
-  newEvent,
-  onClose,
-  onInputChange,
-  onDateChange,
-  onAddEvent,
-}) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-xl p-6 w-full max-w-md">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-newPrimary">Add New Event</h3>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          <FiX size={20} />
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Event Title *
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={newEvent.title}
-            onChange={onInputChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-            placeholder="Meeting name"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date
-          </label>
-          <input
-            type="date"
-            name="date"
-            value={newEvent.date.toISOString().split("T")[0]}
-            onChange={onDateChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Start Time
-            </label>
-            <input
-              type="time"
-              name="startTime"
-              value={newEvent.startTime}
-              onChange={onInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              End Time
-            </label>
-            <input
-              type="time"
-              name="endTime"
-              value={newEvent.endTime}
-              onChange={onInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={newEvent.description}
-            onChange={onInputChange}
-            rows={3}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-            placeholder="Event details"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Participants
-          </label>
-          <input
-            type="text"
-            name="participants"
-            value={newEvent.participants}
-            onChange={onInputChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-newPrimary focus:border-newPrimary"
-            placeholder="Who is attending?"
-          />
-        </div>
-
-        <button
-          onClick={onAddEvent}
-          className="w-full bg-newPrimary text-white py-2 rounded-lg hover:bg-primaryDark transition-all"
-        >
-          Add Event
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 export default Calendar;
