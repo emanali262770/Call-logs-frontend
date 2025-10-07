@@ -11,8 +11,15 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useCallback, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { Eye } from "lucide-react";
+import FollowUpViewModal from "./FollowUpViewModal";
 
 const FollowUp = () => {
+  const [loading, setLoading] = useState(false);
+  const [isView, setIsView] = useState(false);
+  const [selectedViewData, setSelectedViewData] = useState(null);
   const [followUpList, setFollowUpList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,33 +27,54 @@ const FollowUp = () => {
   const [customerNumber, setCustomerNumber] = useState("");
   const [customerDescription, setCustomerDescription] = useState("");
   const [date, setDate] = useState("");
+  const [nextFollowUpDate, setNextFollowUpDate] = useState("");
+  const [nextFollowUpTime, setNextFollowUpTime] = useState("");
   const [time, setTime] = useState("");
   const [status, setStatus] = useState("Active");
+  const [ViewModalDatashow, setViewModalDataShow] = useState([]);
   const [selectedFollowUp, setSelectedFollowUp] = useState(null);
+  const filteredFollowUps = followUpList.filter((followUp) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      followUp.customerName?.toLowerCase().includes(query) ||
+      followUp.customerNumber?.toLowerCase().includes(query) ||
+      followUp.customerDescription?.toLowerCase().includes(query) ||
+      followUp.status?.toLowerCase().includes(query)
+    );
+  });
 
-  const filteredFollowUps = followUpList.filter(
-    (followUp) =>
-      followUp.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      followUp.customerNumber
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      followUp.customerDescription
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      followUp.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  function convertTo24HourFormat(timeStr) {
+    if (!timeStr) return "";
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":");
+    if (modifier === "PM" && hours !== "12") hours = String(+hours + 12);
+    if (modifier === "AM" && hours === "12") hours = "00";
+    return `${hours.padStart(2, "0")}:${minutes}`;
+  }
 
-  const fetchCustomerData = useCallback(async () => {
+  const fetchFollowUpData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/meetings`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch meetings");
-      }
-      const result = await response.json();
-      setCustomerList(result);
+      setViewModalDataShow(response.data.data);
+      const mappedData = response.data.data.map((item) => ({
+        id: item._id,
+        customerName: item.companyName || "N/A",
+        customerNumber: item?.person?.persons?.[0]?.phoneNumber || "N/A",
+        customerDescription: item.details?.[0] || "N/A",
+        date:
+          item.followDates?.length > 0
+            ? new Date(item.followDates[0]).toISOString().split("T")[0]
+            : "N/A",
+        time: convertTo24HourFormat(item.followTimes?.[0]),
+        status: item.status || "N/A",
+      }));
+
+      setFollowUpList(mappedData);
+
+      console.log(response.data.data);
     } catch (error) {
       console.error("Error fetching meetings data:", error);
       toast.error("Failed to load meetings data");
@@ -56,75 +84,101 @@ const FollowUp = () => {
   }, []);
 
   useEffect(() => {
-    fetchCustomerData();
-  }, [fetchCustomerData]);
+    fetchFollowUpData();
+  }, [fetchFollowUpData]);
 
-  const handleAddFollowUp = () => {
-    setSelectedFollowUp(null);
-    setCustomerName("");
-    setCustomerNumber("");
-    setCustomerDescription("");
-    setDate("");
-    setTime("");
-    setStatus("Active");
-    setIsSliderOpen(true);
-  };
+  console.log({ ViewModalDatashow });
 
   const handleEditClick = (followUp) => {
+    console.log(followUp);
+
     setSelectedFollowUp(followUp);
     setCustomerName(followUp.customerName);
     setCustomerNumber(followUp.customerNumber);
     setCustomerDescription(followUp.customerDescription);
     setDate(followUp.date);
-    setTime(followUp.time);
+    setTime(convertTo24HourFormat(followUp.time));
     setStatus(followUp.status);
     setIsSliderOpen(true);
   };
 
-  const handleDeleteClick = (id) => {
-    setFollowUpList(followUpList.filter((item) => item.id !== id));
+  const handleDeleteClick = async (id) => {
+    try {
+      setLoading(true);
+
+      // call delete endpoint
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`);
+
+      // update local state instantly
+      setFollowUpList((prev) => prev.filter((item) => item.id !== id));
+
+      toast.success("Follow-up deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting follow-up:", error);
+      toast.error("Failed to delete follow-up");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedFollowUp) {
-      // Update existing follow-up
-      setFollowUpList(
-        followUpList.map((item) =>
-          item.id === selectedFollowUp.id
-            ? {
-                ...item,
-                customerName,
-                customerNumber,
-                customerDescription,
-                date,
-                time,
-                status,
-              }
-            : item
-        )
-      );
-    } else {
-      // Add new follow-up
-      const newFollowUp = {
-        id: followUpList.length + 1,
-        customerName,
-        customerNumber,
-        customerDescription,
-        date,
-        time,
-        status,
-      };
-      setFollowUpList([...followUpList, newFollowUp]);
+      try {
+        const formattedTime = (() => {
+          if (!nextFollowUpTime) return "";
+          const [hours, minutes] = nextFollowUpTime.split(":");
+          let suffix = "AM";
+          let hr = parseInt(hours, 10);
+          if (hr >= 12) {
+            suffix = "PM";
+            if (hr > 12) hr -= 12;
+          } else if (hr === 0) {
+            hr = 12;
+          }
+          return `${hr}:${minutes} ${suffix}`;
+        })();
+
+        // Prepare payload as per your backend
+        const payload = {
+          date: nextFollowUpDate,
+          time: formattedTime,
+          detail: customerDescription,
+        };
+
+        await axios.patch(
+          `${import.meta.env.VITE_API_BASE_URL}/meetings/${
+            selectedFollowUp.id
+          }/followup`,
+          payload
+        );
+
+        // update local state instantly
+        setFollowUpList((prev) =>
+          prev.map((item) =>
+            item.id === selectedFollowUp.id
+              ? {
+                  ...item,
+                  date: nextFollowUpDate,
+                  time: formattedTime,
+                  customerDescription,
+                }
+              : item
+          )
+        );
+
+        toast.success("Follow-up updated successfully!");
+      } catch (error) {
+        console.error("Error updating follow-up:", error);
+        toast.error("Failed to update follow-up");
+      }
     }
 
+    // close modal and reset states
     setIsSliderOpen(false);
-    setCustomerName("");
-    setCustomerNumber("");
-    setCustomerDescription("");
-    setDate("");
-    setTime("");
-    setStatus("Active");
     setSelectedFollowUp(null);
+    setNextFollowUpDate("");
+    setNextFollowUpTime("");
+    setCustomerDescription("");
   };
 
   const handleCloseModal = () => {
@@ -137,6 +191,7 @@ const FollowUp = () => {
     setTime("");
     setStatus("Active");
   };
+  console.log({ followUpList });
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -164,13 +219,13 @@ const FollowUp = () => {
             />
           </div>
 
-          <button
+          {/* <button
             onClick={handleAddFollowUp}
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
           >
             <FiPlus className="text-lg" />
             <span>Add Follow Up</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -290,6 +345,20 @@ const FollowUp = () => {
                       >
                         <FiTrash2 size={16} />
                       </button>
+                      <button
+                        onClick={() => {
+                          const found = ViewModalDatashow.find(
+                            (d) => d._id === followUp.id
+                          );
+                          if (found) {
+                            setSelectedViewData(found);
+                            setIsView(true);
+                          }
+                        }}
+                        className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -298,7 +367,13 @@ const FollowUp = () => {
           </div>
         </div>
       </div>
-
+     {/* view modal */}
+     {isView && selectedViewData && (
+  <FollowUpViewModal
+    data={selectedViewData}
+    onClose={() => setIsView(false)}
+  />
+)}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
           <div className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
@@ -374,18 +449,7 @@ const FollowUp = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Customer Description
-                </label>
-                <textarea
-                  value={customerDescription}
-                  onChange={(e) => setCustomerDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                  placeholder="Enter description"
-                  rows="3"
-                />
-              </div>
+
               <div>
                 <h1 className="text-xl font-bold text-newPrimary mb-3">
                   Next Follow Up
@@ -401,8 +465,8 @@ const FollowUp = () => {
                         <FiCalendar className="absolute left-3 top-3 text-gray-400" />
                         <input
                           type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
+                          value={nextFollowUpDate}
+                          onChange={(e) => setNextFollowUpDate(e.target.value)}
                           className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
                         />
                       </div>
@@ -415,8 +479,8 @@ const FollowUp = () => {
                         <FiClock className="absolute left-3 top-3 text-gray-400" />
                         <input
                           type="time"
-                          value={time}
-                          onChange={(e) => setTime(e.target.value)}
+                          value={nextFollowUpTime}
+                          onChange={(e) => setNextFollowUpTime(e.target.value)}
                           className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
                         />
                       </div>
@@ -425,6 +489,18 @@ const FollowUp = () => {
                 </div>
               </div>
               <div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Customer Remarks
+                  </label>
+                  <textarea
+                    value={customerDescription}
+                    onChange={(e) => setCustomerDescription(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter description"
+                    rows="3"
+                  />
+                </div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">
                   Status
                 </label>
