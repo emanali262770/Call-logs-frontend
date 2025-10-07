@@ -21,10 +21,8 @@ const ProtectedRoute = ({ children, role }) => {
           },
         });
 
-        console.log({res});
-        
+        console.log({ res });
 
-       
         if (res.data.success === false) {
           localStorage.clear();
           setIsValid(false);
