@@ -12,7 +12,7 @@ import AddProduct from "./pages/admin/AddProduct";
 import { ToastContainer } from "react-toastify";
 import Calendar from "./pages/admin/Calendar";
 import "react-toastify/dist/ReactToastify.css";
-import AddMeeting from "./pages/admin/AddMeeting";  
+import AddMeeting from "./pages/admin/AddMeeting";
 import Category from "./pages/admin/Category";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MeetingFollowPage from "./components/Dashboard/followupmodel";
@@ -55,10 +55,13 @@ function AppContent() {
             {/* Security */}
             <Route path="groups" element={<GroupManagement />} />
             <Route path="users" element={<Users />} />
-            
+
             <Route path="access-rights" element={<AssignRights />} />
             <Route path="modules" element={<Modules />} />
-            <Route path="modules-functionalities" element={<ModulesFunctionalities />} />
+            <Route
+              path="modules-functionalities"
+              element={<ModulesFunctionalities />}
+            />
           </Route>
         </Routes>
       </main>
