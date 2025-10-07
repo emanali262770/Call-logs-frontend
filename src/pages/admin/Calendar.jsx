@@ -275,7 +275,7 @@ const Calendar = () => {
       const meetingsForDay = calendar.filter(meeting =>
         meeting.dates.some(d => d.startsWith(dateStr))
       );
- console.log("meetingsForDay", meetingsForDay);
+//  console.log("meetingsForDay", meetingsForDay);
       
       calendarDays.push(
         <div
@@ -288,16 +288,29 @@ const Calendar = () => {
 
           {/* ✅ Display person & time */}
           <div className="mt-1 space-y-1">
-            {meetingsForDay.map((m, idx) => (
-              <div
-                key={idx}
-                className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
-                title={`${m.person} - ${m.times.join(", ")}`}
-              >
-                <strong>{m.person}</strong>
-                <div className="text-[10px] text-gray-600">{m.times.join(", ")}</div>
-              </div>
-            ))}
+            {meetingsForDay.map((m, idx) => {
+  // Find the index of this date
+  const matchedIndexes = m.dates
+    .map((d, i) => (d.startsWith(dateStr) ? i : -1))
+    .filter(i => i !== -1);
+
+  // Extract only the times for those matched dates
+  const timesForThisDate = matchedIndexes.map(i => m.times[i]);
+
+  return (
+    <div
+      key={idx}
+      className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
+      title={`${m.person} - ${timesForThisDate.join(", ")}`}
+    >
+      <strong>{m.person}</strong>
+      <div className="text-[10px] text-gray-600">
+        {timesForThisDate.join(", ")}
+      </div>
+    </div>
+  );
+})}
+
           </div>
         </div>
       );
@@ -355,7 +368,7 @@ const Calendar = () => {
 
           {/*  Upcoming Meetings */}
           <div className="mt-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <h3 className="text-sm font-bold text-gray-700 mb-3">
               Upcoming Meetings
             </h3>
 
