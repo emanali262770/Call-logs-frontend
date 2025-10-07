@@ -250,7 +250,7 @@ const Calendar = () => {
       const dayEvents = getEventsForDate(selectedDate);
 
       return (
-        <div className="h-96 overflow-y-auto p-4 bg-gray-50 rounded-xl">
+        <div className="h-screen p-4 bg-gray-50 rounded-xl ">
           <div className="text-xl font-bold mb-4 flex items-center gap-2 text-newPrimary">
             <FiCalendar className="text-newPrimary" />
             {days[selectedDate.getDay()]}, {months[selectedDate.getMonth()]}{" "}
@@ -421,14 +421,14 @@ const Calendar = () => {
       }
     }
     return (
-      <div className="grid grid-cols-7 gap-2 overflow-y-auto h-96 bg-gray-50 p-2 rounded-xl">
+      <div className="grid grid-cols-7 gap-2 flex-1 bg-gray-50 p-2 rounded-xl">
         {calendarDays}
       </div>
     );
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+   <div className="p-4 md:p-6 bg-gray-50 min-h-screen flex flex-col">
       {showEventForm && (
         <EventForm
           newEvent={newEvent}
@@ -520,7 +520,7 @@ const Calendar = () => {
         </div>
 
         {/* Main Calendar */}
-        <div className="w-full lg:w-2/3 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+        <div className="w-full lg:w-2/3 bg-white flex flex-col flex-1 p-5 rounded-xl shadow-sm border border-gray-100 min-h-[calc(100vh-120px)]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
             <div className="flex items-center gap-2">
               <button
@@ -530,7 +530,7 @@ const Calendar = () => {
                 <FiChevronLeft className="h-5 w-5 text-gray-600" />
               </button>
               <h3 className="text-lg font-semibold text-gray-800">
-                {viewMode === "day"
+                {viewMode === "month"
                   ? `${days[selectedDate.getDay()]}, ${
                       months[selectedDate.getMonth()]
                     } ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
@@ -549,7 +549,7 @@ const Calendar = () => {
                 <FiChevronRight className="h-5 w-5 text-gray-600" />
               </button>
             </div>
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            {/* <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
               {["day", "week", "month"].map((mode) => (
                 <button
                   key={mode}
@@ -563,6 +563,14 @@ const Calendar = () => {
                   {mode.charAt(0).toUpperCase() + mode.slice(1)}
                 </button>
               ))}
+            </div> */}
+            <div className="flex space-x-1  rounded-lg p-1">
+              <button
+                className="px-3 py-1.5 text-sm rounded-md bg-white  text-newPrimary font-medium"
+                onClick={() => setViewMode("month")}
+              >
+                Month
+              </button>
             </div>
           </div>
 
