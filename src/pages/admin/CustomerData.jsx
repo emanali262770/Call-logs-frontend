@@ -524,7 +524,7 @@ const CustomerData = () => {
                     <div className="text-xs text-gray-500">Assigned Staff:</div>
                     <div className="text-sm flex items-center">
                       <FiUser className="mr-1 text-gray-400" size={14} />
-                      {client.assignedStaff.username}
+                    {client.assignedStaff?.username || "N/A"}
                     </div>
 
                     <div className="text-xs text-gray-500">

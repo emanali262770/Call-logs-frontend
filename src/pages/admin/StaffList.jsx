@@ -243,6 +243,7 @@ const handleDelete = async (id) => {
     .then(async (result) => {
       if (result.isConfirmed) {
         try {
+          setLoading(true)
           const token = userInfo?.token;
           if (!token) {
             toast.error("Authorization token missing!");
@@ -274,6 +275,8 @@ const handleDelete = async (id) => {
             "Failed to delete staff.",
             "error"
           );
+        }finally{
+          setLoading(false)
         }
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         swalWithTailwindButtons.fire(
@@ -300,6 +303,7 @@ const handleDelete = async (id) => {
       </div>
     );
   }
+console.log({filteredStaffList});
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
