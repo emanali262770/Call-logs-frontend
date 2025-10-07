@@ -1,10 +1,20 @@
 import React, { useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
-import axios from 'axios';
+import axios from "axios";
 import { PuffLoader } from "react-spinners";
 import Swal from "sweetalert2";
-import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUser, FiPhone, FiMapPin, FiBriefcase, FiMail } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiUser,
+  FiPhone,
+  FiMapPin,
+  FiBriefcase,
+  FiMail,
+} from "react-icons/fi";
 
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
@@ -18,7 +28,9 @@ const CustomerData = () => {
   const [customerCity, setCustomerCity] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [persons, setPersons] = useState([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
+  const [persons, setPersons] = useState([
+    { fullName: "", phone: "", email: "", designation: "", department: "" },
+  ]);
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
   const [image, setImage] = useState(null);
@@ -39,10 +51,13 @@ const CustomerData = () => {
   const fetchCustomerData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/clients`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/customers`
+      );
       const result = await response.json();
-      setCustomerData(result);
-      setFilteredCustomers(result);
+      setCustomerData(result.data || []);
+      setFilteredCustomers(result.data || []);
+      console.log({ data: result.data });
     } catch (error) {
       console.error("Error fetching customer data:", error);
       toast.error("Failed to fetch customer data");
@@ -56,29 +71,41 @@ const CustomerData = () => {
   }, [fetchCustomerData]);
 
   // Search functionality
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredCustomers(customerList);
-    } else {
-      const filtered = customerList.filter(customer => 
-        customer.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.businessType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.persons?.some(person => 
-          person.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          person.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          person.department?.toLowerCase().includes(searchQuery.toLowerCase())
+ useEffect(() => {
+  if (searchQuery.trim() === "") {
+    setFilteredCustomers(customerList);
+  } else {
+    const query = searchQuery.toLowerCase();
+
+    const filtered = customerList.filter((customer) => {
+      return (
+        customer.companyName?.toLowerCase().includes(query) ||
+        customer.email?.toLowerCase().includes(query) ||
+        customer.phoneNumber?.toLowerCase().includes(query) || 
+        customer.address?.toLowerCase().includes(query) ||
+        customer.city?.toLowerCase().includes(query) ||
+        customer.businessType?.toLowerCase().includes(query) ||
+        customer.persons?.some(
+          (person) =>
+            person.fullName?.toLowerCase().includes(query) ||
+            person.designation?.toLowerCase().includes(query) ||
+            person.department?.toLowerCase().includes(query)
         ) ||
-        (customer.assignToStaffId && typeof customer.assignToStaffId === 'object' && 
-          customer.assignToStaffId.username?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (customer.assignToProductId && typeof customer.assignToProductId === 'object' && 
-          customer.assignToProductId.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        (customer.assignedStaff &&
+          typeof customer.assignedStaff === "object" &&
+          customer.assignedStaff.username
+            ?.toLowerCase()
+            .includes(query)) ||
+        (customer.assignedProducts &&
+          typeof customer.assignedProducts === "object" &&
+          customer.assignedProducts.name?.toLowerCase().includes(query))
       );
-      setFilteredCustomers(filtered);
-    }
-  }, [searchQuery, customerList]);
+    });
+
+    setFilteredCustomers(filtered);
+  }
+}, [searchQuery, customerList]);
+
 
   // Fetch Staff and Product Data
   const fetchAssignedData = useCallback(async () => {
@@ -92,6 +119,8 @@ const CustomerData = () => {
       const product = await productRes.json();
       setStaffMember(staff.data || []);
       setProductList(product.data || []);
+      console.log("productRes ", product.data);
+      
     } catch (error) {
       console.error("Error fetching assigned data:", error);
       toast.error("Failed to fetch staff/product data");
@@ -107,27 +136,25 @@ const CustomerData = () => {
   // Save Customer Data
   const handleSave = async () => {
     const formData = new FormData();
-    formData.append("email", customerEmail);
-    formData.append("mobileNumber", customerPhone);
+    formData.append("businessType", businessType);
+    formData.append("companyName", companyName);
     formData.append("address", customerAddress);
     formData.append("city", customerCity);
-    formData.append("companyName", companyName);
-    formData.append("businessType", businessType);
+    formData.append("email", customerEmail);
+    formData.append("phoneNumber", customerPhone);
+
+    if (image) formData.append("companyLogo", image);
 
     persons.forEach((person, index) => {
-      formData.append(`persons[${index}].name`, person.fullName);
-      formData.append(`persons[${index}].phoneNumber`, person.phone);
-      formData.append(`persons[${index}].email`, person.email);
-      formData.append(`persons[${index}].designation`, person.designation);
-      formData.append(`persons[${index}].department`, person.department);
+      formData.append(`persons[${index}][fullName]`, person.fullName);
+      formData.append(`persons[${index}][designation]`, person.designation);
+      formData.append(`persons[${index}][department]`, person.department);
+      formData.append(`persons[${index}][phoneNumber]`, person.phone);
+      formData.append(`persons[${index}][email]`, person.email);
     });
 
-    formData.append("assignToStaffId", assignedStaff);
-    formData.append("assignToProductId", assignedProduct);
-
-    if (image) {
-      formData.append("companyLogo", image);
-    }
+    formData.append("assignedStaff", assignedStaff);
+    formData.append("assignedProducts", assignedProduct);
 
     try {
       const headers = {
@@ -136,10 +163,18 @@ const CustomerData = () => {
       };
 
       if (isEdit && editId) {
-        await axios.put(`${import.meta.env.VITE_API_BASE_URL}/clients/${editId}`, formData, { headers });
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/customers/${editId}`,
+          formData,
+          { headers }
+        );
         toast.success("✅ Customer updated successfully");
       } else {
-        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/clients`, formData, { headers });
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/customers`,
+          formData,
+          { headers }
+        );
         toast.success("✅ Customer added successfully");
       }
 
@@ -150,7 +185,9 @@ const CustomerData = () => {
       setCustomerCity("");
       setCompanyName("");
       setBusinessType("");
-      setPersons([{ fullName: "", phone: "", email: "", designation: "", department: "" }]);
+      setPersons([
+        { fullName: "", phone: "", email: "", designation: "", department: "" },
+      ]);
       setAssignedStaff("");
       setAssignedProduct("");
       setImage(null);
@@ -183,7 +220,10 @@ const CustomerData = () => {
 
   // Add Person
   const handleAddPerson = () => {
-    setPersons([...persons, { fullName: "", phone: "", email: "", designation: "", department: "" }]);
+    setPersons([
+      ...persons,
+      { fullName: "", phone: "", email: "", designation: "", department: "" },
+    ]);
   };
 
   // Update Person
@@ -199,7 +239,7 @@ const CustomerData = () => {
     setEditId(client._id);
 
     setCustomerEmail(client.email || "");
-    setCustomerPhone(client.mobileNumber || "");
+    setCustomerPhone(client.phoneNumber || "");
     setCustomerAddress(client.address || "");
     setCustomerCity(client.city || "");
     setCompanyName(client.companyName || "");
@@ -207,24 +247,31 @@ const CustomerData = () => {
 
     setPersons(
       client.persons?.map((person) => ({
-        fullName: person.name || "",
+        fullName: person.fullName || "",
         phone: person.phoneNumber || "",
         email: person.email || "",
         designation: person.designation || "",
         department: person.department || "",
-      })) || [{ fullName: "", phone: "", email: "", designation: "", department: "" }]
+      })) || [
+        { fullName: "", phone: "", email: "", designation: "", department: "" },
+      ]
     );
 
     setAssignedStaff(
-      typeof client.assignToStaffId === "object" ? client.assignToStaffId?._id || "" : client.assignToStaffId || ""
+      typeof client.assignedStaff === "object"
+        ? client.assignedStaff?._id || ""
+        : client.assignedStaff || ""
     );
+
     setAssignedProduct(
-      typeof client.assignToProductId === "object" ? client.assignToProductId?._id || "" : client.assignToProductId || ""
+      typeof client.assignedProducts === "object"
+        ? client.assignedProducts?._id || ""
+        : client.assignedProducts || ""
     );
 
     if (client.companyLogo?.url) {
       setImagePreview(client.companyLogo.url);
-      setImage(null); // Reset file input for editing
+      setImage(null);
     } else {
       setImagePreview(null);
       setImage(null);
@@ -265,22 +312,37 @@ const CustomerData = () => {
               return;
             }
 
-            await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/clients/${id}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+            await axios.delete(
+              `${import.meta.env.VITE_API_BASE_URL}/customers/${id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
             setCustomerData(customerList.filter((p) => p._id !== id));
             setFilteredCustomers(filteredCustomers.filter((p) => p._id !== id));
 
-            swalWithTailwindButtons.fire("Deleted!", "Customer deleted successfully.", "success");
+            swalWithTailwindButtons.fire(
+              "Deleted!",
+              "Customer deleted successfully.",
+              "success"
+            );
           } catch (error) {
             console.error("Delete error:", error);
-            swalWithTailwindButtons.fire("Error!", "Failed to delete Customer.", "error");
+            swalWithTailwindButtons.fire(
+              "Error!",
+              "Failed to delete Customer.",
+              "error"
+            );
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          swalWithTailwindButtons.fire("Cancelled", "Customer is safe 🙂", "error");
+          swalWithTailwindButtons.fire(
+            "Cancelled",
+            "Customer is safe 🙂",
+            "error"
+          );
         }
       });
   };
@@ -300,10 +362,12 @@ const CustomerData = () => {
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Customer List</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
+            Customer List
+          </h1>
           <p className="text-gray-500 text-sm">Manage your customer database</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -317,7 +381,7 @@ const CustomerData = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          
+
           <button
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
             onClick={handleAddCustomer}
@@ -355,16 +419,23 @@ const CustomerData = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
                         <img
-                          src={client.companyLogo?.url || "https://via.placeholder.com/40"}
+                          src={
+                            client.companyLogo?.url ||
+                            "https://via.placeholder.com/40"
+                          }
                           alt="Company Logo"
                           className="w-7 h-7 object-cover rounded-full"
                         />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{client.companyName}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {client.companyName}
+                      </div>
                     </div>
                     {userInfo?.isAdmin && (
                       <div className="text-right relative group">
-                        <button className="text-gray-400 hover:text-gray-600 text-xl">⋯</button>
+                        <button className="text-gray-400 hover:text-gray-600 text-xl">
+                          ⋯
+                        </button>
                         <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col">
                           <button
                             onClick={() => handleEdit(client)}
@@ -382,17 +453,22 @@ const CustomerData = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Desktop view cells */}
                   <div className="hidden md:flex items-center gap-3">
-                    <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
+                    <div className="w-10 h-10 flex items-center justify-center border rounded-full">
                       <img
-                        src={client.companyLogo?.url || "https://via.placeholder.com/40"}
+                        src={
+                          client.companyLogo?.url ||
+                          "https://via.placeholder.com/40"
+                        }
                         alt="Company Logo"
                         className="w-7 h-7 object-cover rounded-full"
                       />
                     </div>
-                    <span className="text-sm font-medium text-gray-900 truncate">{client.companyName}</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">
+                      {client.companyName}
+                    </span>
                   </div>
                   <div className="hidden md:flex items-center text-sm text-green-600 truncate">
                     <FiMail className="mr-2 text-gray-400" size={14} />
@@ -410,15 +486,15 @@ const CustomerData = () => {
                     <FiUser className="mr-2 text-gray-400" size={14} />
                     {client.persons?.[0]?.department || "N/A"}
                   </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                  <div className="hidden md:flex items-center  text-sm text-gray-500 ">
                     <FiUser className="mr-2 text-gray-400" size={14} />
-                    {client?.assignToStaffId?.username || "N/A"}
+                    {client?.assignedStaff?.username.slice(0, 6) || "N/A"}
                   </div>
                   <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
                     <FiBriefcase className="mr-2 text-gray-400" size={14} />
-                    {client?.assignToProductId?.name || "N/A"}
+                    {client?.assignedProducts?.name || "N/A"}
                   </div>
-                  
+
                   {/* Mobile view content */}
                   <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
                     <div className="text-xs text-gray-500">Email:</div>
@@ -426,38 +502,40 @@ const CustomerData = () => {
                       <FiMail className="mr-1 text-gray-400" size={14} />
                       {client.email || "N/A"}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Designation:</div>
                     <div className="text-sm flex items-center">
                       <FiBriefcase className="mr-1 text-gray-400" size={14} />
                       {client.persons?.[0]?.designation || "N/A"}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Address:</div>
                     <div className="text-sm flex items-center">
                       <FiMapPin className="mr-1 text-gray-400" size={14} />
                       {client.address || "N/A"}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Department:</div>
-                    <div className="text-sm flex items-center">
-                      <FiUser className="mr-1 text-gray-400" size={14} />
+                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
+                      <FiUser className="mr-2 text-gray-400" size={14} />
                       {client.persons?.[0]?.department || "N/A"}
                     </div>
-                    
+
                     <div className="text-xs text-gray-500">Assigned Staff:</div>
                     <div className="text-sm flex items-center">
                       <FiUser className="mr-1 text-gray-400" size={14} />
-                      {client?.assignToStaffId?.username || "N/A"}
+                      {client.assignedStaff.username}
                     </div>
-                    
-                    <div className="text-xs text-gray-500">Assigned Product:</div>
+
+                    <div className="text-xs text-gray-500">
+                      Assigned Product:
+                    </div>
                     <div className="text-sm flex items-center">
                       <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client?.assignToProductId?.name || "N/A"}
+                      {client.assignedProducts?.name || "N/A"}
                     </div>
                   </div>
-                  
+
                   {/* Actions - visible on desktop only (mobile actions are in header) */}
                   {userInfo?.isAdmin && (
                     <div className="hidden md:flex justify-end">
@@ -479,10 +557,12 @@ const CustomerData = () => {
                   )}
                 </div>
               ))}
-              
+
               {filteredCustomers.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  {searchQuery ? "No customers found matching your search" : "No customers available"}
+                  {searchQuery
+                    ? "No customers found matching your search"
+                    : "No customers available"}
                 </div>
               )}
             </div>
@@ -495,7 +575,9 @@ const CustomerData = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Edit Client" : "Add Client"}</h2>
+              <h2 className="text-xl font-bold text-newPrimary">
+                {isEdit ? "Edit Client" : "Add Client"}
+              </h2>
               <button
                 className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
                 onClick={() => setIsSliderOpen(false)}
@@ -509,7 +591,9 @@ const CustomerData = () => {
                 <h3 className="text-lg font-semibold mb-4">Customer</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">Business Type</label>
+                    <label className="block text-gray-700 mb-1">
+                      Business Type
+                    </label>
                     <input
                       type="text"
                       value={businessType}
@@ -519,7 +603,9 @@ const CustomerData = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Company Name</label>
+                    <label className="block text-gray-700 mb-1">
+                      Company Name
+                    </label>
                     <input
                       type="text"
                       value={companyName}
@@ -528,7 +614,7 @@ const CustomerData = () => {
                       placeholder="Enter company name"
                     />
                   </div>
-                   <div>
+                  <div>
                     <label className="block text-gray-700 mb-1">Address</label>
                     <input
                       type="text"
@@ -559,7 +645,9 @@ const CustomerData = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Phone Number</label>
+                    <label className="block text-gray-700 mb-1">
+                      Phone Number
+                    </label>
                     <input
                       type="text"
                       value={customerPhone}
@@ -568,10 +656,12 @@ const CustomerData = () => {
                       placeholder="Enter phone number"
                     />
                   </div>
-                 
+
                   {/* Company Logo Upload */}
                   <div className="col-span-2">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo Upload</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Company Logo Upload
+                    </h3>
                     <input
                       type="file"
                       onChange={handleImageUpload}
@@ -585,7 +675,9 @@ const CustomerData = () => {
                     />
                     {imagePreview && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Company Logo Preview</h3>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">
+                          Company Logo Preview
+                        </h3>
                         <div className="relative group w-48 h-32">
                           <img
                             src={imagePreview}
@@ -617,57 +709,109 @@ const CustomerData = () => {
                   </button>
                 </div>
                 {persons.map((person, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 last:mb-0">
-                    <div>
-                      <label className="block text-gray-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        value={person.fullName}
-                        onChange={(e) => handlePersonChange(index, "fullName", e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        placeholder="Enter full name"
-                      />
-                    </div>
-                   
-                    <div>
-                      <label className="block text-gray-700 mb-1">Designation</label>
-                      <input
-                        type="text"
-                        value={person.designation}
-                        onChange={(e) => handlePersonChange(index, "designation", e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        placeholder="Enter designation"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1">Department</label>
-                      <input
-                        type="text"
-                        value={person.department}
-                        onChange={(e) => handlePersonChange(index, "department", e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        placeholder="Enter department"
-                      />
-                    </div>
-                     <div>
-                      <label className="block text-gray-700 mb-1">Phone Number</label>
-                      <input
-                        type="text"
-                        value={person.phone}
-                        onChange={(e) => handlePersonChange(index, "phone", e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        placeholder="Enter phone number"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-1">Email</label>
-                      <input
-                        type="email"
-                        value={person.email}
-                        onChange={(e) => handlePersonChange(index, "email", e.target.value)}
-                        className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-                        placeholder="Enter email"
-                      />
+                  <div
+                    key={index}
+                    className="relative border border-gray-200 rounded-lg p-4 mb-6 last:mb-0"
+                  >
+                    {/* Cancel Button for Each Person */}
+                    {index > 0 && (
+                      <button
+                        onClick={() =>
+                          setPersons(persons.filter((_, i) => i !== index))
+                        }
+                        className="absolute top-2 right-2 text-sm text-red-600 border border-red-500 px-2 py-1 rounded-md hover:bg-red-500 hover:text-white transition"
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          value={person.fullName}
+                          onChange={(e) =>
+                            handlePersonChange(
+                              index,
+                              "fullName",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                          placeholder="Enter full name"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 mb-1">
+                          Designation
+                        </label>
+                        <input
+                          type="text"
+                          value={person.designation}
+                          onChange={(e) =>
+                            handlePersonChange(
+                              index,
+                              "designation",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                          placeholder="Enter designation"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 mb-1">
+                          Department
+                        </label>
+                        <input
+                          type="text"
+                          value={person.department}
+                          onChange={(e) =>
+                            handlePersonChange(
+                              index,
+                              "department",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                          placeholder="Enter department"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          value={person.phone}
+                          onChange={(e) =>
+                            handlePersonChange(index, "phone", e.target.value)
+                          }
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                          placeholder="Enter phone number"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 mb-1">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={person.email}
+                          onChange={(e) =>
+                            handlePersonChange(index, "email", e.target.value)
+                          }
+                          className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+                          placeholder="Enter email"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -678,7 +822,9 @@ const CustomerData = () => {
                 <h3 className="text-lg font-semibold mb-4">Assign</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-1">Assign to Staff</label>
+                    <label className="block text-gray-700 mb-1">
+                      Assign to Staff
+                    </label>
                     <select
                       value={assignedStaff}
                       onChange={(e) => setAssignedStaff(e.target.value)}
@@ -693,7 +839,9 @@ const CustomerData = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-gray-700 mb-1">Assign Product</label>
+                    <label className="block text-gray-700 mb-1">
+                      Assign Product
+                    </label>
                     <select
                       value={assignedProduct}
                       onChange={(e) => setAssignedProduct(e.target.value)}
