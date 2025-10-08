@@ -235,6 +235,9 @@ const CustomerData = () => {
 
   // Edit Customer
   const handleEdit = (client) => {
+
+    console.log({client});
+    
     setIsEdit(true);
     setEditId(client._id);
 
@@ -488,11 +491,11 @@ const CustomerData = () => {
                   </div>
                   <div className="hidden md:flex items-center  text-sm text-gray-500 ">
                     <FiUser className="mr-2 text-gray-400" size={14} />
-                    {client?.assignedStaff?.username.slice(0, 6) || "N/A"}
+                    {client.assignedStaff[0].username.slice(0, 6) || "N/A"}
                   </div>
                   <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
                     <FiBriefcase className="mr-2 text-gray-400" size={14} />
-                    {client?.assignedProducts?.name || "N/A"}
+                    {client.assignedProducts.map((p) => p.name).join(", ")|| "N/A"}
                   </div>
 
                   {/* Mobile view content */}
@@ -524,7 +527,7 @@ const CustomerData = () => {
                     <div className="text-xs text-gray-500">Assigned Staff:</div>
                     <div className="text-sm flex items-center">
                       <FiUser className="mr-1 text-gray-400" size={14} />
-                    {client.assignedStaff?.username || "N/A"}
+                    {client.assignedStaff[0].username.slice(0, 6)|| "N/A"}
                     </div>
 
                     <div className="text-xs text-gray-500">
@@ -532,7 +535,7 @@ const CustomerData = () => {
                     </div>
                     <div className="text-sm flex items-center">
                       <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client.assignedProducts?.name || "N/A"}
+                      {client.assignedProducts.map((p) => p.name).join(", ") || "N/A"}
                     </div>
                   </div>
 

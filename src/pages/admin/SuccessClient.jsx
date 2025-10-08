@@ -74,6 +74,7 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
     }
   };
 
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -107,7 +108,7 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
             <div>Number</div>
             <div>Project</div>
             <div>Date</div>
-            <div>Status</div>
+            <div>TimeLine</div>
             <div className="text-right">Actions</div>
           </div>
 
@@ -153,14 +154,13 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       <div className="hidden md:block">
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            client.status === "Follow Up Required"
-              ? "bg-yellow-100 text-yellow-800"
-              : client.status === "Phone Number Responding"
+            client.Timeline === "Completed"
+             
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
           }`}
         >
-          {client.status}
+          {client.Timeline}
         </span>
       </div>
 
