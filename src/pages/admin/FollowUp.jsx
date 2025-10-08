@@ -58,6 +58,7 @@ const FollowUp = () => {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/meetings`
       );
+      
       setViewModalDataShow(response.data.data);
       const mappedData = response.data.data.map((item) => ({
         id: item._id,
@@ -70,11 +71,12 @@ const FollowUp = () => {
             : "N/A",
         time: convertTo24HourFormat(item.followTimes?.[0]),
         status: item.status || "N/A",
+        timeline: item.Timeline
       }));
 
       setFollowUpList(mappedData);
 
-      console.log(response.data.data);
+      console.log(response.data.data,'meet');
     } catch (error) {
       console.error("Error fetching meetings data:", error);
       toast.error("Failed to load meetings data");
@@ -98,7 +100,7 @@ const FollowUp = () => {
     setCustomerDescription(followUp.customerDescription);
     setDate(followUp.date);
     setTime(convertTo24HourFormat(followUp.time));
-    setStatus(followUp.status);
+    setStatus(followUp.timeline);
     setIsSliderOpen(true);
   };
 
@@ -143,7 +145,9 @@ const FollowUp = () => {
           date: nextFollowUpDate,
           time: formattedTime,
           detail: customerDescription,
+          timeline: status
         };
+console.log({payload});
 
         await axios.patch(
           `${import.meta.env.VITE_API_BASE_URL}/meetings/${
