@@ -2,12 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { PuffLoader } from "react-spinners";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  FiUser,
-  FiBriefcase,
-  FiSearch,
-  FiPlus,
-} from "react-icons/fi";
+import { FiUser, FiBriefcase, FiSearch, FiPlus } from "react-icons/fi";
 import axios from "axios";
 
 const MoreProductAssign = () => {
@@ -30,11 +25,10 @@ const MoreProductAssign = () => {
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/customers/companyName`
-      );
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/customers`);
       const result = await res.json();
       setCustomerList(result.data || []);
+      console.log({ data: result.data });
     } catch (error) {
       console.error(error);
       toast.error("Failed to load customers");
@@ -77,7 +71,7 @@ const MoreProductAssign = () => {
     );
 
     if (selectedCompany) {
-      setProduct(selectedCompany.assignedProducts?.name || "");
+      setProduct(selectedCompany.city || "");
 
       if (selectedCompany.persons?.length === 1) {
         const onlyPerson = selectedCompany.persons[0];
@@ -102,30 +96,44 @@ const MoreProductAssign = () => {
         return;
       }
 
+      // Find selected company
+      const selectedCompany = customerList.find(
+        (c) => c.companyName === companyName
+      );
+
+      if (!selectedCompany?._id) {
+        toast.error("Invalid company selection");
+        return;
+      }
+
+      // Payload according to your API spec
       const payload = {
-        companyName,
-        personName,
-        designation,
-        product,
-        assignStaff,
-        assignProduct,
+        assignedStaff: [assignStaff],
+        assignedProducts: [assignProduct],
       };
 
       const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
+        "Content-Type": "application/json",
       };
+      console.log({payload},selectedCompany._id);
+      
 
       setLoading(true);
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/moreProductAssign`,
+
+      await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/customers/assign/${
+          selectedCompany._id
+        }`,
         payload,
         { headers }
       );
-      toast.success("Product assigned successfully!");
+
+      toast.success("✅ Product assigned successfully!");
       resetForm();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to assign product");
+      toast.error("❌ Failed to assign product");
     } finally {
       setLoading(false);
     }
@@ -159,7 +167,6 @@ const MoreProductAssign = () => {
             Assign additional products to customers easily
           </p>
         </div>
-       
       </div>
 
       <form
@@ -253,9 +260,7 @@ const MoreProductAssign = () => {
 
           {/* Product (Auto-filled) */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Products
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">City</label>
             <input
               type="text"
               readOnly
@@ -327,7 +332,6 @@ const MoreProductAssign = () => {
           </button>
         </div>
       </form>
-      <ToastContainer position="bottom-right" />
     </div>
   );
 };
