@@ -58,7 +58,7 @@ const FollowUp = () => {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/meetings`
       );
-      
+
       setViewModalDataShow(response.data.data);
       const mappedData = response.data.data.map((item) => ({
         id: item._id,
@@ -71,12 +71,12 @@ const FollowUp = () => {
             : "N/A",
         time: convertTo24HourFormat(item.followTimes?.[0]),
         status: item.status || "N/A",
-        timeline: item.Timeline
+        timeline: item.Timeline,
       }));
 
       setFollowUpList(mappedData);
 
-      console.log(response.data.data,'meet');
+      console.log(response.data.data, "meet");
     } catch (error) {
       console.error("Error fetching meetings data:", error);
       toast.error("Failed to load meetings data");
@@ -145,9 +145,9 @@ const FollowUp = () => {
           date: nextFollowUpDate,
           time: formattedTime,
           detail: customerDescription,
-          timeline: status
+          timeline: status,
         };
-console.log({payload});
+        console.log({ payload });
 
         await axios.patch(
           `${import.meta.env.VITE_API_BASE_URL}/meetings/${
@@ -305,7 +305,13 @@ console.log({payload});
                     </div>
                     <div className="hidden md:flex items-center text-sm text-gray-500">
                       <FiClock className="mr-2 text-gray-400" />
-                      {followUp.time}
+                      {new Date(
+                        `1970-01-01T${followUp.time}`
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
                     </div>
                     <div className="hidden md:block">
                       <span
