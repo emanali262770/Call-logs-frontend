@@ -21,6 +21,8 @@ import Users from "./pages/admin/Users";
 import AssignRights from "./pages/admin/AccessControl";
 import Modules from "./pages/admin/Modules";
 import ModulesFunctionalities from "./pages/admin/ModulesFunctionalities";
+import SuccessClient from "./pages/admin/SuccessClient";
+import MoreProductAssign from "./pages/admin/MoreProductAssign";
 
 function AppContent() {
   return (
@@ -45,9 +47,11 @@ function AppContent() {
             <Route path="staff" element={<StaffList />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/add" element={<AddProduct />} />
+            <Route path="more-product-assign" element={<MoreProductAssign />} />
             <Route path="customers" element={<CustomerData />} />
             <Route path="calendar" element={<Calendar />} />
-            <Route path="followup" element={<FollowUp />} />
+            <Route path="followup" element={<FollowUp />} /> 
+            <Route path="success-client" element={<SuccessClient />} /> 
             <Route path="meetingup" element={<MeetingFollowPage />} />
             <Route path="meetings/add" element={<AddMeeting />} />
             <Route path="category" element={<Category />} />
