@@ -226,32 +226,31 @@ const AddMeeting = () => {
   };
 
   // Filter meetings based on search query
- useEffect(() => {
-  if (!searchQuery.trim()) {
-    setFilteredMeetings(meetings);
-    return;
-  }
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredMeetings(meetings);
+      return;
+    }
 
-  const filtered = meetings.filter((meeting) => {
-    const company = meeting.companyName?.toLowerCase() || "";
-    const person =
-      meeting.person?.persons?.[0]?.fullName?.toLowerCase() ||
-      meeting.person?.fullName?.toLowerCase() ||
-      "";
-    const product = meeting.product?.name?.toLowerCase() || "";
-    const status = meeting.status?.toLowerCase() || "";
+    const filtered = meetings.filter((meeting) => {
+      const company = meeting.companyName?.toLowerCase() || "";
+      const person =
+        meeting.person?.persons?.[0]?.fullName?.toLowerCase() ||
+        meeting.person?.fullName?.toLowerCase() ||
+        "";
+      const product = meeting.product?.name?.toLowerCase() || "";
+      const status = meeting.status?.toLowerCase() || "";
 
-    return (
-      company.includes(searchQuery.toLowerCase()) ||
-      person.includes(searchQuery.toLowerCase()) ||
-      product.includes(searchQuery.toLowerCase()) ||
-      status.includes(searchQuery.toLowerCase())
-    );
-  });
+      return (
+        company.includes(searchQuery.toLowerCase()) ||
+        person.includes(searchQuery.toLowerCase()) ||
+        product.includes(searchQuery.toLowerCase()) ||
+        status.includes(searchQuery.toLowerCase())
+      );
+    });
 
-  setFilteredMeetings(filtered);
-}, [searchQuery, meetings]);
-
+    setFilteredMeetings(filtered);
+  }, [searchQuery, meetings]);
 
   const fetchCustomerData = useCallback(async () => {
     try {
@@ -395,7 +394,7 @@ const AddMeeting = () => {
             p.designation === meeting.designation
         )?.fullName || "";
     }
-    console.log({ matchedPerson });
+  
 
     // ✅ If no match found, fallback to first person name
     setPersonName(
@@ -410,15 +409,12 @@ const AddMeeting = () => {
     setFollowUpStatus(meeting.status || "Follow Up Required");
 
     // ✅ Follow-up Date & Time
-    setNextFollowUpDate(
-      meeting.followDates?.[0]
-        ? new Date(meeting.followDates[0]).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : "Sat 09 Aug, 2025"
-    );
+  setNextFollowUpDate(
+  meeting.followDates?.[0]
+    ? new Date(meeting.followDates[0]).toISOString().split("T")[0]
+    : ""
+);
+
     setNextFollowUpTime(meeting.followTimes?.[0] || "11:36 AM");
 
     // ✅ Visit Details & Action
@@ -433,28 +429,27 @@ const AddMeeting = () => {
     setShowModal(true);
   };
 
- const handleDeleteClick = async (id) => {
-  try {
-    const headers = {
-      Authorization: `Bearer ${userInfo?.token}`,
-    };
+  const handleDeleteClick = async (id) => {
+    try {
+      const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
 
-    await axios.delete(
-      `${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,
-      { headers }
-    );
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,
+        { headers }
+      );
 
-    setMeetings((prev) => prev.filter((meeting) => meeting._id !== id));
+      setMeetings((prev) => prev.filter((meeting) => meeting._id !== id));
 
-    toast.success("Meeting deleted successfully!");
-  } catch (error) {
-    console.error(error);
-    toast.error("❌ Failed to delete meeting");
-  } finally {
-    setTimeout(() => setLoading(false), 2000);
-  }
-};
-
+      toast.success("Meeting deleted successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("❌ Failed to delete meeting");
+    } finally {
+      setTimeout(() => setLoading(false), 2000);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -481,7 +476,7 @@ const AddMeeting = () => {
           status: followUpStatus,
           followDates: [nextFollowUpDate],
           followTimes: [nextFollowUpTime],
-          details: [detailsOption],
+          details: [nextVisitDetails],
           action: detailsOption,
           reference: referenceProvidedBy,
           referToStaff: selectedStaff?._id || referToStaff,
@@ -573,7 +568,6 @@ const AddMeeting = () => {
       </div>
     );
   }
-
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -860,18 +854,14 @@ const AddMeeting = () => {
                       </label>
                       <div className="relative">
                         <FiCalendar className="absolute left-3 top-3 text-gray-400" />
-                        <select
+                        <input
+                          type="date"
                           value={nextFollowUpDate}
                           onChange={(e) => setNextFollowUpDate(e.target.value)}
-                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                        >
-                          <option value="Sat 09 Aug, 2025">
-                            Sat 09 Aug, 2025
-                          </option>
-                          <option value="Sun 10 Aug, 2025">
-                            Sun 10 Aug, 2025
-                          </option>
-                        </select>
+                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+               focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+               focus:border-newPrimary transition-all"
+                        />
                       </div>
                     </div>
                     <div>
@@ -880,14 +870,14 @@ const AddMeeting = () => {
                       </label>
                       <div className="relative">
                         <FiClock className="absolute left-3 top-3 text-gray-400" />
-                        <select
+                        <input
+                          type="time"
                           value={nextFollowUpTime}
                           onChange={(e) => setNextFollowUpTime(e.target.value)}
-                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                        >
-                          <option value="11:36 AM">11:36 AM</option>
-                          <option value="12:00 PM">12:00 PM</option>
-                        </select>
+                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+               focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+               focus:border-newPrimary transition-all"
+                        />
                       </div>
                     </div>
                   </div>
