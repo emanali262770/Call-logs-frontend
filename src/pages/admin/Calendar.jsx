@@ -73,7 +73,7 @@ const Calendar = () => {
 
       if (result.success) {
         setCalendar(result.data || []);
-        console.log("📅 Calendar Data:", result.data);
+        // console.log("📅 Calendar Data:", result.data);
       } else {
         toast.error("Failed to load calendar data");
       }
@@ -128,52 +128,17 @@ const Calendar = () => {
   };
 
   const handlePrev = () => {
-    if (viewMode === "day") {
-      setCurrentDate(
-        new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate() - 1
-        )
-      );
-    } else if (viewMode === "week") {
-      setCurrentDate(
-        new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate() - 7
-        )
-      );
-    } else {
-      setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-      );
-    }
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
   };
 
   const handleNext = () => {
-    if (viewMode === "day") {
-      setCurrentDate(
-        new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate() + 1
-        )
-      );
-    } else if (viewMode === "week") {
-      setCurrentDate(
-        new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate() + 7
-        )
-      );
-    } else {
-      setCurrentDate(
-        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-      );
-    }
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
   };
+
 
 
 
@@ -270,13 +235,13 @@ const Calendar = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = new Date(year, month, day).toLocaleDateString("en-CA");
 
-     
+
       // ✅ Filter meetings matching this date
       const meetingsForDay = calendar.filter(meeting =>
         meeting.dates.some(d => d.startsWith(dateStr))
       );
-//  console.log("meetingsForDay", meetingsForDay);
-      
+      //  console.log("meetingsForDay", meetingsForDay);
+
       calendarDays.push(
         <div
           key={day}
@@ -289,27 +254,27 @@ const Calendar = () => {
           {/* ✅ Display person & time */}
           <div className="mt-1 space-y-1">
             {meetingsForDay.map((m, idx) => {
-  // Find the index of this date
-  const matchedIndexes = m.dates
-    .map((d, i) => (d.startsWith(dateStr) ? i : -1))
-    .filter(i => i !== -1);
+              // Find the index of this date
+              const matchedIndexes = m.dates
+                .map((d, i) => (d.startsWith(dateStr) ? i : -1))
+                .filter(i => i !== -1);
 
-  // Extract only the times for those matched dates
-  const timesForThisDate = matchedIndexes.map(i => m.times[i]);
+              // Extract only the times for those matched dates
+              const timesForThisDate = matchedIndexes.map(i => m.times[i]);
 
-  return (
-    <div
-      key={idx}
-      className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
-      title={`${m.person} - ${timesForThisDate.join(", ")}`}
-    >
-      <strong>{m.person}</strong>
-      <div className="text-[10px] text-gray-600">
-        {timesForThisDate.join(", ")}
-      </div>
-    </div>
-  );
-})}
+              return (
+                <div
+                  key={idx}
+                  className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
+                  title={`${m.person} - ${timesForThisDate.join(", ")}`}
+                >
+                  <strong>{m.person}</strong>
+                  <div className="text-[10px] text-gray-600">
+                    {timesForThisDate.join(", ")}
+                  </div>
+                </div>
+              );
+            })}
 
           </div>
         </div>
@@ -420,16 +385,11 @@ const Calendar = () => {
               >
                 <FiChevronLeft className="h-5 w-5 text-gray-600" />
               </button>
+
               <h3 className="text-lg font-semibold text-gray-800">
-                {viewMode === "month"
-                  ? `${days[selectedDate.getDay()]}, ${months[selectedDate.getMonth()]
-                  } ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`
-                  : viewMode === "week"
-                    ? `Week of ${months[currentDate.getMonth()]
-                    } ${currentDate.getDate()}, ${currentDate.getFullYear()}`
-                    : `${months[currentDate.getMonth()]
-                    } ${currentDate.getFullYear()}`}
+                {months[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h3>
+
               <button
                 onClick={handleNext}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-all"
@@ -437,6 +397,7 @@ const Calendar = () => {
                 <FiChevronRight className="h-5 w-5 text-gray-600" />
               </button>
             </div>
+
 
           </div>
 
