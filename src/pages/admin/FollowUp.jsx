@@ -33,6 +33,7 @@ const FollowUp = () => {
   const [status, setStatus] = useState("Active");
   const [ViewModalDatashow, setViewModalDataShow] = useState([]);
   const [selectedFollowUp, setSelectedFollowUp] = useState(null);
+   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const filteredFollowUps = followUpList.filter((followUp) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -107,13 +108,15 @@ const FollowUp = () => {
   const handleDeleteClick = async (id) => {
     try {
       setLoading(true);
-
+ const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
       // call delete endpoint
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,{headers});
 
       // update local state instantly
       setFollowUpList((prev) => prev.filter((item) => item.id !== id));
-
+   fetchFollowUpData()
       toast.success("Follow-up deleted successfully!");
     } catch (error) {
       console.error("Error deleting follow-up:", error);
@@ -195,7 +198,7 @@ const FollowUp = () => {
     setTime("");
     setStatus("Active");
   };
-  console.log({ filteredFollowUps });
+
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">

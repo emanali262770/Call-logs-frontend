@@ -14,6 +14,8 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { FaRupeeSign } from "react-icons/fa6";
+
 import { PuffLoader } from "react-spinners";
 
 const ProductsPage = () => {
@@ -98,13 +100,16 @@ const ProductsPage = () => {
       const result = await response.json();
       setProducts(result.data);
       setFilteredProducts(result.data);
-
+   
       setTimeout(() => {
         setLoading(false);
       }, 3000);
     } catch (err) {
       console.error("Fetch products error:", err);
-      toast.error("Failed to fetch products!");
+      setTimeout(() => {
+         toast.error("Failed to fetch products!");
+      }, 2000);
+     
     }
   }, []);
 
@@ -464,12 +469,12 @@ const ProductsPage = () => {
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center">
             <div className="p-3 rounded-lg bg-green-100 mr-4">
-              <FiDollarSign className="text-green-600 text-xl" />
+              <FaRupeeSign className="text-green-600 text-xl" />
             </div>
             <div>
               <p className="text-gray-500 text-sm">Total Sales</p>
               <h3 className="text-2xl font-bold text-gray-800">
-                ${totalSales.toLocaleString()}
+                RS {totalSales.toLocaleString()}
               </h3>
             </div>
           </div>
@@ -543,7 +548,7 @@ const ProductsPage = () => {
 
                         {/* Price */}
                         <div className="text-sm font-medium text-gray-900">
-                          ${price.toLocaleString()}
+                          RS {price.toLocaleString()}
                         </div>
 
                         {/* Orders */}
@@ -553,7 +558,7 @@ const ProductsPage = () => {
 
                         {/* Sales */}
                         <div className="text-sm font-semibold text-green-600">
-                          ${totalSales.toLocaleString()}
+                          RS {totalSales.toLocaleString()}
                         </div>
 
                         {/* Actions */}
@@ -653,7 +658,7 @@ const ProductsPage = () => {
                     </label>
                     <div className="relative rounded-lg shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500">RS </span>
                       </div>
                       <input
                         type="text"
