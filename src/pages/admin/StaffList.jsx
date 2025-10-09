@@ -51,7 +51,7 @@ const StaffList = () => {
   const [loading, setLoading] = useState(true);
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("Admin", userInfo.isAdmin);
+
 
   // Search functionality
   useEffect(() => {
@@ -145,6 +145,10 @@ const StaffList = () => {
 
   //  Staff saved
   const handleSave = async () => {
+    if (!image) {
+      toast.error("Image is compulsory");
+      return; 
+    }
     const formData = new FormData();
     formData.append("username", staffName);
     formData.append("department", department);
@@ -156,8 +160,9 @@ const StaffList = () => {
     if (image) {
       formData.append("image", image);
     }
+    
 
-    console.log("Form Data", formData);
+  
 
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
@@ -371,146 +376,101 @@ const StaffList = () => {
       </div>
 
       {/* Staff Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="min-w-full">
-            {/* Table Headers */}
-            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
-              <div>Name</div>
-              <div>Department</div>
-              {/* <div>Designation</div> */}
-              <div>Address</div>
-              <div>Number</div>
-              <div>Email</div>
-              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
-            </div>
-
-            {/* Staff in Table */}
-            <div className="mt-4 flex flex-col gap-3">
-              {filteredStaffList.length > 0 ? (
-                currentStaff.map((staff, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                  >
-                    {/* Mobile view header */}
-                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center rounded-full">
-                          <img
-                            src={
-                              staff.image?.url ||
-                              "https://via.placeholder.com/40"
-                            }
-                            alt="Staff"
-                            className="w-7 h-7 object-cover rounded-full"
-                          />
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {staff.name}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Desktop view cells */}
-                    <div className="hidden md:flex items-center gap-3">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-full">
-                        <img
-                          src={
-                            staff.image?.url || "https://via.placeholder.com/40"
-                          }
-                          alt="Staff"
-                          className="w-10 h-10 object-cover rounded-full"
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900 truncate">
-                        {staff.name}
-                      </span>
-                    </div>
-
-                    {/* Department */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiBriefcase className="mr-2 text-gray-400" />
-                      {staff.department || "NaN"}
-                    </div>
-
-                    {/* Address */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                      <FiMapPin className="mr-2 text-gray-400" />
-                      {staff?.address || "No have Location"}
-                    </div>
-
-                    {/* Number */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiPhone className="mr-2 text-gray-400" />
-                      {staff.number}
-                    </div>
-
-                    {/* Email */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                      <FiMail className="mr-2 text-gray-400" />
-                      {staff.email}
-                    </div>
-
-                    {/* Mobile view content */}
-                    <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
-                      <div className="text-xs text-gray-500">Department:</div>
-                      <div className="text-sm flex items-center">
-                        <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                        {staff.department}
-                      </div>
-
-                      <div className="text-xs text-gray-500">Designation:</div>
-                      <div className="text-sm">{staff.designation}</div>
-
-                      <div className="text-xs text-gray-500">Address:</div>
-                      <div className="text-sm flex items-center">
-                        <FiMapPin className="mr-1 text-gray-400" size={14} />
-                        {staff.address}
-                      </div>
-
-                      <div className="text-xs text-gray-500">Number:</div>
-                      <div className="text-sm flex items-center">
-                        <FiPhone className="mr-1 text-gray-400" size={14} />
-                        {staff.number}
-                      </div>
-
-                      <div className="text-xs text-gray-500">Email:</div>
-                      <div className="text-sm flex items-center">
-                        <FiMail className="mr-1 text-gray-400" size={14} />
-                        {staff.email}
-                      </div>
-                    </div>
-
-                    {/* Actions - visible on both mobile and desktop */}
-                    {userInfo?.isAdmin && (
-                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEdit(staff)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(staff._id)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No staff members found
-                </div>
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Name</th>
+              <th className="py-3 px-4">Department</th>
+              <th className="py-3 px-4">Address</th>
+              <th className="py-3 px-4">Number</th>
+              <th className="py-3 px-4">Email</th>
+              {userInfo?.isAdmin && (
+                <th className="py-3 px-4 text-right">Actions</th>
               )}
-            </div>
-          </div>
-        </div>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredStaffList.length > 0 ? (
+              currentStaff.map((staff, index) => (
+                <tr
+                  key={index}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+                  {/* Name with Image */}
+                  <td className="py-3 px-4 flex items-center gap-2">
+                    <img
+                      src={staff.image?.url || "https://t4.ftcdn.net/jpg/02/44/43/69/360_F_244436923_vkMe10KKKiw5bjhZeRDT05moxWcPpdmb.jpg"}
+                      alt="Staff"
+                      className="w-8 h-8 rounded-full border object-cover"
+                    />
+                    <span className="font-medium text-gray-900">
+                      {staff.name
+                        ? staff.name.length > 20
+                          ? `${staff.name.slice(0, 20)}...`
+                          : staff.name
+                        : "N/A"}
+                    </span>
+                  </td>
+
+                  {/* Department */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.department || "N/A"}
+                  </td>
+
+                  {/* Address */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.address
+                      ? staff.address.length > 20
+                        ? `${staff.address.slice(0, 20)}...`
+                        : staff.address
+                      : "No have Location"}
+                  </td>
+
+                  {/* Number */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.number || "N/A"}
+                  </td>
+
+                  {/* Email */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {staff.email || "N/A"}
+                  </td>
+
+                  {/* Actions */}
+                  {userInfo?.isAdmin && (
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEdit(staff)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(staff._id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 6 : 5}
+                  className="text-center py-6 text-gray-500"
+                >
+                  No staff members found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Slider */}
