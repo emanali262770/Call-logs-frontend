@@ -151,14 +151,17 @@ const AdminDashboard = () => {
 
     fetchDashboardData();
   }, []);
-
+  const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
   // fetch pie data
   useEffect(() => {
     async function pieDataApi() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`,
+          {headers}
         );
 
         const formattedPie = [
@@ -199,7 +202,8 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/dashboard/weekly-volume`
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/weekly-volume`,
+        {headers}
         );
         console.log({ res });
 
@@ -233,7 +237,8 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/dashboard/monthly-trends`
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/monthly-trends`,
+          {headers}
         );
         console.log({ res });
 
@@ -277,7 +282,8 @@ const AdminDashboard = () => {
         const res = await axios.get(
           `${
             import.meta.env.VITE_API_BASE_URL
-          }/dashboard/calendar-meetings?month=${currentMonth}`
+          }/dashboard/calendar-meetings?month=${currentMonth}`,
+          {headers}
         );
         console.log("📅 Calendar Meetings:", res.data);
 
@@ -312,12 +318,12 @@ const AdminDashboard = () => {
       try {
         const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
           await Promise.all([
-            axios.get(`${base}/customers/count`, { signal: controller.signal }),
+            axios.get(`${base}/customers/count`, {headers}, { signal: controller.signal }),
             axios.get(`${base}/products/count`, { signal: controller.signal }),
             axios.get(`${base}/group-users/count`, {
               signal: controller.signal,
             }),
-            axios.get(`${base}/orders/total`, { signal: controller.signal }),
+            axios.get(`${base}/orders/total`, {headers},{ signal: controller.signal }),
             axios.get(`${base}/notifications`, {
               headers: { Authorization: `Bearer ${userInfo.token}` },
               signal: controller.signal,
