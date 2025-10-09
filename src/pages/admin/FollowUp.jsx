@@ -33,7 +33,10 @@ const FollowUp = () => {
   const [status, setStatus] = useState("Active");
   const [ViewModalDatashow, setViewModalDataShow] = useState([]);
   const [selectedFollowUp, setSelectedFollowUp] = useState(null);
-   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const filteredFollowUps = followUpList.filter((followUp) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -108,15 +111,18 @@ const FollowUp = () => {
   const handleDeleteClick = async (id) => {
     try {
       setLoading(true);
- const headers = {
+      const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
       };
       // call delete endpoint
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,{headers});
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,
+        { headers }
+      );
 
       // update local state instantly
       setFollowUpList((prev) => prev.filter((item) => item.id !== id));
-   fetchFollowUpData()
+      fetchFollowUpData();
       toast.success("Follow-up deleted successfully!");
     } catch (error) {
       console.error("Error deleting follow-up:", error);
@@ -176,13 +182,13 @@ const FollowUp = () => {
         toast.success("Follow-up updated successfully!");
       } catch (error) {
         console.error("Save error:", error);
-       
-           // ✅ Extract message from backend
-           const backendMessage =
-             error.response?.data?.message ||
-             "Something went wrong. Please try again.";
-       
-           toast.error(`❌ ${backendMessage}`);
+
+        // ✅ Extract message from backend
+        const backendMessage =
+          error.response?.data?.message ||
+          "Something went wrong. Please try again.";
+
+        toast.error(`❌ ${backendMessage}`);
       }
     }
 
@@ -204,7 +210,14 @@ const FollowUp = () => {
     setTime("");
     setStatus("Active");
   };
-
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentFollowUps = filteredFollowUps.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredFollowUps.length / itemsPerPage);
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -231,14 +244,6 @@ const FollowUp = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-
-          {/* <button
-            onClick={handleAddFollowUp}
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Follow Up</span>
-          </button> */}
         </div>
       </div>
 
@@ -253,12 +258,7 @@ const FollowUp = () => {
               <div>Date</div>
               <div>Time</div>
               <div>Status</div>
-              {
-                userInfo.isAdmin && (
-                   <div className="text-right">Actions</div>
-                )
-              }
-             
+              {userInfo.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
             <div className="mt-4 flex flex-col gap-3">
@@ -267,7 +267,7 @@ const FollowUp = () => {
                   No follow-ups found.
                 </div>
               ) : (
-                filteredFollowUps.map((followUp) => (
+                currentFollowUps.map((followUp) => (
                   <div
                     key={followUp.id}
                     className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
@@ -344,42 +344,38 @@ const FollowUp = () => {
                         {followUp.status}
                       </span>
                     </div>
-                    {
-                      userInfo.isAdmin && (
-                      
-                    <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditClick(followUp)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(followUp.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            const found = ViewModalDatashow.find(
-                              (d) => d._id === followUp.id
-                            );
-                            if (found) {
-                              setSelectedViewData(found);
-                              setIsView(true);
-                            }
-                          }}
-                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
-                        >
-                          <Eye size={16} />
-                        </button>
+                    {userInfo.isAdmin && (
+                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditClick(followUp)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(followUp.id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const found = ViewModalDatashow.find(
+                                (d) => d._id === followUp.id
+                              );
+                              if (found) {
+                                setSelectedViewData(found);
+                                setIsView(true);
+                              }
+                            }}
+                            className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                      )
-                    }
-                   
+                    )}
                   </div>
                 ))
               )}
@@ -554,6 +550,50 @@ const FollowUp = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {/* Pagination Controls */}
+      {filteredFollowUps.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md border transition ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
