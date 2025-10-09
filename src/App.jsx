@@ -47,7 +47,7 @@ function AppContent() {
             <Route path="staff" element={<StaffList />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/add" element={<AddProduct />} />
-            <Route path="more-product-assign" element={<MoreProductAssign />} />
+            {/* <Route path="more-product-assign" element={<MoreProductAssign />} /> */}
             <Route path="customers" element={<CustomerData />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="followup" element={<FollowUp />} /> 
