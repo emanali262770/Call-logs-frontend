@@ -21,7 +21,7 @@ import { X } from "lucide-react";
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [staffMembers, setStaffMember] = useState([]);
   const [productList, setProductList] = useState([]);
@@ -574,153 +574,72 @@ const CustomerData = () => {
       </div>
 
       {/* Customer Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="min-w-full">
-            {/* Table headers - hidden on mobile */}
-            <div className="hidden md:grid grid-cols-8 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
-              <div>Name</div>
-              <div>Email</div>
-              <div>Designation</div>
-              <div>Address</div>
-              <div>Department</div>
-              <div>Assigned Staff</div>
-              <div>Assigned Product</div>
-              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
-            </div>
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Name</th>
+              <th className="py-3 px-4">Email</th>
+              <th className="py-3 px-4">Designation</th>
+              <th className="py-3 px-4">Address</th>
+              <th className="py-3 px-4">Department</th>
+              <th className="py-3 px-4">Assigned Staff</th>
+              <th className="py-3 px-4">Assigned Product</th>
+              {userInfo?.isAdmin && <th className="py-3 px-4 text-right">Actions</th>}
+            </tr>
+          </thead>
 
-            <div className="mt-4 flex flex-col gap-3">
-              {currentItems.map((client, index) => (
-                <div
+          <tbody>
+            {currentItems.length > 0 ? (
+              currentItems.map((client, index) => (
+                <tr
                   key={index}
-                  className="grid grid-cols-1 md:grid-cols-8 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  className="border-b hover:bg-gray-50 transition"
                 >
-                  {/* Mobile view header */}
-                  <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 flex items-center justify-center bg-[#f0d694] rounded-full">
-                        <img
-                          src={
-                            client.companyLogo?.url ||
-                            "https://via.placeholder.com/40"
-                          }
-                          alt="Company Logo"
-                          className="w-7 h-7 object-cover rounded-full"
-                        />
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {client.companyName}
-                      </div>
-                    </div>
-                    {userInfo?.isAdmin && (
-                      <div className="text-right relative group">
-                        <button className="text-gray-400 hover:text-gray-600 text-xl">
-                          ⋯
-                        </button>
-                        <div className="absolute right-0 top-6 w-28 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300 z-50 flex flex-col">
-                          <button
-                            onClick={() => handleEdit(client)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-blue-100 text-blue-600 flex items-center gap-2"
-                          >
-                            <FiEdit size={14} /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(client._id)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-500 flex items-center gap-2"
-                          >
-                            <FiTrash2 size={14} /> Delete
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <td className="py-3 px-4 flex items-center gap-2">
+                    <img
+                      src={
+                        client.companyLogo?.url ||
+                        "https://via.placeholder.com/40"
+                      }
+                      alt="Logo"
+                      className="w-8 h-8 rounded-full border object-cover"
+                    />
+                    <span className="font-medium text-gray-900">
 
-                  {/* Desktop view cells */}
-                  <div className="hidden md:flex items-center gap-3">
-                    <div className="w-10 h-10 flex items-center justify-center border rounded-full">
-                      <img
-                        src={
-                          client.companyLogo?.url ||
-                          "https://via.placeholder.com/40"
-                        }
-                        alt="Company Logo"
-                        className="w-7 h-7 object-cover rounded-full"
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 truncate">
-                      {client.companyName}
+                      {client.companyName
+                        ? client.companyName.length > 20
+                          ? `${client.companyName.slice(0, 20)}...`
+                          : client.companyName
+                        : "N/A"}
+
+
+
                     </span>
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-green-600 truncate">
-                    <FiMail className="mr-2 text-gray-400" size={14} />
-                    {client.email || "N/A"}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiBriefcase className="mr-2 text-gray-400" size={14} />
+                  </td>
+                  <td className="py-3 px-4 text-green-600">{client.email || "N/A"}</td>
+                  <td className="py-3 px-4 text-gray-700">
                     {client.persons?.[0]?.designation || "N/A"}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiMapPin className="mr-2 text-gray-400" size={14} />
-                    {client.address || "N/A"}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiUser className="mr-2 text-gray-400" size={14} />
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">
+                    {client.address
+                      ? client.address.length > 20
+                        ? `${client.address.slice(0, 20)}...`
+                        : client.address
+                      : "N/A"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">
                     {client.persons?.[0]?.department || "N/A"}
-                  </div>
-                  <div className="hidden md:flex items-center  text-sm text-gray-500 ">
-                    <FiUser className="mr-2 text-gray-400" size={14} />
-                    {client?.assignedStaff?.username || "N/A"}
-                  </div>
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiBriefcase className="mr-2 text-gray-400" size={14} />
-                    {client?.assignedProducts?.name || "N/A"}
-                  </div>
-
-                  {/* Mobile view content */}
-                  <div className="md:hidden grid grid-cols-2 gap-2 mt-2">
-                    <div className="text-xs text-gray-500">Email:</div>
-                    <div className="text-sm flex items-center">
-                      <FiMail className="mr-1 text-gray-400" size={14} />
-                      {client.email || "N/A"}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Designation:</div>
-                    <div className="text-sm flex items-center">
-                      <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client.persons?.[0]?.designation || "N/A"}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Address:</div>
-                    <div className="text-sm flex items-center">
-                      <FiMapPin className="mr-1 text-gray-400" size={14} />
-                      {client.address || "N/A"}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Department:</div>
-                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                      <FiUser className="mr-2 text-gray-400" size={14} />
-                      {client.persons?.[0]?.department || "N/A"}
-                    </div>
-
-                    <div className="text-xs text-gray-500">Assigned Staff:</div>
-                    <div className="text-sm flex items-center">
-                      <FiUser className="mr-1 text-gray-400" size={14} />
-                      {client?.assignedStaff?.username || "N/A"}
-                    </div>
-
-                    <div className="text-xs text-gray-500">
-                      Assigned Product:
-                    </div>
-                    <div className="text-sm flex items-center">
-                      <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client?.assignedProducts?.name || "N/A"}
-                    </div>
-                  </div>
-
-                  {/* Actions - visible on desktop only (mobile actions are in header) */}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">
+                    {client.assignedStaff?.username || "N/A"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">
+                    {client.assignedProducts?.name || "N/A"}
+                  </td>
                   {userInfo?.isAdmin && (
-                    <div className="hidden md:flex justify-end">
-                      <div className="flex space-x-2">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(client)}
                           className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
@@ -734,21 +653,22 @@ const CustomerData = () => {
                           <FiTrash2 size={16} />
                         </button>
                       </div>
-                    </div>
+                    </td>
                   )}
-                </div>
-              ))}
-
-              {filteredCustomers.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  {searchQuery
-                    ? "No customers found matching your search"
-                    : "No customers available"}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 8 : 7}
+                  className="text-center py-6 text-gray-500"
+                >
+                  No customers found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal */}
@@ -1063,11 +983,10 @@ const CustomerData = () => {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg ${
-              currentPage === 1
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 border rounded-lg ${currentPage === 1
+              ? "text-gray-400 border-gray-200 cursor-not-allowed"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             Prev
           </button>
@@ -1076,11 +995,10 @@ const CustomerData = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border ${
-                currentPage === i + 1
-                  ? "bg-newPrimary text-white border-newPrimary"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+              className={`px-3 py-1 rounded-md border ${currentPage === i + 1
+                ? "bg-newPrimary text-white border-newPrimary"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
             >
               {i + 1}
             </button>
@@ -1091,11 +1009,10 @@ const CustomerData = () => {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`px-4 py-2 border rounded-lg ${
-              currentPage === totalPages
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 border rounded-lg ${currentPage === totalPages
+              ? "text-gray-400 border-gray-200 cursor-not-allowed"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             Next
           </button>
