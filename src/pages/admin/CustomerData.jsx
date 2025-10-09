@@ -41,7 +41,25 @@ const CustomerData = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddCustomer = () => {
+     // Reset form
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+      setCustomerCity("");
+      setCompanyName("");
+      setBusinessType("");
+      setPersons([
+        { fullName: "", phone: "", email: "", designation: "", department: "" },
+      ]);
+      setAssignedStaff("");
+      setAssignedProduct("");
+      setImage(null);
+      setImagePreview(null);
+      setEditId(null);
+      setIsEdit(false);
+      setIsSliderOpen(false);
     setIsSliderOpen(true);
+    
   };
 
   // Token
@@ -236,7 +254,6 @@ const CustomerData = () => {
   // Edit Customer
   const handleEdit = (client) => {
 
-    console.log({client});
     
     setIsEdit(true);
     setEditId(client._id);
@@ -360,6 +377,7 @@ const CustomerData = () => {
       </div>
     );
   }
+
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -491,11 +509,11 @@ const CustomerData = () => {
                   </div>
                   <div className="hidden md:flex items-center  text-sm text-gray-500 ">
                     <FiUser className="mr-2 text-gray-400" size={14} />
-                    {client.assignedStaff[0].username.slice(0, 6) || "N/A"}
+                    {client.assignedStaff.username || "N/A"}
                   </div>
                   <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
                     <FiBriefcase className="mr-2 text-gray-400" size={14} />
-                    {client.assignedProducts.map((p) => p.name).join(", ")|| "N/A"}
+                    {client.assignedProducts.name|| "N/A"}
                   </div>
 
                   {/* Mobile view content */}
@@ -527,7 +545,7 @@ const CustomerData = () => {
                     <div className="text-xs text-gray-500">Assigned Staff:</div>
                     <div className="text-sm flex items-center">
                       <FiUser className="mr-1 text-gray-400" size={14} />
-                    {client.assignedStaff[0].username.slice(0, 6)|| "N/A"}
+                    {client.assignedStaff.username|| "N/A"}
                     </div>
 
                     <div className="text-xs text-gray-500">
@@ -535,7 +553,7 @@ const CustomerData = () => {
                     </div>
                     <div className="text-sm flex items-center">
                       <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client.assignedProducts.map((p) => p.name).join(", ") || "N/A"}
+                      {client.assignedProducts.name|| "N/A"}
                     </div>
                   </div>
 

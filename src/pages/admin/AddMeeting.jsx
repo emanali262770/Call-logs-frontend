@@ -276,6 +276,7 @@ const AddMeeting = () => {
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
+console.log({customerList});
 
   // useEffect used for company selection
   useEffect(() => {
@@ -394,7 +395,6 @@ const AddMeeting = () => {
             p.designation === meeting.designation
         )?.fullName || "";
     }
-  
 
     // ✅ If no match found, fallback to first person name
     setPersonName(
@@ -409,11 +409,11 @@ const AddMeeting = () => {
     setFollowUpStatus(meeting.status || "Follow Up Required");
 
     // ✅ Follow-up Date & Time
-  setNextFollowUpDate(
-  meeting.followDates?.[0]
-    ? new Date(meeting.followDates[0]).toISOString().split("T")[0]
-    : ""
-);
+    setNextFollowUpDate(
+      meeting.followDates?.[0]
+        ? new Date(meeting.followDates[0]).toISOString().split("T")[0]
+        : ""
+    );
 
     setNextFollowUpTime(meeting.followTimes?.[0] || "11:36 AM");
 
@@ -560,6 +560,7 @@ const AddMeeting = () => {
     setReferToStaff("");
     setContactMethod("By Visit");
   };
+  console.log({ meetings });
 
   if (loading) {
     return (
@@ -568,6 +569,7 @@ const AddMeeting = () => {
       </div>
     );
   }
+
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -617,65 +619,71 @@ const AddMeeting = () => {
             </div>
 
             <div className="mt-4 flex flex-col gap-3 pb-14">
-              {filteredMeetings.map((meeting, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                >
-                  <div className="hidden md:block text-sm font-medium text-gray-900 truncate">
-                    {meeting.companyName}
-                  </div>
-
-                  <div className="hidden md:block text-sm text-gray-500 truncate">
-                    {meeting.person?.persons?.[0]?.fullName || "—"}
-                  </div>
-
-                  <div className="hidden md:block text-sm text-gray-500 truncate">
-                    {meeting.product?.name || "—"}
-                  </div>
-
-                  <div className="hidden md:block pl-6">
-                    <div
-                      className={`max-w-fit truncate items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        meeting.status === "Follow Up Required"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : meeting.status === "Not Interested"
-                          ? "bg-red-100 text-red-800"
-                          : meeting.status === "All Ready Installed"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {meeting.status}
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-gray-500 text-center">
-                    {meeting.followDates?.length
-                      ? new Date(meeting.followDates[0]).toLocaleDateString()
-                      : "—"}
-                    {" • "}
-                    {meeting.followTimes?.[0] || "—"}
-                  </div>
-
-                  <div className="flex justify-end md:justify-end col-span-1 md:col-span-2">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditClick(meeting)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                      >
-                        <FiEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(meeting._id)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
+              {filteredMeetings.length === 0 ? (
+                <div className="text-center py-8 bg-white rounded-xl border border-gray-200 text-gray-500 text-sm">
+                  No meetings found.
                 </div>
-              ))}
+              ) : (
+                filteredMeetings.map((meeting, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  >
+                    <div className="hidden md:block text-sm font-medium text-gray-900 truncate">
+                      {meeting.companyName}
+                    </div>
+
+                    <div className="hidden md:block text-sm text-gray-500 truncate">
+                      {meeting.person?.persons?.[0]?.fullName || "—"}
+                    </div>
+
+                    <div className="hidden md:block text-sm text-gray-500 truncate">
+                      {meeting.product?.name || "—"}
+                    </div>
+
+                    <div className="hidden md:block pl-6">
+                      <div
+                        className={`max-w-fit truncate items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          meeting.status === "Follow Up Required"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : meeting.status === "Not Interested"
+                            ? "bg-red-100 text-red-800"
+                            : meeting.status === "All Ready Installed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {meeting.status}
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-500 text-center">
+                      {meeting.followDates?.length
+                        ? new Date(meeting.followDates[0]).toLocaleDateString()
+                        : "—"}
+                      {" • "}
+                      {meeting.followTimes?.[0] || "—"}
+                    </div>
+
+                    <div className="flex justify-end md:justify-end col-span-1 md:col-span-2">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditClick(meeting)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(meeting._id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
