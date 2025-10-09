@@ -18,7 +18,6 @@ import {
 import * as XLSX from "xlsx";
 import { X } from "lucide-react";
 
-
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,14 +44,14 @@ const CustomerData = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [file, setFile] = useState(null);
-   const [excelData, setExcelData] = useState([]); // preview data
+  const [excelData, setExcelData] = useState([]); // preview data
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-    // Token
+  // Token
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
-// 🧩 Step 1: Handle file selection + parse Excel
+  // 🧩 Step 1: Handle file selection + parse Excel
   const handleFileChange = async (e) => {
     const uploadedFile = e.target.files[0];
     if (!uploadedFile) return;
@@ -90,7 +89,6 @@ const CustomerData = () => {
     setIsEdit(false);
     setIsSliderOpen(false);
     setIsSliderOpen(true);
-
   };
   // Excel file upload in the backend
   const handleUpload = async () => {
@@ -100,28 +98,25 @@ const CustomerData = () => {
     formData.append("file", file);
 
     try {
-       const headers = {
+      const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
         "Content-Type": "multipart/form-data",
       };
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/customers/upload`,
         formData,
-        {headers},
+        { headers }
       );
 
       if (res.data.success) {
         alert(`✅ ${res.data.totalInserted} customers uploaded successfully!`);
-        setShowPreview(false)
+        setShowPreview(false);
       }
     } catch (error) {
       console.error(error);
       alert("Upload failed. Check console for details.");
     }
   };
-
-
-
 
   // Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
@@ -169,9 +164,7 @@ const CustomerData = () => {
           ) ||
           (customer.assignedStaff &&
             typeof customer.assignedStaff === "object" &&
-            customer.assignedStaff.username
-              ?.toLowerCase()
-              .includes(query)) ||
+            customer.assignedStaff.username?.toLowerCase().includes(query)) ||
           (customer.assignedProducts &&
             typeof customer.assignedProducts === "object" &&
             customer.assignedProducts.name?.toLowerCase().includes(query))
@@ -181,7 +174,6 @@ const CustomerData = () => {
       setFilteredCustomers(filtered);
     }
   }, [searchQuery, customerList]);
-
 
   // Fetch Staff and Product Data
   const fetchAssignedData = useCallback(async () => {
@@ -196,7 +188,6 @@ const CustomerData = () => {
       setStaffMember(staff.data || []);
       setProductList(product.data || []);
       console.log("productRes ", product.data);
-
     } catch (error) {
       console.error("Error fetching assigned data:", error);
       toast.error("Failed to fetch staff/product data");
@@ -317,8 +308,6 @@ const CustomerData = () => {
 
   // Edit Customer
   const handleEdit = (client) => {
-
-
     setIsEdit(true);
     setEditId(client._id);
 
@@ -434,10 +423,12 @@ const CustomerData = () => {
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCustomers.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredCustomers.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
-
 
   // Loading Spinner
   if (loading) {
@@ -450,112 +441,136 @@ const CustomerData = () => {
     );
   }
 
-
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
-          Customer List
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Manage your customer database
-        </p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-        <div className="relative w-full md:w-64">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search customers..."
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-          />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
+            Customer List
+          </h1>
+          <p className="text-gray-500 text-sm">Manage your customer database</p>
         </div>
 
-        {/* Upload Excel */}
-        <div className="flex items-center gap-3">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileChange}
-            className="border border-gray-300 rounded-lg p-2"
-          />
-        </div>
-
-        {/* Add Customer Btn */}
-        {userInfo?.isAdmin && (
-          <button
-          onClick={handleAddCustomer}
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Customer</span>
-          </button>
-        )}
-      </div>
-
-      {/* 🧾 PREVIEW MODAL */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white w-[100%] md:w-[1000px] rounded-xl shadow-lg p-6 relative max-h-[80vh] overflow-y-auto">
-            <button
-              onClick={() => setShowPreview(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-            >
-              <X size={20} />
-            </button>
-            <h2 className="text-lg font-semibold mb-4 text-newPrimary">
-              Excel Preview ({excelData.length} Rows)
-            </h2>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full border text-sm">
-                <thead className="bg-gray-200 text-gray-700">
-                  <tr>
-                    {Object.keys(excelData[0] || {}).map((key) => (
-                      <th key={key} className="border px-3 py-2 text-left">
-                        {key}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {excelData.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      {Object.values(row).map((val, i) => (
-                        <td key={i} className="border px-3 py-2">
-                          {val || "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
             </div>
+            <input
+              type="text"
+              placeholder="Search customers..."
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+            />
+          </div>
 
-            <div className="flex justify-end mt-4 gap-3">
+          {/* Upload Excel */}
+          {/* Excel Upload Box */}
+          <div className="relative group">
+            <label
+              htmlFor="excel-upload"
+              className="flex items-center justify-center px-5 py-2.5 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer 
+               bg-white hover:bg-blue-50 transition-all duration-300 text-gray-600 font-medium text-sm
+               group-hover:border-blue-400 group-hover:text-blue-600"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="w-5 h-5 mr-2 text-blue-500 group-hover:text-blue-600 transition-colors"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-9-9v12m0 0l-3-3m3 3l3-3"
+                />
+              </svg>
+              Upload Excel File
+            </label>
+            <input
+              id="excel-upload"
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {file && (
+              <p className="mt-2 text-xs text-gray-500">📄 {file.name}</p>
+            )}
+          </div>
+
+          {/* Add Customer Btn */}
+          {userInfo?.isAdmin && (
+            <button
+              onClick={handleAddCustomer}
+              className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+            >
+              <FiPlus className="text-lg" />
+              <span>Add Customer</span>
+            </button>
+          )}
+        </div>
+
+        {/* 🧾 PREVIEW MODAL */}
+        {showPreview && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white w-[100%] md:w-[1000px] rounded-xl shadow-lg p-6 relative max-h-[80vh] overflow-y-auto">
               <button
                 onClick={() => setShowPreview(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
               >
-                Cancel
+                <X size={20} />
               </button>
-              <button
-                onClick={handleUpload}
-                disabled={uploading}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-              >
-                {uploading ? "Uploading..." : "Upload to Backend"}
-              </button>
+              <h2 className="text-lg font-semibold mb-4 text-newPrimary">
+                Excel Preview ({excelData.length} Rows)
+              </h2>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full border text-sm">
+                  <thead className="bg-gray-200 text-gray-700">
+                    <tr>
+                      {Object.keys(excelData[0] || {}).map((key) => (
+                        <th key={key} className="border px-3 py-2 text-left">
+                          {key}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {excelData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        {Object.values(row).map((val, i) => (
+                          <td key={i} className="border px-3 py-2">
+                            {val || "-"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end mt-4 gap-3">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                >
+                  {uploading ? "Uploading..." : "Upload to Backend"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-
+        )}
+      </div>
 
       {/* Customer Table */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
@@ -1047,10 +1062,11 @@ const CustomerData = () => {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg ${currentPage === 1
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Prev
           </button>
@@ -1059,10 +1075,11 @@ const CustomerData = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border ${currentPage === i + 1
-                ? "bg-newPrimary text-white border-newPrimary"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                }`}
+              className={`px-3 py-1 rounded-md border ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
             >
               {i + 1}
             </button>
@@ -1073,16 +1090,16 @@ const CustomerData = () => {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`px-4 py-2 border rounded-lg ${currentPage === totalPages
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Next
           </button>
         </div>
       )}
-
     </div>
   );
 };
