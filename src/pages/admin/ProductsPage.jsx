@@ -431,14 +431,18 @@ const ProductsPage = () => {
               </button>
             )}
           </div>
-
-          <button
+         {
+          userInfo?.isAdmin && (
+             <button
             className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
             onClick={handleAddProduct}
           >
             <FiPlus className="w-5 h-5 mr-2" />
             Add Product
           </button>
+          )
+         }
+         
         </div>
       </div>
 

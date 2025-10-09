@@ -186,14 +186,14 @@ const CustomerData = () => {
           formData,
           { headers }
         );
-        toast.success("✅ Customer updated successfully");
+        toast.success("Customer updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/customers`,
           formData,
           { headers }
         );
-        toast.success("✅ Customer added successfully");
+        toast.success("Customer added successfully");
       }
 
       // Reset form
@@ -402,14 +402,18 @@ const CustomerData = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-
-          <button
+       {
+        userInfo?.isAdmin&& (
+             <button
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
             onClick={handleAddCustomer}
           >
             <FiPlus className="text-lg" />
             <span>Add Customer</span>
           </button>
+        )
+       }
+        
         </div>
       </div>
 
