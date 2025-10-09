@@ -33,6 +33,7 @@ const StaffList = () => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+   const [visiblePasswords, setVisiblePasswords] = useState({});
   const itemsPerPage = 10;
   const [formState, setEditFormState] = useState({
     name: "",
@@ -245,6 +246,15 @@ const StaffList = () => {
     setIsSliderOpen(true);
   };
 
+
+    const togglePasswordVisibility = (userId) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
+
+
   // Delete Staff
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
@@ -375,13 +385,14 @@ const StaffList = () => {
         <div className="overflow-x-auto scrollbar-hide">
           <div className="min-w-full">
             {/* Table Headers */}
-            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+            <div className="hidden md:grid grid-cols-8 gap-8 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Name</div>
               <div>Department</div>
               {/* <div>Designation</div> */}
               <div>Address</div>
               <div>Number</div>
               <div>Email</div>
+              <div>Password</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
@@ -391,7 +402,7 @@ const StaffList = () => {
                 currentStaff.map((staff, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                    className="grid grid-cols-1 md:grid-cols-8 items-center gap- bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
                   >
                     {/* Mobile view header */}
                     <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
@@ -480,7 +491,17 @@ const StaffList = () => {
                         <FiMail className="mr-1 text-gray-400" size={14} />
                         {staff.email}
                       </div>
+
+
+                      <div className="text-xs text-gray-500">Password:</div>
+                      <div className="text-sm flex items-center">
+                        <FiMail className="mr-1 text-gray-400" size={14} />
+                        {staff.password }
+                      </div>
                     </div>
+
+
+
 
                     {/* Actions - visible on both mobile and desktop */}
                     {userInfo?.isAdmin && (
@@ -736,11 +757,10 @@ const StaffList = () => {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-              currentPage === 1
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === 1
                 ? "text-gray-400 border-gray-200 cursor-not-allowed"
                 : "text-gray-700 hover:bg-gray-100 border-gray-300"
-            }`}
+              }`}
           >
             Prev
           </button>
@@ -750,11 +770,10 @@ const StaffList = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
-                currentPage === i + 1
+              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${currentPage === i + 1
                   ? "bg-newPrimary text-white border-newPrimary shadow-sm"
                   : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
+                }`}
             >
               {i + 1}
             </button>
@@ -766,11 +785,10 @@ const StaffList = () => {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-              currentPage === totalPages
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === totalPages
                 ? "text-gray-400 border-gray-200 cursor-not-allowed"
                 : "text-gray-700 hover:bg-gray-100 border-gray-300"
-            }`}
+              }`}
           >
             Next
           </button>

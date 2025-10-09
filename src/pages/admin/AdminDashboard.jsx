@@ -68,7 +68,7 @@ const AdminDashboard = () => {
 
   const abortRef = useRef(null);
   // Get user info from localStorage
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const userName = userInfo?.name || "Admin User";
   const userEmail = userInfo?.email || "admin@example.com";
   const userRole = userInfo?.role || "Administrator";
@@ -114,36 +114,14 @@ const AdminDashboard = () => {
         console.error("Failed to fetch dashboard data:", error);
         // Fallback to static data if API calls fail
         setNotifications([
-          {
-            id: 1,
-            message: "New user registered",
-            time: "2 mins ago",
-            read: false,
-          },
-          {
-            id: 2,
-            message: "Order #1234 completed",
-            time: "1 hour ago",
-            read: false,
-          },
-          {
-            id: 3,
-            message: "System update available",
-            time: "5 hours ago",
-            read: true,
-          },
+         
         ]);
         setPerformanceData([
-          { name: "Week 1", efficiency: 75, satisfaction: 85 },
-          { name: "Week 2", efficiency: 60, satisfaction: 78 },
-          { name: "Week 3", efficiency: 85, satisfaction: 90 },
-          { name: "Week 4", efficiency: 70, satisfaction: 82 },
+         
         ]);
 
         setRadialData([
-          { name: "Goal Completion", value: 78, fill: "#8884d8" },
-          { name: "Target Achievement", value: 65, fill: "#83a6ed" },
-          { name: "Productivity", value: 92, fill: "#8dd1e1" },
+         
         ]);
         setLoading(false);
       }
