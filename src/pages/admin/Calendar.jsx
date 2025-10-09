@@ -73,7 +73,7 @@ const Calendar = () => {
 
       if (result.success) {
         setCalendar(result.data || []);
-        // console.log("📅 Calendar Data:", result.data);
+        console.log("📅 Calendar Data:", result.data);
       } else {
         toast.error("Failed to load calendar data");
       }
@@ -268,7 +268,7 @@ const Calendar = () => {
                   className="text-xs text-gray-700 bg-green-300 p-1 rounded-md truncate"
                   title={`${m.person} - ${timesForThisDate.join(", ")}`}
                 >
-                  <strong>{m.person}</strong>
+                  <strong>{m.companyName}</strong>
                   <div className="text-[10px] text-gray-600">
                     {timesForThisDate.join(", ")}
                   </div>
@@ -343,7 +343,8 @@ const Calendar = () => {
                   // ✅ Flatten all meetings with their individual date & time
                   .flatMap(meeting =>
                     meeting.dates.map((date, i) => ({
-                      person: meeting.person,
+                      companyName: meeting?.companyName,
+                      person: meeting?.person,
                       date: new Date(date),
                       time: meeting.times?.[i] || "N/A",
                     }))
@@ -359,7 +360,7 @@ const Calendar = () => {
                       className="bg-blue-50 p-3 rounded-lg border border-blue-100 hover:bg-blue-100 transition"
                     >
                       <div className="text-sm font-medium text-gray-900">
-                        {m.person || "Unknown Person"}
+                        {m?.companyName ? `${m.companyName} — ${m.person}` : m?.person}
                       </div>
                       <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                         <FiClock size={12} />
