@@ -41,6 +41,8 @@ const AddMeeting = () => {
   const [referToStaffList, setReferToStaffList] = useState([]);
   const [contactMethod, setContactMethod] = useState("By Visit");
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 10;
   // Custom SVG logo components
   const TechIcon = () => (
     <svg
@@ -519,14 +521,14 @@ const AddMeeting = () => {
       resetForm();
       fetchMeetingData();
     } catch (error) {
-       console.error("Save error:", error);
-      
-          // ✅ Extract message from backend
-          const backendMessage =
-            error.response?.data?.message ||
-            "Something went wrong. Please try again.";
-      
-          toast.error(`❌ ${backendMessage}`);
+      console.error("Save error:", error);
+
+      // ✅ Extract message from backend
+      const backendMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      toast.error(`❌ ${backendMessage}`);
     } finally {
       setLoading(false);
     }
@@ -566,7 +568,11 @@ const AddMeeting = () => {
     setReferToStaff("");
     setContactMethod("By Visit");
   };
-  console.log({ meetings });
+// Pagination logic
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentMeetings = filteredMeetings.slice(indexOfFirstItem, indexOfLastItem);
+const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
 
   if (loading) {
     return (
@@ -575,6 +581,7 @@ const AddMeeting = () => {
       </div>
     );
   }
+console.log({meetings});
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -632,7 +639,7 @@ const AddMeeting = () => {
                   No meetings found.
                 </div>
               ) : (
-                filteredMeetings.map((meeting, index) => (
+                currentMeetings.map((meeting, index) => (
                   <div
                     key={index}
                     className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
@@ -813,55 +820,88 @@ const AddMeeting = () => {
                 </div>
               </div>
 
-              <div className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Status</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Follow Up Required"
-                      checked={followUpStatus === "Follow Up Required"}
-                      onChange={(e) => setFollowUpStatus(e.target.value)}
-                      className="mr-2 text-newPrimary focus:ring-newPrimary"
-                    />
-                    Follow Up Required
-                  </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Not Interested"
-                      checked={followUpStatus === "Not Interested"}
-                      onChange={(e) => setFollowUpStatus(e.target.value)}
-                      className="mr-2 text-newPrimary focus:ring-newPrimary"
-                    />
-                    Not Interested
-                  </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="All Ready Installed"
-                      checked={followUpStatus === "All Ready Installed"}
-                      onChange={(e) => setFollowUpStatus(e.target.value)}
-                      className="mr-2 text-newPrimary focus:ring-newPrimary"
-                    />
-                    Already Installed
-                  </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Phone Number Responding"
-                      checked={followUpStatus === "Phone Number Responding"}
-                      onChange={(e) => setFollowUpStatus(e.target.value)}
-                      className="mr-2 text-newPrimary focus:ring-newPrimary"
-                    />
-                    Phone Responding
-                  </label>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <label
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
+    border border-transparent hover:scale-105 
+    ${
+      followUpStatus === "Follow Up Required"
+        ? "bg-green-100 text-green-700 ring-2 ring-green-400"
+        : "bg-green-50 hover:bg-green-100 text-green-600"
+    }`}
+                >
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Follow Up Required"
+                    checked={followUpStatus === "Follow Up Required"}
+                    onChange={(e) => setFollowUpStatus(e.target.value)}
+                    className="mr-2 accent-blue-600"
+                  />
+                  Follow Up Required
+                </label>
+
+                <label
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
+    border border-transparent hover:scale-105 
+    ${
+      followUpStatus === "Not Interested"
+        ? "bg-rose-100 text-rose-700 ring-2 ring-rose-400"
+        : "bg-rose-50 hover:bg-rose-100 text-rose-600"
+    }`}
+                >
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Not Interested"
+                    checked={followUpStatus === "Not Interested"}
+                    onChange={(e) => setFollowUpStatus(e.target.value)}
+                    className="mr-2 accent-rose-600"
+                  />
+                  Not Interested
+                </label>
+
+                <label
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
+    border border-transparent hover:scale-105 
+    ${
+      followUpStatus === "All Ready Installed"
+        ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
+        : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+    }`}
+                >
+                  <input
+                    type="radio"
+                    name="status"
+                    value="All Ready Installed"
+                    checked={followUpStatus === "All Ready Installed"}
+                    onChange={(e) => setFollowUpStatus(e.target.value)}
+                    className="mr-2 accent-green-600"
+                  />
+                  Already Installed
+                </label>
+
+                <label
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
+    border border-transparent hover:scale-105 
+    ${
+      followUpStatus === "Phone Number Responding"
+        ? "bg-amber-100 text-amber-700 ring-2 ring-amber-400"
+        : "bg-amber-50 hover:bg-amber-100 text-amber-600"
+    }`}
+                >
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Phone Number Responding"
+                    checked={followUpStatus === "Phone Number Responding"}
+                    onChange={(e) => setFollowUpStatus(e.target.value)}
+                    className="mr-2 accent-amber-600"
+                  />
+                  Phone Responding
+                </label>
               </div>
+
               {followUpStatus === "Follow Up Required" && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -1069,7 +1109,49 @@ const AddMeeting = () => {
           </div>
         </div>
       )}
-    
+      {/* Pagination Controls */}
+{filteredMeetings.length > itemsPerPage && (
+  <div className="flex justify-center items-center gap-2 mt-6">
+    <button
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      className={`px-4 py-2 border rounded-lg transition ${
+        currentPage === 1
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100 border-gray-300"
+      }`}
+    >
+      Prev
+    </button>
+
+    {[...Array(totalPages)].map((_, i) => (
+      <button
+        key={i}
+        onClick={() => setCurrentPage(i + 1)}
+        className={`px-3 py-1 rounded-md border transition ${
+          currentPage === i + 1
+            ? "bg-newPrimary text-white border-newPrimary"
+            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+        }`}
+      >
+        {i + 1}
+      </button>
+    ))}
+
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      className={`px-4 py-2 border rounded-lg transition ${
+        currentPage === totalPages
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100 border-gray-300"
+      }`}
+    >
+      Next
+    </button>
+  </div>
+)}
+
     </div>
   );
 };
