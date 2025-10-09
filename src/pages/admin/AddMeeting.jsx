@@ -276,7 +276,7 @@ const AddMeeting = () => {
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
-console.log({customerList});
+  console.log({ customerList });
 
   // useEffect used for company selection
   useEffect(() => {
@@ -506,21 +506,27 @@ console.log({customerList});
           payload,
           { headers }
         );
-        toast.success("✅ Meeting updated successfully");
+        toast.success("Meeting updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/meetings`,
           payload,
           { headers }
         );
-        toast.success("✅ Meeting added successfully");
+        toast.success("Meeting added successfully");
       }
 
       resetForm();
       fetchMeetingData();
     } catch (error) {
-      console.error(error);
-      toast.error(`❌ ${selectedMeeting ? "Update" : "Add"} meeting failed`);
+       console.error("Save error:", error);
+      
+          // ✅ Extract message from backend
+          const backendMessage =
+            error.response?.data?.message ||
+            "Something went wrong. Please try again.";
+      
+          toast.error(`❌ ${backendMessage}`);
     } finally {
       setLoading(false);
     }
@@ -570,7 +576,6 @@ console.log({customerList});
     );
   }
 
-
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -594,14 +599,15 @@ console.log({customerList});
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-
-          <button
-            onClick={handleAddClick}
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Meeting</span>
-          </button>
+          {userInfo?.isAdmin && (
+            <button
+              onClick={handleAddClick}
+              className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+            >
+              <FiPlus className="text-lg" />
+              <span>Add Meeting</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -615,7 +621,9 @@ console.log({customerList});
               <div>Products</div>
               <div className="pl-6 ">Status</div>
               <div className="text-center">Date & Time</div>
-              <div className="text-right col-span-2">Actions</div>
+              {userInfo?.isAdmin && (
+                <div className="text-right col-span-2">Actions</div>
+              )}
             </div>
 
             <div className="mt-4 flex flex-col gap-3 pb-14">
@@ -664,23 +672,24 @@ console.log({customerList});
                       {" • "}
                       {meeting.followTimes?.[0] || "—"}
                     </div>
-
-                    <div className="flex justify-end md:justify-end col-span-1 md:col-span-2">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditClick(meeting)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(meeting._id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
+                    {userInfo.isAdmin && (
+                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-2">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditClick(meeting)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(meeting._id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))
               )}
@@ -1060,7 +1069,7 @@ console.log({customerList});
           </div>
         </div>
       )}
-      <ToastContainer position="bottom-right" />
+    
     </div>
   );
 };

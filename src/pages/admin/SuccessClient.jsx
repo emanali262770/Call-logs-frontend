@@ -109,7 +109,7 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
             <div>Project</div>
             <div>Date</div>
             <div>TimeLine</div>
-            <div className="text-right">Actions</div>
+            {userInfo.isAdmin && (<div className="text-right">Actions</div>)}
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
@@ -165,7 +165,9 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end">
+      {
+        userInfo.isAdmin && (
+             <div className="flex justify-end">
         <div className="flex space-x-2">
           <button
             onClick={() => {
@@ -184,6 +186,9 @@ const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
           </button>
         </div>
       </div>
+        )
+      }
+     
     </div>
   ))
 )}

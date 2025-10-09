@@ -41,6 +41,8 @@ import {
 import { IoClose } from "react-icons/io5";
 import { MdOpenInNew } from "react-icons/md";
 import Swal from "sweetalert2";
+import { CardSkeleton } from "./CardSkeleton";
+import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
   const [recentProducts, setRecentProducts] = useState([]);
@@ -60,7 +62,7 @@ const AdminDashboard = () => {
   const [dayData, setDayData] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [radialData, setRadialData] = useState([]);
- 
+  const [cardsLoading, setCardsLoading] = useState(true);
 
   const abortRef = useRef(null);
   // Get user info from localStorage
@@ -83,7 +85,6 @@ const AdminDashboard = () => {
           performanceRes,
           callDataRes,
           dayDataRes,
-          pieDataRes,
           radialDataRes,
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
@@ -96,7 +97,7 @@ const AdminDashboard = () => {
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/performance`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/calls/monthly`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/calls/weekly`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/performance/summary`),
+         
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/goals`),
         ]);
 
@@ -108,12 +109,11 @@ const AdminDashboard = () => {
         setPerformanceData(performanceRes.data.data);
         setCallData(callDataRes.data.data);
         setDayData(dayDataRes.data.data);
-        setPieData(pieDataRes.data.data);
+       
+        
         setRadialData(radialDataRes.data.data);
 
-        setTimeout(() => {
-          setLoading(false);
-        }, 1500);
+        setLoading(false);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
         // Fallback to static data if API calls fail
@@ -166,11 +166,7 @@ const AdminDashboard = () => {
           { name: "Fri", calls: 30 },
           { name: "Sat", calls: 12 },
         ]);
-        setPieData([
-          { name: "Success Rate", value: 81, color: "#10b981" },
-          { name: "Pending Calls", value: 22, color: "#f59e0b" },
-          { name: "Follow Ups", value: 62, color: "#3b82f6" },
-        ]);
+        
         setRadialData([
           { name: "Goal Completion", value: 78, fill: "#8884d8" },
           { name: "Target Achievement", value: 65, fill: "#83a6ed" },
@@ -183,91 +179,72 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // fetch pie data
   useEffect(() => {
-    const controller = new AbortController();
-    abortRef.current = controller;
+   async function pieDataApi() {
+    try {
+      setLoading(true)
+        const res=await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`)
 
-    const fetchCustomers = async () => {
-      try {
-        const res = await axios.get(`${base}/clients/count`, {
-          signal: controller.signal,
-        });
-        setCustomers(res.data?.totalClients ?? 0);
-      } catch (err) {
-        if (!axios.isCancel(err)) console.error("Customer fetch failed:", err);
-      }
-    };
+         const formattedPie = [
+    { name: "Success Rate", value: res.data.data.successRate || 0, color: "#10b981" },
+    { name: "Pending Calls", value: res.data.data.pendingCalls || 0, color: "#f59e0b" },
+    { name: "Follow Ups", value: res.data.data.followUps || 0, color: "#3b82f6" },
+  ];
+      setPieData(formattedPie)
+    } catch (error) {
+       // ✅ Extract message from backend
+               const backendMessage =
+                 error.response?.data?.message ||
+                 "Something went wrong. Please try again.";
+           
+               toast.error(`❌ ${backendMessage}`);
+    }finally{
+      setLoading(false)
+    }
+    
+      
+    }
+    pieDataApi()
+  }, [])
+  
 
-    const fetchItems = async () => {
-      try {
-        const res = await axios.get(`${base}/products/count`, {
-          signal: controller.signal,
-        });
-        setItems(res.data?.totalProducts ?? 0);
-      } catch (err) {
-        if (!axios.isCancel(err)) console.error("Items fetch failed:", err);
-      }
-    };
+ useEffect(() => {
+  const controller = new AbortController();
+  abortRef.current = controller;
 
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${base}/group-users/count`, {
-          signal: controller.signal,
-        });
-        setUsers(res.data?.totalUsers ?? 0);
-      } catch (err) {
-        if (!axios.isCancel(err)) console.error("Users fetch failed:", err);
-      }
-    };
+  const fetchAllCounts = async () => {
+    setCardsLoading(true);
 
-    const fetchNotifcations = async () => {
-      try {
-        const res = await axios.get(`${base}/notifications`, {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-          signal: controller.signal,
-        });
-       
+    try {
+      const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
+        await Promise.all([
+          axios.get(`${base}/customers/count`, { signal: controller.signal }),
+          axios.get(`${base}/products/count`, { signal: controller.signal }),
+          axios.get(`${base}/group-users/count`, { signal: controller.signal }),
+          axios.get(`${base}/orders/total`, { signal: controller.signal }),
+          axios.get(`${base}/notifications`, {
+            headers: { Authorization: `Bearer ${userInfo.token}` },
+            signal: controller.signal,
+          }),
+        ]);
 
-        setNotifications(res.data);
-      } catch (err) {
-        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
-      }
-    };
+      setCustomers(customersRes.data?.totalCustomers ?? 0);
+      setItems(itemsRes.data?.totalProducts ?? 0);
+      setUsers(usersRes.data?.totalUsers ?? 0);
+      setSales(salesRes.data?.totalSales ?? 0);
+      setNotifications(notificationsRes.data || []);
+    } catch (error) {
+      console.error("Error fetching count data:", error);
+    } finally {
+      setCardsLoading(false); // ✅ only stop skeleton once all data set
+    }
+  };
 
-    const fetchSales = async () => {
-      try {
-        const res = await axios.get(`${base}/orders/total`, {
-          signal: controller.signal,
-        });
-        setSales(res.data?.totalSales ?? 0);
-      } catch (err) {
-        if (!axios.isCancel(err)) console.error("Sales fetch failed:", err);
-      }
-    };
+  fetchAllCounts();
 
-    const fetchAll = async () => {
-      setLoading(true);
-      await Promise.allSettled([
-        fetchCustomers(),
-        fetchItems(),
-        fetchUsers(),
-        fetchSales(),
-        // fetchRevenue(),
-        fetchNotifcations(),
-      ]);
-      // Add a slight delay to show loading animation
-      setTimeout(() => setLoading(false), 1000);
-    };
-
-    fetchAll();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
+  return () => controller.abort();
+}, []);
 
 
   // ✅ Mark single notification as read
@@ -303,7 +280,6 @@ const AdminDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
- 
   const summaryData = [
     {
       name: "Customers",
@@ -338,20 +314,13 @@ const AdminDashboard = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const openNotifModal = (notif) => {
-  
-    
-  Swal.fire({
-    title: notif?.title ?? "Details",
-    text: notif?.message ?? "No description available.",
-    icon: "info",
-    confirmButtonText: "Close",
-  });
-
- 
- 
-};
-
-
+    Swal.fire({
+      title: notif?.title ?? "Details",
+      text: notif?.message ?? "No description available.",
+      icon: "info",
+      confirmButtonText: "Close",
+    });
+  };
 
   const markNotificationAsRead = (id) => {
     setNotifications(
@@ -361,16 +330,18 @@ const AdminDashboard = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
-        <div className="text-center">
-          <PuffLoader color="#1d4ed8" size={80} />
-          <p className="mt-4 text-gray-600">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+  //       <div className="text-center">
+  //         <PuffLoader color="#1d4ed8" size={80} />
+  //         <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+console.log({pieData});
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 text-gray-800">
@@ -537,40 +508,46 @@ const AdminDashboard = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          {summaryData.map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group"
-            >
-              {/* Animated background element */}
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-              <div className="flex justify-between items-start relative z-10">
+          {cardsLoading
+            ? Array.from({ length: summaryData.length }).map((_, idx) => (
+                <CardSkeleton key={idx} />
+              ))
+            : summaryData.map((item, index) => (
                 <div
-                  className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
-                >
-                  {item.icon}
-                </div>
-                <span
-                  className={`text-xs md:text-sm font-medium ${
-                    item.change.includes("+")
-                      ? "text-green-600"
-                      : "text-red-600"
+                  key={index}
+                  className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${
+                    cardsLoading ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  {item.change}
-                </span>
-              </div>
-              <div className="mt-4 relative z-10">
-                <div className="text-2xl md:text-3xl font-bold text-gray-800">
-                  {item.value}
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  <div className="flex justify-between items-start relative z-10">
+                    <div
+                      className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                    >
+                      {item.icon}
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-medium ${
+                        item.change.includes("+")
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {item.change}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 relative z-10">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                      {item.value}
+                    </div>
+                    <div className="text-gray-500 text-sm md:text-base mt-1">
+                      {item.name}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-gray-500 text-sm md:text-base mt-1">
-                  {item.name}
-                </div>
-              </div>
-            </div>
-          ))}
+              ))}
         </div>
 
         {/* Charts Section */}
@@ -712,8 +689,8 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
-              {["S", "M", "T", "W", "T", "F", "S"].map((day,idx) => (
-                <div key={day+idx} className="font-medium text-gray-500 py-2">
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                <div key={day + idx} className="font-medium text-gray-500 py-2">
                   {day}
                 </div>
               ))}
@@ -792,7 +769,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
-     
     </div>
   );
 };

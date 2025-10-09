@@ -114,6 +114,20 @@ const StaffList = () => {
 
   // Handlers
   const handleAddStaff = () => {
+     // Reset fields
+    setStaffName("");
+    setDepartment("");
+    setDesignation("");
+    setAddress("");
+    setNumber("");
+    setEmail("");
+    setPassword("");
+    setImage(null);
+    setImagePreview(null);
+    setEditId(null);
+    setIsEdit(false);
+    setIsSliderOpen(false);
+
     setIsSliderOpen(true);
   };
 
@@ -175,8 +189,14 @@ const StaffList = () => {
     fetchStaff();
 
   } catch (error) {
-    console.error(error);
-    toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
+    console.error("Save error:", error);
+
+    // ✅ Extract message from backend
+    const backendMessage =
+      error.response?.data?.message ||
+      "Something went wrong. Please try again.";
+
+    toast.error(`❌ ${backendMessage}`);
   }
 };
 
@@ -326,14 +346,18 @@ console.log({filteredStaffList});
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          
-          <button
+          {
+            userInfo.isAdmin && (
+               <button
             onClick={handleAddStaff}
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
           >
             <FiPlus className="text-lg" />
             <span>Add Staff</span>
           </button>
+            )
+          }
+         
         </div>
       </div>
 

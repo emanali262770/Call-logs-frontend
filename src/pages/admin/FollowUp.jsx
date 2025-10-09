@@ -175,8 +175,14 @@ const FollowUp = () => {
         await fetchFollowUpData();
         toast.success("Follow-up updated successfully!");
       } catch (error) {
-        console.error("Error updating follow-up:", error);
-        toast.error("Failed to update follow-up");
+        console.error("Save error:", error);
+       
+           // ✅ Extract message from backend
+           const backendMessage =
+             error.response?.data?.message ||
+             "Something went wrong. Please try again.";
+       
+           toast.error(`❌ ${backendMessage}`);
       }
     }
 
@@ -247,7 +253,12 @@ const FollowUp = () => {
               <div>Date</div>
               <div>Time</div>
               <div>Status</div>
-              <div className="text-right">Actions</div>
+              {
+                userInfo.isAdmin && (
+                   <div className="text-right">Actions</div>
+                )
+              }
+             
             </div>
 
             <div className="mt-4 flex flex-col gap-3">
@@ -333,8 +344,9 @@ const FollowUp = () => {
                         {followUp.status}
                       </span>
                     </div>
-
-                    {/* Actions */}
+                    {
+                      userInfo.isAdmin && (
+                      
                     <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
                       <div className="flex space-x-2">
                         <button
@@ -365,6 +377,9 @@ const FollowUp = () => {
                         </button>
                       </div>
                     </div>
+                      )
+                    }
+                   
                   </div>
                 ))
               )}
