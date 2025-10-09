@@ -63,6 +63,8 @@ const AdminDashboard = () => {
   const [pieData, setPieData] = useState([]);
   const [radialData, setRadialData] = useState([]);
   const [cardsLoading, setCardsLoading] = useState(true);
+  const [calendarMeetings, setCalendarMeetings] = useState([]);
+  const [totalMeetings, setTotalMeetings] = useState(0);
 
   const abortRef = useRef(null);
   // Get user info from localStorage
@@ -83,8 +85,7 @@ const AdminDashboard = () => {
           transactionsRes,
           notificationsRes,
           performanceRes,
-          callDataRes,
-          dayDataRes,
+
           radialDataRes,
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
@@ -95,9 +96,7 @@ const AdminDashboard = () => {
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/notifications`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/performance`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/calls/monthly`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/calls/weekly`),
-         
+
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/goals`),
         ]);
 
@@ -107,10 +106,7 @@ const AdminDashboard = () => {
         setTransactions(transactionsRes.data.data);
         setNotifications(notificationsRes.data.data);
         setPerformanceData(performanceRes.data.data);
-        setCallData(callDataRes.data.data);
-        setDayData(dayDataRes.data.data);
-       
-        
+
         setRadialData(radialDataRes.data.data);
 
         setLoading(false);
@@ -143,30 +139,7 @@ const AdminDashboard = () => {
           { name: "Week 3", efficiency: 85, satisfaction: 90 },
           { name: "Week 4", efficiency: 70, satisfaction: 82 },
         ]);
-        setCallData([
-          { name: "Jan", calls: 20 },
-          { name: "Feb", calls: 35 },
-          { name: "Mar", calls: 50 },
-          { name: "Apr", calls: 45 },
-          { name: "May", calls: 60 },
-          { name: "Jun", calls: 70 },
-          { name: "Jul", calls: 80 },
-          { name: "Aug", calls: 100 },
-          { name: "Sep", calls: 90 },
-          { name: "Oct", calls: 75 },
-          { name: "Nov", calls: 65 },
-          { name: "Dec", calls: 55 },
-        ]);
-        setDayData([
-          { name: "Sun", calls: 15 },
-          { name: "Mon", calls: 22 },
-          { name: "Tue", calls: 18 },
-          { name: "Wed", calls: 25 },
-          { name: "Thu", calls: 20 },
-          { name: "Fri", calls: 30 },
-          { name: "Sat", calls: 12 },
-        ]);
-        
+
         setRadialData([
           { name: "Goal Completion", value: 78, fill: "#8884d8" },
           { name: "Target Achievement", value: 65, fill: "#83a6ed" },
@@ -181,71 +154,194 @@ const AdminDashboard = () => {
 
   // fetch pie data
   useEffect(() => {
-   async function pieDataApi() {
-    try {
-      setLoading(true)
-        const res=await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`)
+    async function pieDataApi() {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`
+        );
 
-         const formattedPie = [
-    { name: "Success Rate", value: res.data.data.successRate || 0, color: "#10b981" },
-    { name: "Pending Calls", value: res.data.data.pendingCalls || 0, color: "#f59e0b" },
-    { name: "Follow Ups", value: res.data.data.followUps || 0, color: "#3b82f6" },
-  ];
-      setPieData(formattedPie)
-    } catch (error) {
-       // ✅ Extract message from backend
-               const backendMessage =
-                 error.response?.data?.message ||
-                 "Something went wrong. Please try again.";
-           
-               toast.error(`❌ ${backendMessage}`);
-    }finally{
-      setLoading(false)
+        const formattedPie = [
+          {
+            name: "Success Rate",
+            value: res.data.data.successRate || 0,
+            color: "#10b981",
+          },
+          {
+            name: "Pending Calls",
+            value: res.data.data.pendingCalls || 0,
+            color: "#f59e0b",
+          },
+          {
+            name: "Follow Ups",
+            value: res.data.data.followUps || 0,
+            color: "#3b82f6",
+          },
+        ];
+        setPieData(formattedPie);
+      } catch (error) {
+        // ✅ Extract message from backend
+        const backendMessage =
+          error.response?.data?.message ||
+          "Something went wrong. Please try again.";
+
+        toast.error(`❌ ${backendMessage}`);
+      } finally {
+        setLoading(false);
+      }
     }
-    
-      
+    pieDataApi();
+  }, []);
+
+  // fetch day data
+  useEffect(() => {
+    async function DaysDataApi() {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/weekly-volume`
+        );
+        console.log({ res });
+
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const formatted = res.data.data.map((item) => ({
+            name: item.day, // For X-Axis
+            calls: item.count, // For Y-Axis
+          }));
+          setDayData(formatted);
+
+          if (formatted.every((d) => d.calls === 0)) {
+            toast.info("No calls recorded this week.");
+          }
+        }
+      } catch (error) {
+        const backendMessage =
+          error.response?.data?.message ||
+          "Something went wrong. Please try again.";
+        toast.error(`❌ ${backendMessage}`);
+      } finally {
+        setLoading(false);
+      }
     }
-    pieDataApi()
-  }, [])
-  
+    DaysDataApi();
+  }, []);
 
- useEffect(() => {
-  const controller = new AbortController();
-  abortRef.current = controller;
+  // fetch Montly Trend
 
-  const fetchAllCounts = async () => {
-    setCardsLoading(true);
+  useEffect(() => {
+    async function MontlyTrendDataApi() {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/dashboard/monthly-trends`
+        );
+        console.log({ res });
 
-    try {
-      const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
-        await Promise.all([
-          axios.get(`${base}/customers/count`, { signal: controller.signal }),
-          axios.get(`${base}/products/count`, { signal: controller.signal }),
-          axios.get(`${base}/group-users/count`, { signal: controller.signal }),
-          axios.get(`${base}/orders/total`, { signal: controller.signal }),
-          axios.get(`${base}/notifications`, {
-            headers: { Authorization: `Bearer ${userInfo.token}` },
-            signal: controller.signal,
-          }),
-        ]);
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const formatted = res.data.data.map((item) => ({
+            name: item.month, // ✅ for X-axis
+            calls: item.count, // ✅ for bar height
+          }));
 
-      setCustomers(customersRes.data?.totalCustomers ?? 0);
-      setItems(itemsRes.data?.totalProducts ?? 0);
-      setUsers(usersRes.data?.totalUsers ?? 0);
-      setSales(salesRes.data?.totalSales ?? 0);
-      setNotifications(notificationsRes.data || []);
-    } catch (error) {
-      console.error("Error fetching count data:", error);
-    } finally {
-      setCardsLoading(false); // ✅ only stop skeleton once all data set
+          setCallData(formatted);
+
+          // Optional: log total calls
+          console.log("Total Calls:", res.data.totalCalls);
+
+          // Optional toast
+          if (res.data.totalCalls === 0) {
+            toast.info("No calls recorded this year.");
+          }
+        }
+      } catch (error) {
+        const backendMessage =
+          error.response?.data?.message ||
+          "Something went wrong. Please try again.";
+        toast.error(`❌ ${backendMessage}`);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+    MontlyTrendDataApi();
+  }, []);
 
-  fetchAllCounts();
+  // ✅ Fetch Calendar Meetings (based on current month)
+  useEffect(() => {
+    async function fetchCalendarMeetings() {
+      try {
+        setLoading(true);
 
-  return () => controller.abort();
-}, []);
+        // ✅ Format month as YYYY-MM
+        const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-10"
 
+        const res = await axios.get(
+          `${
+            import.meta.env.VITE_API_BASE_URL
+          }/dashboard/calendar-meetings?month=${currentMonth}`
+        );
+        console.log("📅 Calendar Meetings:", res.data);
+
+        if (res.data?.success) {
+          setCalendarMeetings(res.data.data || []);
+          setTotalMeetings(res.data.totalMeetings || 0);
+
+          if ((res.data.data || []).length === 0) {
+            toast.info("No meetings scheduled for this month.");
+          }
+        }
+      } catch (error) {
+        const backendMessage =
+          error.response?.data?.message ||
+          "Something went wrong fetching calendar meetings.";
+        toast.error(`❌ ${backendMessage}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCalendarMeetings();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const fetchAllCounts = async () => {
+      setCardsLoading(true);
+
+      try {
+        const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
+          await Promise.all([
+            axios.get(`${base}/customers/count`, { signal: controller.signal }),
+            axios.get(`${base}/products/count`, { signal: controller.signal }),
+            axios.get(`${base}/group-users/count`, {
+              signal: controller.signal,
+            }),
+            axios.get(`${base}/orders/total`, { signal: controller.signal }),
+            axios.get(`${base}/notifications`, {
+              headers: { Authorization: `Bearer ${userInfo.token}` },
+              signal: controller.signal,
+            }),
+          ]);
+
+        setCustomers(customersRes.data?.totalCustomers ?? 0);
+        setItems(itemsRes.data?.totalProducts ?? 0);
+        setUsers(usersRes.data?.totalUsers ?? 0);
+        setSales(salesRes.data?.totalSales ?? 0);
+        setNotifications(notificationsRes.data || []);
+      } catch (error) {
+        console.error("Error fetching count data:", error);
+      } finally {
+        setTimeout(() => {
+          setCardsLoading(false);
+        }, 3000);
+      }
+    };
+
+    fetchAllCounts();
+
+    return () => controller.abort();
+  }, []);
 
   // ✅ Mark single notification as read
   const clearNotification = async (id) => {
@@ -340,8 +436,6 @@ const AdminDashboard = () => {
   //     </div>
   //   );
   // }
-
-console.log({pieData});
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 text-gray-800">
@@ -676,6 +770,7 @@ console.log({pieData});
           </div>
 
           {/* Follow up Meetings */}
+          {/* Follow up Meetings */}
           <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
@@ -688,82 +783,46 @@ console.log({pieData});
                 })}
               </div>
             </div>
+
+            {/* Calendar grid */}
             <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
+              {/* Weekday names */}
               {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
                 <div key={day + idx} className="font-medium text-gray-500 py-2">
                   {day}
                 </div>
               ))}
-              {[29, 30, 1, 2, 3, 4, 5].map((date) => (
-                <div
-                  key={`row1-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                    [2, 15, 25].includes(date)
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {date}
-                </div>
-              ))}
-              {[6, 7, 8, 9, 10, 11, 12].map((date) => (
-                <div
-                  key={`row2-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                    [2, 15, 25].includes(date)
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {date}
-                </div>
-              ))}
-              {[13, 14, 15, 16, 17, 18, 19].map((date) => (
-                <div
-                  key={`row3-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                    [2, 15, 25].includes(date)
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {date}
-                </div>
-              ))}
-              {[20, 21, 22, 23, 24, 25, 26].map((date) => (
-                <div
-                  key={`row4-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                    [2, 15, 25].includes(date)
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {date}
-                </div>
-              ))}
-              {[27, 28, 29, 30, 31, 1, 2].map((date) => (
-                <div
-                  key={`row5-${date}`}
-                  className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                    [2, 15, 25].includes(date)
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {date}
-                </div>
-              ))}
+
+              {/* Dynamic date cells */}
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
+                const hasMeeting = calendarMeetings.some(
+                  (m) => new Date(m.date).getDate() === date
+                );
+                return (
+                  <div
+                    key={date}
+                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                      hasMeeting
+                        ? "bg-blue-100 text-blue-600 font-medium"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {date}
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Summary row */}
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600">
-                  Scheduled meetings
+                  Scheduled meetings this month
                 </span>
               </div>
               <span className="text-sm font-medium text-blue-600">
-                12 meetings
+                {totalMeetings} meetings
               </span>
             </div>
           </div>

@@ -4,7 +4,18 @@ import gsap from "gsap";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import { FiSearch, FiPlus, FiEdit, FiTrash2, FiUser, FiPhone, FiMail, FiMapPin, FiBriefcase, FiX } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiUser,
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiBriefcase,
+  FiX,
+} from "react-icons/fi";
 
 const StaffList = () => {
   const [staffList, setStaffList] = useState([]);
@@ -19,21 +30,22 @@ const StaffList = () => {
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [image, setImage] = useState(null);   
-  const [imagePreview, setImagePreview] = useState(null); 
-
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [formState, setEditFormState] = useState({
     name: "",
     department: "",
     designation: "",
-    address:"",
+    address: "",
     number: "",
     email: "",
     password: "",
-    image: ""
+    image: "",
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null); 
+  const [editId, setEditId] = useState(null);
 
   const sliderRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -44,12 +56,13 @@ const StaffList = () => {
   // Search functionality
   useEffect(() => {
     if (searchQuery) {
-      const filtered = staffList.filter(staff => 
-        staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.number.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = staffList.filter(
+        (staff) =>
+          staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          staff.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          staff.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          staff.number.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredStaffList(filtered);
     } else {
@@ -57,28 +70,29 @@ const StaffList = () => {
     }
   }, [searchQuery, staffList]);
 
-  // slider styling 
+  // slider styling
   useEffect(() => {
     if (isSliderOpen && sliderRef.current) {
       gsap.fromTo(
         sliderRef.current,
-        { x: "100%", opacity: 0 },  // offscreen right
+        { x: "100%", opacity: 0 }, // offscreen right
         {
           x: "0%",
           opacity: 1,
           duration: 1.2,
-          ease: "expo.out",          // smoother easing
+          ease: "expo.out", // smoother easing
         }
       );
     }
   }, [isSliderOpen]);
 
-
   // Fetch data from API
   const fetchStaff = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/staff`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/staff`
+      );
       const result = await response.json();
 
       if (result.success && Array.isArray(result.data)) {
@@ -90,13 +104,12 @@ const StaffList = () => {
           address: staff.address,
           number: staff.number,
           email: staff.email,
-          password:staff.password,
+          password: staff.password,
           image: staff.image || [],
         }));
 
         setStaffList(mappedStaff);
         setFilteredStaffList(mappedStaff);
-        
       }
     } catch (error) {
       console.error("Error fetching staff data:", error);
@@ -111,10 +124,9 @@ const StaffList = () => {
     fetchStaff(); // Only re-executes if fetchStaff reference changes
   }, [fetchStaff]);
 
-
   // Handlers
   const handleAddStaff = () => {
-     // Reset fields
+    // Reset fields
     setStaffName("");
     setDepartment("");
     setDesignation("");
@@ -131,76 +143,73 @@ const StaffList = () => {
     setIsSliderOpen(true);
   };
 
-
- //  Staff saved
- const handleSave = async () => {
-  const formData = new FormData();
-  formData.append("username", staffName);
-  formData.append("department", department);
-  formData.append("designation", designation);
-  formData.append("address", address);
-  formData.append("number", number);
-  formData.append("email", email);
-  formData.append('password', password)
-  if (image) {
-    formData.append("image", image);
-  }
-
-  console.log("Form Data", formData);
-  
-  try {
-    const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "multipart/form-data",
-    };
-
-    if (isEdit && editId) {
-      await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/staff/${editId}`,
-        formData,
-        { headers }
-      );
-      toast.success("✅ Staff updated successfully");
-    } else {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/staff`,
-        formData,
-        { headers }
-      );
-      toast.success("✅ Staff added successfully");
+  //  Staff saved
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("username", staffName);
+    formData.append("department", department);
+    formData.append("designation", designation);
+    formData.append("address", address);
+    formData.append("number", number);
+    formData.append("email", email);
+    formData.append("password", password);
+    if (image) {
+      formData.append("image", image);
     }
 
-    // Reset fields
-    setStaffName("");
-    setDepartment("");
-    setDesignation("");
-    setAddress("");
-    setNumber("");
-    setEmail("");
-    setPassword("");
-    setImage(null);
-    setImagePreview(null);
-    setEditId(null);
-    setIsEdit(false);
-    setIsSliderOpen(false);
+    console.log("Form Data", formData);
 
-    // Refresh list
-    fetchStaff();
+    try {
+      const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      };
 
-  } catch (error) {
-    console.error("Save error:", error);
+      if (isEdit && editId) {
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/staff/${editId}`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Staff updated successfully");
+      } else {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/staff`,
+          formData,
+          { headers }
+        );
+        toast.success("✅ Staff added successfully");
+      }
 
-    // ✅ Extract message from backend
-    const backendMessage =
-      error.response?.data?.message ||
-      "Something went wrong. Please try again.";
+      // Reset fields
+      setStaffName("");
+      setDepartment("");
+      setDesignation("");
+      setAddress("");
+      setNumber("");
+      setEmail("");
+      setPassword("");
+      setImage(null);
+      setImagePreview(null);
+      setEditId(null);
+      setIsEdit(false);
+      setIsSliderOpen(false);
 
-    toast.error(`❌ ${backendMessage}`);
-  }
-};
+      // Refresh list
+      fetchStaff();
+    } catch (error) {
+      console.error("Save error:", error);
 
- 
+      // ✅ Extract message from backend
+      const backendMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      toast.error(`❌ ${backendMessage}`);
+    }
+  };
+
   // Image Upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -213,13 +222,12 @@ const StaffList = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Image Remove
   const removeImage = () => {
     setImagePreview("");
     setEditFormState({ ...formState, image: "" });
   };
-
 
   // Open the edit modal and populate the form
   const handleEdit = (staff) => {
@@ -237,102 +245,106 @@ const StaffList = () => {
     setIsSliderOpen(true);
   };
 
- // Delete Staff
-const handleDelete = async (id) => {
-  const swalWithTailwindButtons = Swal.mixin({
-    customClass: {
-      actions: "space-x-2", // gap between buttons
-      confirmButton:
-        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
-      cancelButton:
-        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
-    },
-    buttonsStyling: false,
-  });
+  // Delete Staff
+  const handleDelete = async (id) => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        actions: "space-x-2", // gap between buttons
+        confirmButton:
+          "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+        cancelButton:
+          "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+      },
+      buttonsStyling: false,
+    });
 
-  swalWithTailwindButtons
-    .fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, cancel!",
-      reverseButtons: true,
-    })
-    .then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          setLoading(true)
-          const token = userInfo?.token;
-          if (!token) {
-            toast.error("Authorization token missing!");
-            return;
-          }
-
-          await axios.delete(
-            `${import.meta.env.VITE_API_BASE_URL}/staff/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+    swalWithTailwindButtons
+      .fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true,
+      })
+      .then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            setLoading(true);
+            const token = userInfo?.token;
+            if (!token) {
+              toast.error("Authorization token missing!");
+              return;
             }
-          );
 
-          // Update UI
-          setStaffList(staffList.filter((p) => p._id !== id));
-          setFilteredStaffList(filteredStaffList.filter((p) => p._id !== id));
+            await axios.delete(
+              `${import.meta.env.VITE_API_BASE_URL}/staff/${id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
+            // Update UI
+            setStaffList(staffList.filter((p) => p._id !== id));
+            setFilteredStaffList(filteredStaffList.filter((p) => p._id !== id));
+
+            swalWithTailwindButtons.fire(
+              "Deleted!",
+              "Staff deleted successfully.",
+              "success"
+            );
+          } catch (error) {
+            console.error("Delete error:", error);
+            swalWithTailwindButtons.fire(
+              "Error!",
+              "Failed to delete staff.",
+              "error"
+            );
+          } finally {
+            setLoading(false);
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
-            "Deleted!",
-            "Staff deleted successfully.",
-            "success"
-          );
-        } catch (error) {
-          console.error("Delete error:", error);
-          swalWithTailwindButtons.fire(
-            "Error!",
-            "Failed to delete staff.",
+            "Cancelled",
+            "Staff is safe 🙂",
             "error"
           );
-        }finally{
-          setLoading(false)
         }
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        swalWithTailwindButtons.fire(
-          "Cancelled",
-          "Staff is safe 🙂",
-          "error"
-        );
-      }
-    });
-};
+      });
+  };
 
   // Show loading spinner
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <PuffLoader
-            height="150"
-            width="150"
-            radius={1}
-            color="#1d4ed8"
-          />
+          <PuffLoader height="150" width="150" radius={1} color="#1d4ed8" />
         </div>
       </div>
     );
   }
-console.log({filteredStaffList});
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentStaff = filteredStaffList.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredStaffList.length / itemsPerPage);
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">Staff List</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
+            Staff List
+          </h1>
           <p className="text-gray-500 text-sm">Manage your staff members</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -346,18 +358,15 @@ console.log({filteredStaffList});
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          {
-            userInfo.isAdmin && (
-               <button
-            onClick={handleAddStaff}
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Staff</span>
-          </button>
-            )
-          }
-         
+          {userInfo.isAdmin && (
+            <button
+              onClick={handleAddStaff}
+              className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+            >
+              <FiPlus className="text-lg" />
+              <span>Add Staff</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -379,7 +388,7 @@ console.log({filteredStaffList});
             {/* Staff in Table */}
             <div className="mt-4 flex flex-col gap-3">
               {filteredStaffList.length > 0 ? (
-                filteredStaffList.map((staff, index) => (
+                currentStaff.map((staff, index) => (
                   <div
                     key={index}
                     className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
@@ -389,7 +398,10 @@ console.log({filteredStaffList});
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 flex items-center justify-center rounded-full">
                           <img
-                            src={staff.image?.url || "https://via.placeholder.com/40"}
+                            src={
+                              staff.image?.url ||
+                              "https://via.placeholder.com/40"
+                            }
                             alt="Staff"
                             className="w-7 h-7 object-cover rounded-full"
                           />
@@ -399,12 +411,14 @@ console.log({filteredStaffList});
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Desktop view cells */}
                     <div className="hidden md:flex items-center gap-3">
                       <div className="w-10 h-10 flex items-center justify-center rounded-full">
                         <img
-                          src={staff.image?.url || "https://via.placeholder.com/40"}
+                          src={
+                            staff.image?.url || "https://via.placeholder.com/40"
+                          }
                           alt="Staff"
                           className="w-10 h-10 object-cover rounded-full"
                         />
@@ -445,29 +459,29 @@ console.log({filteredStaffList});
                         <FiBriefcase className="mr-1 text-gray-400" size={14} />
                         {staff.department}
                       </div>
-                      
+
                       <div className="text-xs text-gray-500">Designation:</div>
                       <div className="text-sm">{staff.designation}</div>
-                      
+
                       <div className="text-xs text-gray-500">Address:</div>
                       <div className="text-sm flex items-center">
                         <FiMapPin className="mr-1 text-gray-400" size={14} />
                         {staff.address}
                       </div>
-                      
+
                       <div className="text-xs text-gray-500">Number:</div>
                       <div className="text-sm flex items-center">
                         <FiPhone className="mr-1 text-gray-400" size={14} />
                         {staff.number}
                       </div>
-                      
+
                       <div className="text-xs text-gray-500">Email:</div>
                       <div className="text-sm flex items-center">
                         <FiMail className="mr-1 text-gray-400" size={14} />
                         {staff.email}
                       </div>
                     </div>
-                    
+
                     {/* Actions - visible on both mobile and desktop */}
                     {userInfo?.isAdmin && (
                       <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
@@ -504,25 +518,30 @@ console.log({filteredStaffList});
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
           <div
             ref={sliderRef}
-            className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
+            className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg"
+          >
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-newPrimary">{isEdit ? "Update Staff" : "Add a New Staff"}</h2>
+              <h2 className="text-xl font-bold text-newPrimary">
+                {isEdit ? "Update Staff" : "Add a New Staff"}
+              </h2>
               <button
                 className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
                 onClick={() => {
-                    setIsSliderOpen(false);
-                    setIsEdit(false);
-                    setEditId(null);
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
+                  setIsSliderOpen(false);
+                  setIsEdit(false);
+                  setEditId(null);
+                  setImage(null);
+                  setImagePreview(null);
+                }}
               >
                 &times;
               </button>
             </div>
             <div className="p-4 md:p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Name <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Name <span className="text-newPrimary">*</span>
+                </label>
                 <div className="relative">
                   <FiUser className="absolute left-3 top-3 text-gray-400" />
                   <input
@@ -535,7 +554,9 @@ console.log({filteredStaffList});
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Department <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Department <span className="text-newPrimary">*</span>
+                </label>
                 <div className="relative">
                   <FiBriefcase className="absolute left-3 top-3 text-gray-400" />
                   <input
@@ -548,7 +569,9 @@ console.log({filteredStaffList});
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Designation <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Designation <span className="text-newPrimary">*</span>
+                </label>
                 <input
                   type="text"
                   value={designation}
@@ -558,7 +581,9 @@ console.log({filteredStaffList});
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Address <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Address <span className="text-newPrimary">*</span>
+                </label>
                 <div className="relative">
                   <FiMapPin className="absolute left-3 top-3 text-gray-400" />
                   <input
@@ -571,7 +596,9 @@ console.log({filteredStaffList});
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Number <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Number <span className="text-newPrimary">*</span>
+                </label>
                 <div className="relative">
                   <FiPhone className="absolute left-3 top-3 text-gray-400" />
                   <input
@@ -584,7 +611,9 @@ console.log({filteredStaffList});
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Email <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Email <span className="text-newPrimary">*</span>
+                </label>
                 <div className="relative">
                   <FiMail className="absolute left-3 top-3 text-gray-400" />
                   <input
@@ -598,7 +627,9 @@ console.log({filteredStaffList});
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Password <span className="text-newPrimary">*</span></label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Password <span className="text-newPrimary">*</span>
+                </label>
                 <input
                   type="password"
                   value={password}
@@ -607,7 +638,7 @@ console.log({filteredStaffList});
                   placeholder="Enter password"
                 />
               </div>
-              
+
               {/* Image Upload */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -654,7 +685,9 @@ console.log({filteredStaffList});
                 {/* Image Preview */}
                 {imagePreview && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Image</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Uploaded Image
+                    </h3>
                     <div className="relative group w-48 h-32">
                       <img
                         src={imagePreview}
@@ -671,7 +704,7 @@ console.log({filteredStaffList});
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   onClick={() => {
@@ -694,6 +727,53 @@ console.log({filteredStaffList});
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {/* Pagination Controls */}
+      {filteredStaffList.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          {/* Prev Button */}
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Prev
+          </button>
+
+          {/* Page Numbers */}
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          {/* Next Button */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

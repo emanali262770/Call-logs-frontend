@@ -24,6 +24,9 @@ const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [productsByMonths, setProductsByMonths] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const [orders, setOrders] = useState([]);
   const [formState, setEditFormState] = useState({
     name: "",
@@ -100,16 +103,15 @@ const ProductsPage = () => {
       const result = await response.json();
       setProducts(result.data);
       setFilteredProducts(result.data);
-   
+
       setTimeout(() => {
         setLoading(false);
       }, 3000);
     } catch (err) {
       console.error("Fetch products error:", err);
       setTimeout(() => {
-         toast.error("Failed to fetch products!");
+        toast.error("Failed to fetch products!");
       }, 2000);
-     
     }
   }, []);
 
@@ -251,7 +253,6 @@ const ProductsPage = () => {
 
     formData.append("image", image); // single file
 
-
     console.log("payload (FormData)", formState.name, formState.price, image);
 
     let response;
@@ -288,19 +289,17 @@ const ProductsPage = () => {
       setIsSliderOpen(false);
       setIsEdit(false);
       setEditId(null);
-
     } catch (error) {
-       console.error("Save error:", error);
-      
-          // ✅ Extract message from backend
-          const backendMessage =
-            error.response?.data?.message ||
-            "Something went wrong. Please try again.";
-      
-          toast.error(`❌ ${backendMessage}`);
+      console.error("Save error:", error);
+
+      // ✅ Extract message from backend
+      const backendMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      toast.error(`❌ ${backendMessage}`);
     }
   };
-
 
   // Image Upload
   const handleImageUpload = (e) => {
@@ -344,6 +343,15 @@ const ProductsPage = () => {
     setIsSliderOpen(true);
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
   // Show loading spinner
   if (loading) {
     return (
@@ -375,6 +383,7 @@ const ProductsPage = () => {
     (sum, order) => sum + (order.totalSales || 0),
     0
   );
+  console.log({ products });
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -437,18 +446,15 @@ const ProductsPage = () => {
               </button>
             )}
           </div>
-         {
-          userInfo?.isAdmin && (
-             <button
-            className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-            onClick={handleAddProduct}
-          >
-            <FiPlus className="w-5 h-5 mr-2" />
-            Add Product
-          </button>
-          )
-         }
-         
+          {userInfo?.isAdmin && (
+            <button
+              className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+              onClick={handleAddProduct}
+            >
+              <FiPlus className="w-5 h-5 mr-2" />
+              Add Product
+            </button>
+          )}
         </div>
       </div>
 
@@ -532,7 +538,7 @@ const ProductsPage = () => {
               {/* Product Rows */}
               <div className="mt-4 flex flex-col gap-3 pb-4">
                 {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product, index) => {
+                  currentProducts.map((product, index) => {
                     const price = parseCurrency(product.price);
                     const totalOrders = parseCurrency(product.totalOrders);
                     const totalSales = price * totalOrders;
@@ -591,7 +597,6 @@ const ProductsPage = () => {
                             </div>
                           </div>
                         )}
-
                       </div>
                     );
                   })
@@ -607,8 +612,6 @@ const ProductsPage = () => {
             </div>
           </div>
         </div>
-
-        
       </div>
 
       {/* Enhanced Right-Side Slider */}
@@ -780,6 +783,50 @@ const ProductsPage = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {/* Pagination Controls */}
+      {filteredProducts.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md border transition ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
