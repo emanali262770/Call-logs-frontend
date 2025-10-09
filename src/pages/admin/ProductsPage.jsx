@@ -512,107 +512,115 @@ const ProductsPage = () => {
       </div>
 
       {/* Main Content with Table and Cards */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Product List Table */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 w-full  overflow-hidden">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Product List
-            </h2>
-            <span className="text-sm text-gray-500">
-              {filteredProducts.length} items
-            </span>
-          </div>
+     <div className="flex flex-col lg:flex-row gap-6">
+  {/* Product List Table */}
+  <div className="bg-white rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+    <div className="mb-4 flex items-center justify-between">
+      <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
+      <span className="text-sm text-gray-500">
+        {filteredProducts.length} items
+      </span>
+    </div>
 
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="w-full">
-              {/* Table Headers */}
-              <div className="hidden lg:grid grid-cols-5 gap-4 py-4 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider rounded-lg">
-                <div>Name</div>
-                <div>Price</div>
-                <div>Total Orders</div>
-                <div>Total Sales</div>
-                {userInfo?.isAdmin && <div className="text-right">Actions</div>}
-              </div>
+    <table className="min-w-full text-sm text-left border-collapse">
+      <thead>
+        <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+          <th className="py-3 px-4">Name</th>
+          <th className="py-3 px-4">Price</th>
+          <th className="py-3 px-4">Total Orders</th>
+          <th className="py-3 px-4">Total Sales</th>
+          {userInfo?.isAdmin && (
+            <th className="py-3 px-4 text-right">Actions</th>
+          )}
+        </tr>
+      </thead>
 
-              {/* Product Rows */}
-              <div className="mt-4 flex flex-col gap-3 pb-4">
-                {filteredProducts.length > 0 ? (
-                  currentProducts.map((product, index) => {
-                    const price = parseCurrency(product.price);
-                    const totalOrders = parseCurrency(product.totalOrders);
-                    const totalSales = price * totalOrders;
+      <tbody>
+        {filteredProducts.length > 0 ? (
+          currentProducts.map((product, index) => {
+            const price = parseCurrency(product.price);
+            const totalOrders = parseCurrency(product.totalOrders);
+            const totalSales = price * totalOrders;
 
-                    return (
-                      <div
-                        key={index}
-                        className="grid grid-cols-5 items-center gap-4 bg-white p-4 rounded-lg shadow-xs hover:shadow-md transition-all border border-gray-100"
-                      >
-                        {/* Name */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
-                            <img
-                              src={product.image[0]?.url}
-                              alt="Product Icon"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            {capitalizeFirstLetter(product.name)}
-                          </span>
-                        </div>
-
-                        {/* Price */}
-                        <div className="text-sm font-medium text-gray-900">
-                          RS {price.toLocaleString()}
-                        </div>
-
-                        {/* Orders */}
-                        <div className="text-sm text-gray-500">
-                          {totalOrders} Orders
-                        </div>
-
-                        {/* Sales */}
-                        <div className="text-sm font-semibold text-green-600">
-                          RS {totalSales.toLocaleString()}
-                        </div>
-
-                        {/* Actions */}
-
-                        {userInfo?.isAdmin && (
-                          <div className="hidden md:flex justify-end">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEdit(product)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                              >
-                                <FiEdit size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(product._id)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                              >
-                                <FiTrash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
-                    <div className="mb-2 text-4xl">📦</div>
-                    {searchTerm
-                      ? "No products found matching your search"
-                      : "No products available"}
+            return (
+              <tr
+                key={index}
+                className="border-b hover:bg-gray-50 transition"
+              >
+                {/* Product Name */}
+                <td className="py-3 px-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg border overflow-hidden flex items-center justify-center bg-gray-50">
+                    <img
+                      src={
+                        product.image?.[0]?.url ||
+                        "https://via.placeholder.com/40"
+                      }
+                      alt="Product"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                  <span className="font-medium text-gray-900">
+                    {capitalizeFirstLetter(product.name) || "N/A"}
+                  </span>
+                </td>
+
+                {/* Price */}
+                <td className="py-3 px-4 text-gray-700">
+                  RS {price.toLocaleString()}
+                </td>
+
+                {/* Total Orders */}
+                <td className="py-3 px-4 text-gray-700">
+                  {totalOrders} Orders
+                </td>
+
+                {/* Total Sales */}
+                <td className="py-3 px-4 font-semibold text-green-600">
+                  RS {totalSales.toLocaleString()}
+                </td>
+
+                {/* Actions */}
+                {userInfo?.isAdmin && (
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product._id)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
                 )}
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td
+              colSpan={userInfo?.isAdmin ? 5 : 4}
+              className="text-center py-8 text-gray-500"
+            >
+              <div className="flex flex-col items-center justify-center">
+                <div className="mb-2 text-4xl">📦</div>
+                {searchTerm
+                  ? "No products found matching your search"
+                  : "No products available"}
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 
       {/* Enhanced Right-Side Slider */}
       {isSliderOpen && (

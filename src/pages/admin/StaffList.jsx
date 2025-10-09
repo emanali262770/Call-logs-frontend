@@ -52,7 +52,7 @@ const StaffList = () => {
   const [loading, setLoading] = useState(true);
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  console.log("Admin", userInfo.isAdmin);
+
 
   // Search functionality
   useEffect(() => {
@@ -146,6 +146,10 @@ const StaffList = () => {
 
   //  Staff saved
   const handleSave = async () => {
+    if (!image) {
+      toast.error("Image is compulsory");
+      return; 
+    }
     const formData = new FormData();
     formData.append("username", staffName);
     formData.append("department", department);
@@ -157,8 +161,9 @@ const StaffList = () => {
     if (image) {
       formData.append("image", image);
     }
+    
 
-    console.log("Form Data", formData);
+  
 
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
@@ -385,14 +390,13 @@ const StaffList = () => {
         <div className="overflow-x-auto scrollbar-hide">
           <div className="min-w-full">
             {/* Table Headers */}
-            <div className="hidden md:grid grid-cols-8 gap-8 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
+            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
               <div>Name</div>
               <div>Department</div>
               {/* <div>Designation</div> */}
               <div>Address</div>
               <div>Number</div>
               <div>Email</div>
-              <div>Password</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
 
@@ -402,7 +406,7 @@ const StaffList = () => {
                 currentStaff.map((staff, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-1 md:grid-cols-8 items-center gap- bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
                   >
                     {/* Mobile view header */}
                     <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
@@ -439,23 +443,24 @@ const StaffList = () => {
                       </span>
                     </div>
 
-                    {/* Department */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiBriefcase className="mr-2 text-gray-400" />
-                      {staff.department || "NaN"}
-                    </div>
+                  {/* Department */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.department || "N/A"}
+                  </td>
 
-                    {/* Address */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                      <FiMapPin className="mr-2 text-gray-400" />
-                      {staff?.address || "No have Location"}
-                    </div>
+                  {/* Address */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.address
+                      ? staff.address.length > 20
+                        ? `${staff.address.slice(0, 20)}...`
+                        : staff.address
+                      : "No have Location"}
+                  </td>
 
-                    {/* Number */}
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiPhone className="mr-2 text-gray-400" />
-                      {staff.number}
-                    </div>
+                  {/* Number */}
+                  <td className="py-3 px-4 text-gray-700">
+                    {staff.number || "N/A"}
+                  </td>
 
                     {/* Email */}
                     <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
@@ -491,17 +496,7 @@ const StaffList = () => {
                         <FiMail className="mr-1 text-gray-400" size={14} />
                         {staff.email}
                       </div>
-
-
-                      <div className="text-xs text-gray-500">Password:</div>
-                      <div className="text-sm flex items-center">
-                        <FiMail className="mr-1 text-gray-400" size={14} />
-                        {staff.password }
-                      </div>
                     </div>
-
-
-
 
                     {/* Actions - visible on both mobile and desktop */}
                     {userInfo?.isAdmin && (

@@ -113,57 +113,73 @@ const SuccessClient = () => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="hidden md:grid grid-cols-6 gap-4 bg-gray-50 py-3 px-4 text-xs font-medium text-gray-500 uppercase rounded-lg">
-            <div>Client Name</div>
-            <div>Number</div>
-            <div>Project</div>
-            <div>Date</div>
-            <div>TimeLine</div>
-            {userInfo.isAdmin && <div className="text-right">Actions</div>}
-          </div>
+      {/* Client Table */}
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Client Name</th>
+              <th className="py-3 px-4">Number</th>
+              <th className="py-3 px-4">Project</th>
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4">Timeline</th>
+              {userInfo?.isAdmin && (
+                <th className="py-3 px-4 text-right">Actions</th>
+              )}
+            </tr>
+          </thead>
 
-          <div className="mt-4 flex flex-col gap-3">
+          <tbody>
             {filteredClients.length === 0 ? (
-              <div className="text-center py-8 bg-white rounded-xl border border-gray-200 text-gray-500 text-sm">
-                No clients found.
-              </div>
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 6 : 5}
+                  className="text-center py-8 text-gray-500"
+                >
+                  No clients found.
+                </td>
+              </tr>
             ) : (
               currentClients.map((client) => (
-                <div
+                <tr
                   key={client._id}
-                  className="grid grid-cols-1 md:grid-cols-6 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
+                  className="border-b hover:bg-gray-50 transition"
                 >
                   {/* Client Name */}
-                  <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
-                    <FiUser className="mr-2 text-gray-400" />
-                    {client.companyName || "N/A"}
-                  </div>
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    <div className="flex items-center gap-2">
+                      <FiUser className="text-gray-400" />
+                      {client.companyName || "N/A"}
+                    </div>
+                  </td>
 
                   {/* Phone Number */}
-                  <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                    <FiPhone className="mr-2 text-gray-400" />
-                    {client.person?.persons?.[0]?.phoneNumber || "N/A"}
-                  </div>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    <div className="flex items-center gap-2">
+                      <FiPhone className="text-gray-400" />
+                      {client.person?.persons?.[0]?.phoneNumber || "N/A"}
+                    </div>
+                  </td>
 
-                  {/* Product */}
-                  <div className="hidden md:block text-sm text-gray-500 truncate">
+                  {/* Project */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.product?.name || "N/A"}
-                  </div>
+                  </td>
 
-                  {/* Last Follow Date */}
-                  <div className="hidden md:flex items-center text-sm text-gray-500">
-                    <FiCalendar className="mr-2 text-gray-400" />
-                    {client.followDates?.length > 0
-                      ? new Date(
-                          client.followDates[client.followDates.length - 1]
-                        ).toLocaleDateString()
-                      : "N/A"}
-                  </div>
+                  {/* Date */}
+                  <td className="py-3 px-4 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <FiCalendar className="text-gray-400" />
+                      {client.followDates?.length > 0
+                        ? new Date(
+                            client.followDates[client.followDates.length - 1]
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </div>
+                  </td>
 
-                  {/* Status */}
-                  <div className="hidden md:block">
+                  {/* Timeline */}
+                  <td className="py-3 px-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                         client.Timeline === "Completed"
@@ -171,14 +187,14 @@ const SuccessClient = () => {
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {client.Timeline}
+                      {client.Timeline || "N/A"}
                     </span>
-                  </div>
+                  </td>
 
                   {/* Actions */}
-                  {userInfo.isAdmin && (
-                    <div className="flex justify-end">
-                      <div className="flex space-x-2">
+                  {userInfo?.isAdmin && (
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => {
                             setSelectedViewData(client);
@@ -195,13 +211,13 @@ const SuccessClient = () => {
                           <FiTrash2 size={16} />
                         </button>
                       </div>
-                    </div>
+                    </td>
                   )}
-                </div>
+                </tr>
               ))
             )}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
       {/* View Modal */}
