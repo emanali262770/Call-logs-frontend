@@ -69,11 +69,17 @@ const AdminDashboard = () => {
   const abortRef = useRef(null);
   // Get user info from localStorage
     const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  const userName = userInfo?.name || "Admin User";
+  const userName = userInfo?.username || "Admin User";
   const userEmail = userInfo?.email || "admin@example.com";
-  const userRole = userInfo?.role || "Administrator";
+let userRole = userInfo?.role || "Administrator";
+if (userRole === "user") {
+  userRole = "Staff";
+}
   const base = import.meta.env.VITE_API_BASE_URL;
 
+
+  console.log("userInfo ", userInfo);
+  
   
   const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
