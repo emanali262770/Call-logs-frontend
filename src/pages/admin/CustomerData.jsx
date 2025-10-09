@@ -18,6 +18,8 @@ import {
 
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 10;
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [staffMembers, setStaffMember] = useState([]);
   const [productList, setProductList] = useState([]);
@@ -373,6 +375,14 @@ const CustomerData = () => {
       });
   };
 
+  // Pagination Logic
+const indexOfLastItem = currentPage * itemsPerPage;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems = filteredCustomers.slice(indexOfFirstItem, indexOfLastItem);
+
+const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+
+
   // Loading Spinner
   if (loading) {
     return (
@@ -440,7 +450,7 @@ const CustomerData = () => {
             </div>
 
             <div className="mt-4 flex flex-col gap-3">
-              {filteredCustomers.map((client, index) => (
+              {currentItems.map((client, index) => (
                 <div
                   key={index}
                   className="grid grid-cols-1 md:grid-cols-8 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
@@ -907,6 +917,51 @@ const CustomerData = () => {
           </div>
         </div>
       )}
+      {/* Pagination Controls */}
+{filteredCustomers.length > itemsPerPage && (
+  <div className="flex justify-center items-center gap-2 mt-6">
+    <button
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      className={`px-4 py-2 border rounded-lg ${
+        currentPage === 1
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      Prev
+    </button>
+
+    {[...Array(totalPages)].map((_, i) => (
+      <button
+        key={i}
+        onClick={() => setCurrentPage(i + 1)}
+        className={`px-3 py-1 rounded-md border ${
+          currentPage === i + 1
+            ? "bg-newPrimary text-white border-newPrimary"
+            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+        }`}
+      >
+        {i + 1}
+      </button>
+    ))}
+
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+      }
+      className={`px-4 py-2 border rounded-lg ${
+        currentPage === totalPages
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      Next
+    </button>
+  </div>
+)}
+
     </div>
   );
 };
