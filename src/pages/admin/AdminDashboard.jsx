@@ -74,61 +74,7 @@ const AdminDashboard = () => {
   const userRole = userInfo?.role || "Administrator";
   const base = import.meta.env.VITE_API_BASE_URL;
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
-      try {
-        const [
-          allProductsRes,
-          recentProductsRes,
-          usersRes,
-          transactionsRes,
-          notificationsRes,
-          performanceRes,
-
-          radialDataRes,
-        ] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`),
-          axios.get(
-            `${import.meta.env.VITE_API_BASE_URL}/products?limit=5&sort=desc`
-          ),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/users`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/notifications`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/performance`),
-
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/goals`),
-        ]);
-
-        setAllProducts(allProductsRes.data.data);
-        setRecentProducts(recentProductsRes.data.data);
-        setUsers(usersRes.data.data);
-        setTransactions(transactionsRes.data.data);
-        setNotifications(notificationsRes.data.data);
-        setPerformanceData(performanceRes.data.data);
-
-        setRadialData(radialDataRes.data.data);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-        // Fallback to static data if API calls fail
-        setNotifications([
-         
-        ]);
-        setPerformanceData([
-         
-        ]);
-
-        setRadialData([
-         
-        ]);
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  
   const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
       };
