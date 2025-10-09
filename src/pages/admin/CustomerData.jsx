@@ -498,7 +498,7 @@ const CustomerData = () => {
             />
 
             {file && (
-              <p className="mt-2 text-xs text-gray-500">📄 {file.name}</p>
+              <p className="mt-2 text-xs absolute text-gray-500">📄 {file.name}</p>
             )}
           </div>
 
@@ -574,7 +574,7 @@ const CustomerData = () => {
       </div>
 
       {/* Customer Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+      <div className="rounded-xl  shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">

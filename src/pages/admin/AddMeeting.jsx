@@ -42,7 +42,7 @@ const AddMeeting = () => {
   const [contactMethod, setContactMethod] = useState("By Visit");
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const [currentPage, setCurrentPage] = useState(1);
-const itemsPerPage = 10;
+  const itemsPerPage = 10;
   // Custom SVG logo components
   const TechIcon = () => (
     <svg
@@ -568,11 +568,14 @@ const itemsPerPage = 10;
     setReferToStaff("");
     setContactMethod("By Visit");
   };
-// Pagination logic
-const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-const currentMeetings = filteredMeetings.slice(indexOfFirstItem, indexOfLastItem);
-const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentMeetings = filteredMeetings.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
 
   if (loading) {
     return (
@@ -581,7 +584,6 @@ const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
       </div>
     );
   }
-console.log({meetings});
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -618,91 +620,103 @@ console.log({meetings});
         </div>
       </div>
 
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="min-w-full">
-            {/* Table headers - hidden on mobile */}
-            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
-              <div>Company Name</div>
-              <div>Person</div>
-              <div>Products</div>
-              <div className="pl-6 ">Status</div>
-              <div className="text-center">Date & Time</div>
+      {/* Meeting Table */}
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Company Name</th>
+              <th className="py-3 px-4">Person</th>
+              <th className="py-3 px-4">Product</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4 text-center">Date & Time</th>
               {userInfo?.isAdmin && (
-                <div className="text-right col-span-2">Actions</div>
+                <th className="py-3 px-4 text-right">Actions</th>
               )}
-            </div>
+            </tr>
+          </thead>
 
-            <div className="mt-4 flex flex-col gap-3 pb-14">
-              {filteredMeetings.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-xl border border-gray-200 text-gray-500 text-sm">
+          <tbody>
+            {filteredMeetings.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 6 : 5}
+                  className="text-center py-8 text-gray-500 bg-white rounded-lg"
+                >
                   No meetings found.
-                </div>
-              ) : (
-                currentMeetings.map((meeting, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                  >
-                    <div className="hidden md:block text-sm font-medium text-gray-900 truncate">
-                      {meeting.companyName}
-                    </div>
+                </td>
+              </tr>
+            ) : (
+              currentMeetings.map((meeting, index) => (
+                <tr
+                  key={index}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+                  {/* Company Name */}
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    {meeting.companyName || "—"}
+                  </td>
 
-                    <div className="hidden md:block text-sm text-gray-500 truncate">
-                      {meeting.person?.persons?.[0]?.fullName || "—"}
-                    </div>
+                  {/* Person */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {meeting.person?.persons?.[0]?.fullName || "—"}
+                  </td>
 
-                    <div className="hidden md:block text-sm text-gray-500 truncate">
-                      {meeting.product?.name || "—"}
-                    </div>
+                  {/* Product */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {meeting.product?.name || "—"}
+                  </td>
 
-                    <div className="hidden md:block pl-6">
-                      <div
-                        className={`max-w-fit truncate items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          meeting.status === "Follow Up Required"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : meeting.status === "Not Interested"
-                            ? "bg-red-100 text-red-800"
-                            : meeting.status === "All Ready Installed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {meeting.status}
+                  {/* Status */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                        meeting.status === "Follow Up Required"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : meeting.status === "Not Interested"
+                          ? "bg-red-100 text-red-800"
+                          : meeting.status === "All Ready Installed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {meeting.status || "—"}
+                    </span>
+                  </td>
+
+                  {/* Date & Time */}
+                  <td className="py-3 px-4 text-center text-gray-700">
+                    {meeting.followDates?.length
+                      ? new Date(meeting.followDates[0]).toLocaleDateString()
+                      : "—"}
+                    {" • "}
+                    {meeting.followTimes?.[0] || "—"}
+                  </td>
+
+                  {/* Actions */}
+                  {userInfo?.isAdmin && (
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditClick(meeting)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(meeting._id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
                       </div>
-                    </div>
-
-                    <div className="text-sm text-gray-500 text-center">
-                      {meeting.followDates?.length
-                        ? new Date(meeting.followDates[0]).toLocaleDateString()
-                        : "—"}
-                      {" • "}
-                      {meeting.followTimes?.[0] || "—"}
-                    </div>
-                    {userInfo.isAdmin && (
-                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-2">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditClick(meeting)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(meeting._id)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {showModal && (
@@ -1110,48 +1124,49 @@ console.log({meetings});
         </div>
       )}
       {/* Pagination Controls */}
-{filteredMeetings.length > itemsPerPage && (
-  <div className="flex justify-center items-center gap-2 mt-6">
-    <button
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-      className={`px-4 py-2 border rounded-lg transition ${
-        currentPage === 1
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100 border-gray-300"
-      }`}
-    >
-      Prev
-    </button>
+      {filteredMeetings.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Prev
+          </button>
 
-    {[...Array(totalPages)].map((_, i) => (
-      <button
-        key={i}
-        onClick={() => setCurrentPage(i + 1)}
-        className={`px-3 py-1 rounded-md border transition ${
-          currentPage === i + 1
-            ? "bg-newPrimary text-white border-newPrimary"
-            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-        }`}
-      >
-        {i + 1}
-      </button>
-    ))}
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md border transition ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
 
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-      className={`px-4 py-2 border rounded-lg transition ${
-        currentPage === totalPages
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100 border-gray-300"
-      }`}
-    >
-      Next
-    </button>
-  </div>
-)}
-
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg transition ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -247,142 +247,143 @@ const FollowUp = () => {
         </div>
       </div>
 
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="min-w-full">
-            {/* Table headers - hidden on mobile */}
-            <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg">
-              <div>Company Name</div>
-              <div>Number</div>
-              <div>Description</div>
-              <div>Date</div>
-              <div>Time</div>
-              <div>Status</div>
-              {userInfo.isAdmin && <div className="text-right">Actions</div>}
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3">
-              {filteredFollowUps.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-xl border border-gray-200 text-gray-500 text-sm">
-                  No follow-ups found.
-                </div>
-              ) : (
-                currentFollowUps.map((followUp) => (
-                  <div
-                    key={followUp.id}
-                    className="grid grid-cols-1 md:grid-cols-7 items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100"
-                  >
-                    {/* Mobile view header */}
-                    <div className="md:hidden flex justify-between items-center border-b pb-2 mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full">
-                          <FiUser className="text-blue-600" />
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {followUp.customerName}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            followUp.status === "Follow Up Required"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : followUp.status === "Not Interested"
-                              ? "bg-red-100 text-red-800"
-                              : followUp.status === "All Ready Installed"
-                              ? "bg-green-100 text-green-800"
-                              : followUp.status === "Phone Number Responding"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {followUp.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Desktop view */}
-                    <div className="hidden md:flex items-center text-sm font-medium text-gray-900 truncate">
-                      <FiUser className="mr-2 text-gray-400" />
-                      {followUp.customerName}
-                    </div>
-                    <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                      <FiPhone className="mr-2 text-gray-400" />
-                      {followUp.customerNumber}
-                    </div>
-                    <div className="hidden md:block text-sm text-gray-500 truncate">
-                      {followUp.customerDescription}
-                    </div>
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiCalendar className="mr-2 text-gray-400" />
-                      {followUp.date}
-                    </div>
-                    <div className="hidden md:flex items-center text-sm text-gray-500">
-                      <FiClock className="mr-2 text-gray-400" />
-                      {new Date(
-                        `1970-01-01T${followUp.time}`
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </div>
-                    <div className="hidden md:block">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          followUp.status === "Follow Up Required"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : followUp.status === "Not Interested"
-                            ? "bg-red-100 text-red-800"
-                            : followUp.status === "All Ready Installed"
-                            ? "bg-green-100 text-green-800"
-                            : followUp.status === "Phone Number Responding"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {followUp.status}
-                      </span>
-                    </div>
-                    {userInfo.isAdmin && (
-                      <div className="flex justify-end md:justify-end col-span-1 md:col-span-1 mt-2 md:mt-0">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditClick(followUp)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(followUp.id)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              const found = ViewModalDatashow.find(
-                                (d) => d._id === followUp.id
-                              );
-                              if (found) {
-                                setSelectedViewData(found);
-                                setIsView(true);
-                              }
-                            }}
-                            className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
-                          >
-                            <Eye size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
+      {/* Follow-Up Table */}
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Company Name</th>
+              <th className="py-3 px-4">Number</th>
+              <th className="py-3 px-4">Description</th>
+              <th className="py-3 px-4">Date</th>
+              <th className="py-3 px-4">Time</th>
+              <th className="py-3 px-4">Status</th>
+              {userInfo?.isAdmin && (
+                <th className="py-3 px-4 text-right">Actions</th>
               )}
-            </div>
-          </div>
-        </div>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredFollowUps.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 7 : 6}
+                  className="text-center py-8 text-gray-500"
+                >
+                  No follow-ups found.
+                </td>
+              </tr>
+            ) : (
+              currentFollowUps.map((followUp) => (
+                <tr
+                  key={followUp.id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+                  {/* Company Name */}
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    <div className="flex items-center gap-2">
+                      <FiUser className="text-gray-400" />
+                      {followUp.customerName || "N/A"}
+                    </div>
+                  </td>
+
+                  {/* Number */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    <div className="flex items-center gap-2">
+                      <FiPhone className="text-gray-400" />
+                      {followUp.customerNumber || "N/A"}
+                    </div>
+                  </td>
+
+                  {/* Description */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {followUp.customerDescription || "—"}
+                  </td>
+
+                  {/* Date */}
+                  <td className="py-3 px-4 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <FiCalendar className="text-gray-400" />
+                      {followUp.date || "—"}
+                    </div>
+                  </td>
+
+                  {/* Time */}
+                  <td className="py-3 px-4 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <FiClock className="text-gray-400" />
+                      {followUp.time
+                        ? new Date(
+                            `1970-01-01T${followUp.time}`
+                          ).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                        : "—"}
+                    </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        followUp.status === "Follow Up Required"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : followUp.status === "Not Interested"
+                          ? "bg-red-100 text-red-800"
+                          : followUp.status === "All Ready Installed"
+                          ? "bg-green-100 text-green-800"
+                          : followUp.status === "Phone Number Responding"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {followUp.status || "—"}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  {userInfo?.isAdmin && (
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditClick(followUp)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(followUp.id)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            const found = ViewModalDatashow.find(
+                              (d) => d._id === followUp.id
+                            );
+                            if (found) {
+                              setSelectedViewData(found);
+                              setIsView(true);
+                            }
+                          }}
+                          className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
       {/* view modal */}
       {isView && selectedViewData && (
         <FollowUpViewModal
