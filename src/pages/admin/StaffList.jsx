@@ -162,7 +162,7 @@ const StaffList = () => {
     }
     
 
-    console.log("Form Data", formData);
+  
 
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
