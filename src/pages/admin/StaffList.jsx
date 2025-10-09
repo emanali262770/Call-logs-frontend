@@ -114,6 +114,20 @@ const StaffList = () => {
 
   // Handlers
   const handleAddStaff = () => {
+     // Reset fields
+    setStaffName("");
+    setDepartment("");
+    setDesignation("");
+    setAddress("");
+    setNumber("");
+    setEmail("");
+    setPassword("");
+    setImage(null);
+    setImagePreview(null);
+    setEditId(null);
+    setIsEdit(false);
+    setIsSliderOpen(false);
+
     setIsSliderOpen(true);
   };
 
@@ -175,8 +189,14 @@ const StaffList = () => {
     fetchStaff();
 
   } catch (error) {
-    console.error(error);
-    toast.error(`❌ ${isEdit ? "Update" : "Add"} staff failed`);
+    console.error("Save error:", error);
+
+    // ✅ Extract message from backend
+    const backendMessage =
+      error.response?.data?.message ||
+      "Something went wrong. Please try again.";
+
+    toast.error(`❌ ${backendMessage}`);
   }
 };
 

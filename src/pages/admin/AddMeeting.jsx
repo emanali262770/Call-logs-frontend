@@ -519,8 +519,14 @@ const AddMeeting = () => {
       resetForm();
       fetchMeetingData();
     } catch (error) {
-      console.error(error);
-      toast.error(`❌ ${selectedMeeting ? "Update" : "Add"} meeting failed`);
+       console.error("Save error:", error);
+      
+          // ✅ Extract message from backend
+          const backendMessage =
+            error.response?.data?.message ||
+            "Something went wrong. Please try again.";
+      
+          toast.error(`❌ ${backendMessage}`);
     } finally {
       setLoading(false);
     }

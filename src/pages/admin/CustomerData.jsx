@@ -216,8 +216,14 @@ const CustomerData = () => {
 
       fetchCustomerData();
     } catch (error) {
-      console.error(error);
-      toast.error(`❌ ${isEdit ? "Update" : "Add"} customer failed`);
+       console.error("Save error:", error);
+      
+          // ✅ Extract message from backend
+          const backendMessage =
+            error.response?.data?.message ||
+            "Something went wrong. Please try again.";
+      
+          toast.error(`❌ ${backendMessage}`);
     }
   };
 

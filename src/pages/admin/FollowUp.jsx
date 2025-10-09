@@ -175,8 +175,14 @@ const FollowUp = () => {
         await fetchFollowUpData();
         toast.success("Follow-up updated successfully!");
       } catch (error) {
-        console.error("Error updating follow-up:", error);
-        toast.error("Failed to update follow-up");
+        console.error("Save error:", error);
+       
+           // ✅ Extract message from backend
+           const backendMessage =
+             error.response?.data?.message ||
+             "Something went wrong. Please try again.";
+       
+           toast.error(`❌ ${backendMessage}`);
       }
     }
 
