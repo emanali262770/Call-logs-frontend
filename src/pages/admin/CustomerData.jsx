@@ -397,7 +397,7 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
             Customer List
