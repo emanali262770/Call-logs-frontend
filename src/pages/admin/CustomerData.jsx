@@ -109,12 +109,13 @@ const CustomerData = () => {
       );
 
       if (res.data.success) {
-        alert(`✅ ${res.data.totalInserted} customers uploaded successfully!`);
+        toast.success(`${res.data.totalInserted} customers uploaded successfully!`);
         setShowPreview(false);
+        fetchCustomerData()
       }
     } catch (error) {
       console.error(error);
-      alert("Upload failed. Check console for details.");
+      toast.error("Upload failed. Check console for details.");
     }
   };
 
