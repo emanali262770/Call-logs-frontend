@@ -57,14 +57,21 @@ const FollowUp = () => {
   }
 
   const fetchFollowUpData = useCallback(async () => {
+
+    const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/meetings`
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/followUp`,
+        {headers}
       );
-
-      setViewModalDataShow(response.data.data);
-      const mappedData = response.data.data.map((item) => ({
+      
+      console.log("response ", response.data);
+      
+      setViewModalDataShow(response.data);
+      const mappedData = response.data.map((item) => ({
         id: item._id,
         customerName: item.companyName || "N/A",
         customerNumber: item?.person?.persons?.[0]?.phoneNumber || "N/A",

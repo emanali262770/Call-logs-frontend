@@ -204,28 +204,7 @@ const itemsPerPage = 10;
     </svg>
   );
 
-  const renderLogo = (logoType) => {
-    switch (logoType) {
-      case "TechIcon":
-        return <TechIcon />;
-      case "DigitalIcon":
-        return <DigitalIcon />;
-      case "CloudIcon":
-        return <CloudIcon />;
-      case "DataIcon":
-        return <DataIcon />;
-      case "WebIcon":
-        return <WebIcon />;
-      case "SoftwareIcon":
-        return <SoftwareIcon />;
-      case "ITIcon":
-        return <ITIcon />;
-      case "NetworkIcon":
-        return <NetworkIcon />;
-      default:
-        return <TechIcon />;
-    }
-  };
+
 
   // Filter meetings based on search query
   useEffect(() => {
@@ -311,10 +290,14 @@ const itemsPerPage = 10;
 
   // Fetch meetings
   const fetchMeetingData = useCallback(async () => {
+    const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
     try {
       setLoading(true);
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/meetings`
+        `${import.meta.env.VITE_API_BASE_URL}/meetings`,
+        {headers}
       );
       if (!response.ok) {
         throw new Error("Failed to fetch Meeting");

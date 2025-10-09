@@ -121,10 +121,15 @@ const CustomerData = () => {
 
   // Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
+    const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+        "Content-Type": "application/json",
+      };
     try {
       setLoading(true);
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/customers`
+        `${import.meta.env.VITE_API_BASE_URL}/customers`,
+        {headers}
       );
       const result = await response.json();
       setCustomerData(result.data || []);

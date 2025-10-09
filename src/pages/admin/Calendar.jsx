@@ -48,6 +48,9 @@ const Calendar = () => {
     },
   ]);
   const [searchQuery, setSearchQuery] = useState("");
+  // Token
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+
   const [newEvent, setNewEvent] = useState({
     title: "",
     date: new Date(),
@@ -57,7 +60,9 @@ const Calendar = () => {
     participants: "",
   });
 
-
+const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
   // ✅ Fetch Meetings by Month
   const fetchCustomerData = useCallback(async () => {
     try {
@@ -66,7 +71,8 @@ const Calendar = () => {
       const monthParam = `${year}-${month}`;
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/meetings/calendar?month=${monthParam}`
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/calendar?month=${monthParam}`,
+        {headers}
       );
 
       const result = await response.json();

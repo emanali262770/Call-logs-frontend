@@ -33,12 +33,16 @@ const SuccessClient = () => {
       client.status?.toLowerCase().includes(query)
     );
   });
+  const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+      };
 
   const fetchClientData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/meetings/success-client`
+        `${import.meta.env.VITE_API_BASE_URL}/meetings/success-client`,
+        {headers}
       );
 
       console.log(response.data.data, "data");
@@ -58,9 +62,7 @@ const SuccessClient = () => {
 
   const handleDelete = async (id) => {
     try {
-      const headers = {
-        Authorization: `Bearer ${userInfo?.token}`,
-      };
+      
       setLoading(true);
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/meetings/${id}`,
