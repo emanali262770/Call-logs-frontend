@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaDiagramSuccessor } from "react-icons/fa6";
 
 import {
@@ -73,6 +73,7 @@ const filteredLinks = links.filter((link) => {
   return (
     <aside className="bg-white shadow min-h-screen w-16 sm:w-20 md:w-60 flex flex-col py-8 px-2 sm:px-4 justify-between transition-all duration-300">
       {/* Logo / Title */}
+      <Link to='/admin'>
       <div>
         <div className="flex items-center justify-center mb-12 space-x-2 md:space-x-4">
           <div className="relative">
@@ -165,6 +166,7 @@ const filteredLinks = links.filter((link) => {
           )}
         </nav>
       </div>
+      </Link>
 
       {/* Logout */}
       <button

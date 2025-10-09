@@ -15,11 +15,14 @@ import {
   FiBriefcase,
   FiMail,
 } from "react-icons/fi";
+import * as XLSX from "xlsx";
+import { X } from "lucide-react";
+
 
 const CustomerData = () => {
   const [customerList, setCustomerData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-const itemsPerPage = 10;
+  const itemsPerPage = 10;
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [staffMembers, setStaffMember] = useState([]);
   const [productList, setProductList] = useState([]);
@@ -41,31 +44,84 @@ const itemsPerPage = 10;
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [file, setFile] = useState(null);
+   const [excelData, setExcelData] = useState([]); // preview data
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleAddCustomer = () => {
-     // Reset form
-      setCustomerEmail("");
-      setCustomerPhone("");
-      setCustomerAddress("");
-      setCustomerCity("");
-      setCompanyName("");
-      setBusinessType("");
-      setPersons([
-        { fullName: "", phone: "", email: "", designation: "", department: "" },
-      ]);
-      setAssignedStaff("");
-      setAssignedProduct("");
-      setImage(null);
-      setImagePreview(null);
-      setEditId(null);
-      setIsEdit(false);
-      setIsSliderOpen(false);
-    setIsSliderOpen(true);
-    
+    // Token
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+
+// 🧩 Step 1: Handle file selection + parse Excel
+  const handleFileChange = async (e) => {
+    const uploadedFile = e.target.files[0];
+    if (!uploadedFile) return;
+
+    setFile(uploadedFile);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      setExcelData(jsonData);
+      setShowPreview(true);
+    };
+    reader.readAsArrayBuffer(uploadedFile);
   };
 
-  // Token
-  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const handleAddCustomer = () => {
+    // Reset form
+    setCustomerEmail("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setCustomerCity("");
+    setCompanyName("");
+    setBusinessType("");
+    setPersons([
+      { fullName: "", phone: "", email: "", designation: "", department: "" },
+    ]);
+    setAssignedStaff("");
+    setAssignedProduct("");
+    setImage(null);
+    setImagePreview(null);
+    setEditId(null);
+    setIsEdit(false);
+    setIsSliderOpen(false);
+    setIsSliderOpen(true);
+
+  };
+  // Excel file upload in the backend
+  const handleUpload = async () => {
+    if (!file) return alert("Please select an Excel file!");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+       const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+        "Content-Type": "multipart/form-data",
+      };
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/customers/upload`,
+        formData,
+        {headers},
+      );
+
+      if (res.data.success) {
+        alert(`✅ ${res.data.totalInserted} customers uploaded successfully!`);
+        setShowPreview(false)
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed. Check console for details.");
+    }
+  };
+
+
+
 
   // Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
@@ -91,40 +147,40 @@ const itemsPerPage = 10;
   }, [fetchCustomerData]);
 
   // Search functionality
- useEffect(() => {
-  if (searchQuery.trim() === "") {
-    setFilteredCustomers(customerList);
-  } else {
-    const query = searchQuery.toLowerCase();
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredCustomers(customerList);
+    } else {
+      const query = searchQuery.toLowerCase();
 
-    const filtered = customerList.filter((customer) => {
-      return (
-        customer.companyName?.toLowerCase().includes(query) ||
-        customer.email?.toLowerCase().includes(query) ||
-        customer.phoneNumber?.toLowerCase().includes(query) || 
-        customer.address?.toLowerCase().includes(query) ||
-        customer.city?.toLowerCase().includes(query) ||
-        customer.businessType?.toLowerCase().includes(query) ||
-        customer.persons?.some(
-          (person) =>
-            person.fullName?.toLowerCase().includes(query) ||
-            person.designation?.toLowerCase().includes(query) ||
-            person.department?.toLowerCase().includes(query)
-        ) ||
-        (customer.assignedStaff &&
-          typeof customer.assignedStaff === "object" &&
-          customer.assignedStaff.username
-            ?.toLowerCase()
-            .includes(query)) ||
-        (customer.assignedProducts &&
-          typeof customer.assignedProducts === "object" &&
-          customer.assignedProducts.name?.toLowerCase().includes(query))
-      );
-    });
+      const filtered = customerList.filter((customer) => {
+        return (
+          customer.companyName?.toLowerCase().includes(query) ||
+          customer.email?.toLowerCase().includes(query) ||
+          customer.phoneNumber?.toLowerCase().includes(query) ||
+          customer.address?.toLowerCase().includes(query) ||
+          customer.city?.toLowerCase().includes(query) ||
+          customer.businessType?.toLowerCase().includes(query) ||
+          customer.persons?.some(
+            (person) =>
+              person.fullName?.toLowerCase().includes(query) ||
+              person.designation?.toLowerCase().includes(query) ||
+              person.department?.toLowerCase().includes(query)
+          ) ||
+          (customer.assignedStaff &&
+            typeof customer.assignedStaff === "object" &&
+            customer.assignedStaff.username
+              ?.toLowerCase()
+              .includes(query)) ||
+          (customer.assignedProducts &&
+            typeof customer.assignedProducts === "object" &&
+            customer.assignedProducts.name?.toLowerCase().includes(query))
+        );
+      });
 
-    setFilteredCustomers(filtered);
-  }
-}, [searchQuery, customerList]);
+      setFilteredCustomers(filtered);
+    }
+  }, [searchQuery, customerList]);
 
 
   // Fetch Staff and Product Data
@@ -140,7 +196,7 @@ const itemsPerPage = 10;
       setStaffMember(staff.data || []);
       setProductList(product.data || []);
       console.log("productRes ", product.data);
-      
+
     } catch (error) {
       console.error("Error fetching assigned data:", error);
       toast.error("Failed to fetch staff/product data");
@@ -218,14 +274,14 @@ const itemsPerPage = 10;
 
       fetchCustomerData();
     } catch (error) {
-       console.error("Save error:", error);
-      
-          // ✅ Extract message from backend
-          const backendMessage =
-            error.response?.data?.message ||
-            "Something went wrong. Please try again.";
-      
-          toast.error(`❌ ${backendMessage}`);
+      console.error("Save error:", error);
+
+      // ✅ Extract message from backend
+      const backendMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      toast.error(`❌ ${backendMessage}`);
     }
   };
 
@@ -262,7 +318,7 @@ const itemsPerPage = 10;
   // Edit Customer
   const handleEdit = (client) => {
 
-    
+
     setIsEdit(true);
     setEditId(client._id);
 
@@ -376,11 +432,11 @@ const itemsPerPage = 10;
   };
 
   // Pagination Logic
-const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-const currentItems = filteredCustomers.slice(indexOfFirstItem, indexOfLastItem);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredCustomers.slice(indexOfFirstItem, indexOfLastItem);
 
-const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
 
 
   // Loading Spinner
@@ -397,41 +453,109 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
-            Customer List
-          </h1>
-          <p className="text-gray-500 text-sm">Manage your customer database</p>
+     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
+          Customer List
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Manage your customer database
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div className="relative w-full md:w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiSearch className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search customers..."
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+          />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search customers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-            />
-          </div>
-       {
-        userInfo?.isAdmin&& (
-             <button
+        {/* Upload Excel */}
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileChange}
+            className="border border-gray-300 rounded-lg p-2"
+          />
+        </div>
+
+        {/* Add Customer Btn */}
+        {userInfo?.isAdmin && (
+          <button
+          onClick={handleAddCustomer}
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-            onClick={handleAddCustomer}
           >
             <FiPlus className="text-lg" />
             <span>Add Customer</span>
           </button>
-        )
-       }
-        
-        </div>
+        )}
       </div>
+
+      {/* 🧾 PREVIEW MODAL */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white w-[100%] md:w-[1000px] rounded-xl shadow-lg p-6 relative max-h-[80vh] overflow-y-auto">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+            >
+              <X size={20} />
+            </button>
+            <h2 className="text-lg font-semibold mb-4 text-newPrimary">
+              Excel Preview ({excelData.length} Rows)
+            </h2>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full border text-sm">
+                <thead className="bg-gray-200 text-gray-700">
+                  <tr>
+                    {Object.keys(excelData[0] || {}).map((key) => (
+                      <th key={key} className="border px-3 py-2 text-left">
+                        {key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {excelData.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      {Object.values(row).map((val, i) => (
+                        <td key={i} className="border px-3 py-2">
+                          {val || "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end mt-4 gap-3">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploading}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+              >
+                {uploading ? "Uploading..." : "Upload to Backend"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
 
       {/* Customer Table */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
@@ -533,7 +657,7 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
                   </div>
                   <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
                     <FiBriefcase className="mr-2 text-gray-400" size={14} />
-                    {client?.assignedProducts?.name|| "N/A"}
+                    {client?.assignedProducts?.name || "N/A"}
                   </div>
 
                   {/* Mobile view content */}
@@ -565,7 +689,7 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
                     <div className="text-xs text-gray-500">Assigned Staff:</div>
                     <div className="text-sm flex items-center">
                       <FiUser className="mr-1 text-gray-400" size={14} />
-                    {client?.assignedStaff?.username|| "N/A"}
+                      {client?.assignedStaff?.username || "N/A"}
                     </div>
 
                     <div className="text-xs text-gray-500">
@@ -573,7 +697,7 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
                     </div>
                     <div className="text-sm flex items-center">
                       <FiBriefcase className="mr-1 text-gray-400" size={14} />
-                      {client?.assignedProducts?.name|| "N/A"}
+                      {client?.assignedProducts?.name || "N/A"}
                     </div>
                   </div>
 
@@ -918,49 +1042,46 @@ const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
         </div>
       )}
       {/* Pagination Controls */}
-{filteredCustomers.length > itemsPerPage && (
-  <div className="flex justify-center items-center gap-2 mt-6">
-    <button
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-      className={`px-4 py-2 border rounded-lg ${
-        currentPage === 1
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      Prev
-    </button>
+      {filteredCustomers.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg ${currentPage === 1
+              ? "text-gray-400 border-gray-200 cursor-not-allowed"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            Prev
+          </button>
 
-    {[...Array(totalPages)].map((_, i) => (
-      <button
-        key={i}
-        onClick={() => setCurrentPage(i + 1)}
-        className={`px-3 py-1 rounded-md border ${
-          currentPage === i + 1
-            ? "bg-newPrimary text-white border-newPrimary"
-            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-        }`}
-      >
-        {i + 1}
-      </button>
-    ))}
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md border ${currentPage === i + 1
+                ? "bg-newPrimary text-white border-newPrimary"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
+            >
+              {i + 1}
+            </button>
+          ))}
 
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() =>
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-      }
-      className={`px-4 py-2 border rounded-lg ${
-        currentPage === totalPages
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      Next
-    </button>
-  </div>
-)}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg ${currentPage === totalPages
+              ? "text-gray-400 border-gray-200 cursor-not-allowed"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
     </div>
   );
