@@ -506,14 +506,14 @@ const AddMeeting = () => {
           payload,
           { headers }
         );
-        toast.success("✅ Meeting updated successfully");
+        toast.success("Meeting updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/meetings`,
           payload,
           { headers }
         );
-        toast.success("✅ Meeting added successfully");
+        toast.success("Meeting added successfully");
       }
 
       resetForm();
@@ -1069,7 +1069,7 @@ const AddMeeting = () => {
           </div>
         </div>
       )}
-      <ToastContainer position="bottom-right" />
+    
     </div>
   );
 };
