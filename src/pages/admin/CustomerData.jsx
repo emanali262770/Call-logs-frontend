@@ -109,9 +109,11 @@ const CustomerData = () => {
       );
 
       if (res.data.success) {
-        toast.success(`${res.data.totalInserted} customers uploaded successfully!`);
+        toast.success(
+          `${res.data.totalInserted} customers uploaded successfully!`
+        );
         setShowPreview(false);
-        fetchCustomerData()
+        fetchCustomerData();
       }
     } catch (error) {
       console.error(error);
@@ -122,14 +124,14 @@ const CustomerData = () => {
   // Fetch Customer Data
   const fetchCustomerData = useCallback(async () => {
     const headers = {
-        Authorization: `Bearer ${userInfo?.token}`,
-        "Content-Type": "application/json",
-      };
+      Authorization: `Bearer ${userInfo?.token}`,
+      "Content-Type": "application/json",
+    };
     try {
       setLoading(true);
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/customers`,
-        {headers}
+        { headers }
       );
       const result = await response.json();
       setCustomerData(result.data || []);
@@ -156,24 +158,28 @@ const CustomerData = () => {
 
       const filtered = customerList.filter((customer) => {
         return (
-          customer.companyName?.toLowerCase().includes(query) ||
-          customer.email?.toLowerCase().includes(query) ||
-          customer.phoneNumber?.toLowerCase().includes(query) ||
-          customer.address?.toLowerCase().includes(query) ||
-          customer.city?.toLowerCase().includes(query) ||
-          customer.businessType?.toLowerCase().includes(query) ||
+          (customer.companyName || "").toLowerCase().includes(query) ||
+          (customer.email || "").toLowerCase().includes(query) ||
+          (customer.phoneNumber || "").toLowerCase().includes(query) ||
+          (customer.address || "").toLowerCase().includes(query) ||
+          (customer.city || "").toLowerCase().includes(query) ||
+          (customer.businessType || "").toLowerCase().includes(query) ||
           customer.persons?.some(
             (person) =>
-              person.fullName?.toLowerCase().includes(query) ||
-              person.designation?.toLowerCase().includes(query) ||
-              person.department?.toLowerCase().includes(query)
+              (person.fullName || "").toLowerCase().includes(query) ||
+              (person.designation || "").toLowerCase().includes(query) ||
+              (person.department || "").toLowerCase().includes(query)
           ) ||
           (customer.assignedStaff &&
             typeof customer.assignedStaff === "object" &&
-            customer.assignedStaff.username?.toLowerCase().includes(query)) ||
+            (customer.assignedStaff.username || "")
+              .toLowerCase()
+              .includes(query)) ||
           (customer.assignedProducts &&
             typeof customer.assignedProducts === "object" &&
-            customer.assignedProducts.name?.toLowerCase().includes(query))
+            (customer.assignedProducts.name || "")
+              .toLowerCase()
+              .includes(query))
         );
       });
 
@@ -465,6 +471,8 @@ const CustomerData = () => {
             <input
               type="text"
               placeholder="Search customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
@@ -503,20 +511,21 @@ const CustomerData = () => {
             />
 
             {file && (
-              <p className="mt-2 text-xs absolute text-gray-500">📄 {file.name}</p>
+              <p className="mt-2 text-xs absolute text-gray-500">
+                📄 {file.name}
+              </p>
             )}
           </div>
 
           {/* Add Customer Btn */}
-       
-            <button
-              onClick={handleAddCustomer}
-              className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-            >
-              <FiPlus className="text-lg" />
-              <span>Add Customer</span>
-            </button>
-         
+
+          <button
+            onClick={handleAddCustomer}
+            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
+          >
+            <FiPlus className="text-lg" />
+            <span>Add Customer</span>
+          </button>
         </div>
 
         {/* 🧾 PREVIEW MODAL */}
@@ -591,7 +600,9 @@ const CustomerData = () => {
               <th className="py-3 px-4">Department</th>
               <th className="py-3 px-4">Assigned Staff</th>
               <th className="py-3 px-4">Assigned Product</th>
-              {userInfo?.isAdmin && <th className="py-3 px-4 text-right">Actions</th>}
+              {userInfo?.isAdmin && (
+                <th className="py-3 px-4 text-right">Actions</th>
+              )}
             </tr>
           </thead>
 
@@ -613,18 +624,16 @@ const CustomerData = () => {
                       className="w-8 h-8 rounded-full border object-cover"
                     />
                     <span className="font-medium text-gray-900">
-
                       {client.companyName
                         ? client.companyName.length > 20
                           ? `${client.companyName.slice(0, 20)}...`
                           : client.companyName
                         : "N/A"}
-
-
-
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-green-600">{client.email || "N/A"}</td>
+                  <td className="py-3 px-4 text-green-600">
+                    {client.email || "N/A"}
+                  </td>
                   <td className="py-3 px-4 text-gray-700">
                     {client.persons?.[0]?.designation || "N/A"}
                   </td>
@@ -990,10 +999,11 @@ const CustomerData = () => {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg ${currentPage === 1
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Prev
           </button>
@@ -1002,10 +1012,11 @@ const CustomerData = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border ${currentPage === i + 1
-                ? "bg-newPrimary text-white border-newPrimary"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                }`}
+              className={`px-3 py-1 rounded-md border ${
+                currentPage === i + 1
+                  ? "bg-newPrimary text-white border-newPrimary"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              }`}
             >
               {i + 1}
             </button>
@@ -1016,10 +1027,11 @@ const CustomerData = () => {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`px-4 py-2 border rounded-lg ${currentPage === totalPages
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Next
           </button>

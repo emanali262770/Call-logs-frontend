@@ -57,21 +57,23 @@ const StaffList = () => {
   const [loading, setLoading] = useState(true);
 
   // Search functionality
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = staffList.filter(
-        (staff) =>
-          staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          staff.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          staff.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          staff.number.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredStaffList(filtered);
-    } else {
-      setFilteredStaffList(staffList);
-    }
-  }, [searchQuery, staffList]);
+// Search functionality
+useEffect(() => {
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    const filtered = staffList.filter((staff) =>
+      (staff.name || "").toLowerCase().includes(query) ||
+      (staff.department || "").toLowerCase().includes(query) ||
+      (staff.designation || "").toLowerCase().includes(query) ||
+      (staff.email || "").toLowerCase().includes(query) ||
+      (staff.number || "").toLowerCase().includes(query)
+    );
+    setFilteredStaffList(filtered);
+  } else {
+    setFilteredStaffList(staffList);
+  }
+}, [searchQuery, staffList]);
+
 
   // slider styling
   useEffect(() => {
@@ -177,14 +179,14 @@ const StaffList = () => {
           formData,
           { headers }
         );
-        toast.success("✅ Staff updated successfully");
+        toast.success("Staff updated successfully");
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/staff`,
           formData,
           { headers }
         );
-        toast.success("✅ Staff added successfully");
+        toast.success("Staff added successfully");
       }
 
       // Reset fields
@@ -383,139 +385,139 @@ const StaffList = () => {
       </div>
 
       {/* Staff Table */}
-     
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="min-w-full">
-            {/* ✅ Table Headers */}
-            <div
-              className={`hidden md:grid ${
-                userInfo?.isAdmin ? "grid-cols-9" : "grid-cols-8"
-              } gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg`}
+
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-full text-sm text-left border-collapse">
+          <thead>
+            <tr
+              className={`bg-gray-50 text-xs font-medium text-gray-600 uppercase ${
+                userInfo?.isAdmin ? "grid-cols-8" : "grid-cols-7"
+              }`}
             >
-              <div>Sr</div>
-              <div>Name</div>
-              <div>Department</div>
-              {/* <div>Designation</div> */}
-              <div>Address</div>
-              <div>Number</div>
-              <div>Email</div>
-              <div>Password</div>
-              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
-            </div>
-
-            {/* ✅ Staff Rows */}
-            <div className="mt-4 flex flex-col gap-3">
-              {filteredStaffList.length > 0 ? (
-                currentStaff.map((staff, index) => {
-                  const canViewPassword =
-                    userInfo?.isAdmin || currentUserId === staff._id;
-
-                  return (
-                    <div
-                      key={index}
-                      className={`grid grid-cols-1 ${
-                        userInfo?.isAdmin ? "md:grid-cols-9" : "md:grid-cols-8"
-                      } items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100`}
-                    >
-                      {/* ✅ Desktop View */}
-                      <div className="hidden md:flex items-center gap-3">
-                         <td className="py-3 px-4 text-gray-700">
-                       {indexOfFirstItem + index + 1}
-                      </td>
-                        <div className="w-10 h-10 flex items-center justify-center rounded-full">
-                          <img
-                            src={
-                              staff.image?.url ||
-                              "https://via.placeholder.com/40"
-                            }
-                            alt="Staff"
-                            className="w-10 h-10 object-cover rounded-full"
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {staff.name}
-                        </span>
-                      </div>
-
-                      {/* Department */}
-                      <td className="py-3 px-4 text-gray-700">
-                        {staff.department || "N/A"}
-                      </td>
-
-                      {/* Address */}
-                      <td className="py-3 px-4 text-gray-700">
-                        {staff.address
-                          ? staff.address.length > 20
-                            ? `${staff.address.slice(0, 20)}...`
-                            : staff.address
-                          : "No have Location"}
-                      </td>
-
-                      {/* Number */}
-                      <td className="py-3 px-4 text-gray-700">
-                        {staff.number || "N/A"}
-                      </td>
-
-                      {/* Email */}
-                      <div className="hidden md:flex items-center text-sm text-gray-500 truncate">
-                        <FiMail className="mr-2 text-gray-400" />
-                        {staff.email}
-                      </div>
-
-                      {/* ✅ Password Column (dynamic dots) */}
-                      <div className="hidden md:flex items-center text-sm text-gray-500">
-                        {canViewPassword
-                          ? visiblePasswords[staff._id]
-                            ? staff.password
-                            : "•".repeat(staff.password?.length || 5)
-                          : "•".repeat(staff.password?.length || 5)}
-
-                        {canViewPassword && (
-                          <button
-                            type="button"
-                            onClick={() => togglePasswordVisibility(staff._id)}
-                            className="ml-2 text-gray-600 hover:text-gray-800"
-                          >
-                            {visiblePasswords[staff._id] ? (
-                              <AiOutlineEyeInvisible />
-                            ) : (
-                              <AiOutlineEye />
-                            )}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* ✅ Actions (Only Admin) */}
-                      {userInfo?.isAdmin && (
-                        <div className="flex justify-end col-span-1 mt-2 md:mt-0">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEdit(staff)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                            >
-                              <FiEdit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(staff._id)}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                            >
-                              <FiTrash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No staff members found
-                </div>
+              <th className="py-3 px-4">Sr</th>
+              <th className="py-3 px-4">Name</th>
+              <th className="py-3 px-4">Department</th>
+              <th className="py-3 px-4">Address</th>
+              <th className="py-3 px-4">Number</th>
+              <th className="py-3 px-4">Email</th>
+              <th className="py-3 px-4">Password</th>
+              {userInfo?.isAdmin && (
+                <th className="py-3 px-4 text-right">Actions</th>
               )}
-            </div>
-          </div>
-        </div>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredStaffList.length > 0 ? (
+              currentStaff.map((staff, index) => {
+                const canViewPassword =
+                  userInfo?.isAdmin || currentUserId === staff._id;
+
+                return (
+                  <tr
+                    key={index}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    {/* Sr */}
+                    <td className="py-3 px-4">
+                      {indexOfFirstItem + index + 1}
+                    </td>
+
+                    {/* Name + Image */}
+                    <td className="py-3 px-4 flex items-center gap-2">
+                      <img
+                        src={
+                          staff.image?.url || "https://via.placeholder.com/40"
+                        }
+                        alt="Staff"
+                        className="w-8 h-8 rounded-full border object-cover"
+                      />
+                      <span className="font-medium text-gray-900 truncate">
+                        {staff.name || "N/A"}
+                      </span>
+                    </td>
+
+                    {/* Department */}
+                    <td className="py-3 px-4 text-gray-700">
+                      {staff.department || "N/A"}
+                    </td>
+
+                    {/* Address */}
+                    <td className="py-3 px-4 text-gray-700">
+                      {staff.address
+                        ? staff.address.length > 20
+                          ? `${staff.address.slice(0, 20)}...`
+                          : staff.address
+                        : "No have Location"}
+                    </td>
+
+                    {/* Number */}
+                    <td className="py-3 px-4 text-gray-700">
+                      {staff.number || "N/A"}
+                    </td>
+
+                    {/* Email */}
+                    <td className="py-3 px-4 text-gray-700">
+                      {staff.email || "N/A"}
+                    </td>
+
+                    {/* Password (toggle visibility) */}
+                    <td className="py-3 px-4 text-gray-700 flex items-center">
+                      {canViewPassword
+                        ? visiblePasswords[staff._id]
+                          ? staff.password
+                          : "•".repeat(staff.password?.length || 5)
+                        : "•".repeat(staff.password?.length || 5)}
+
+                      {canViewPassword && (
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility(staff._id)}
+                          className="ml-2 text-gray-600 hover:text-gray-800"
+                        >
+                          {visiblePasswords[staff._id] ? (
+                            <AiOutlineEyeInvisible />
+                          ) : (
+                            <AiOutlineEye />
+                          )}
+                        </button>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    {userInfo?.isAdmin && (
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleEdit(staff)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(staff._id)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={userInfo?.isAdmin ? 8 : 7}
+                  className="text-center py-6 text-gray-500"
+                >
+                  No staff members found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Slider */}
