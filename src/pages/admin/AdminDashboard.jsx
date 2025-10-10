@@ -119,7 +119,9 @@ const AdminDashboard = () => {
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
 
+       setTimeout(() => {
         toast.error(`❌ ${backendMessage}`);
+       }, 2000); 
       } finally {
         setLoading(false);
       }
@@ -153,7 +155,9 @@ const AdminDashboard = () => {
         const backendMessage =
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
+         setTimeout(() => {
         toast.error(`❌ ${backendMessage}`);
+       }, 2000); 
       } finally {
         setLoading(false);
       }
@@ -192,7 +196,9 @@ const AdminDashboard = () => {
         const backendMessage =
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
+         setTimeout(() => {
         toast.error(`❌ ${backendMessage}`);
+       }, 2000); 
       } finally {
         setLoading(false);
       }
@@ -229,7 +235,9 @@ const AdminDashboard = () => {
         const backendMessage =
           error.response?.data?.message ||
           "Something went wrong fetching calendar meetings.";
+        setTimeout(() => {
         toast.error(`❌ ${backendMessage}`);
+       }, 2000); 
       } finally {
         setLoading(false);
       }
