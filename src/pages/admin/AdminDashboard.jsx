@@ -43,43 +43,46 @@ import { MdOpenInNew } from "react-icons/md";
 import Swal from "sweetalert2";
 import { CardSkeleton } from "./CardSkeleton";
 import { toast } from "react-toastify";
-import AppHeader from "./AppHeader";
 
 const AdminDashboard = () => {
- 
+  const [recentProducts, setRecentProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [customers, setCustomers] = useState(0);
   const [items, setItems] = useState(0);
   const [sales, setSales] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
- 
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [performanceData, setPerformanceData] = useState([]);
   const [callData, setCallData] = useState([]);
   const [dayData, setDayData] = useState([]);
   const [pieData, setPieData] = useState([]);
-
+  const [radialData, setRadialData] = useState([]);
   const [cardsLoading, setCardsLoading] = useState(true);
   const [calendarMeetings, setCalendarMeetings] = useState([]);
   const [totalMeetings, setTotalMeetings] = useState(0);
 
   const abortRef = useRef(null);
   // Get user info from localStorage
-    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const userName = userInfo?.username || "Admin User";
-  
-let userRole = userInfo?.role || "Administrator";
-if (userRole === "user") {
-  userRole = "Staff";
-}
+  const userEmail = userInfo?.email || "admin@example.com";
+  let userRole = userInfo?.role || "Administrator";
+  if (userRole === "user") {
+    userRole = "Staff";
+  }
   const base = import.meta.env.VITE_API_BASE_URL;
 
-  
-  
+
+  // console.log("userInfo ", userInfo);
+
+
   const headers = {
-        Authorization: `Bearer ${userInfo?.token}`,
-      };
+    Authorization: `Bearer ${userInfo?.token}`,
+  };
   // fetch pie data
   useEffect(() => {
     async function pieDataApi() {
@@ -87,7 +90,7 @@ if (userRole === "user") {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`,
-          {headers}
+          { headers }
         );
 
         const formattedPie = [
@@ -129,7 +132,7 @@ if (userRole === "user") {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/weekly-volume`,
-        {headers}
+          { headers }
         );
         console.log({ res });
 
@@ -157,14 +160,13 @@ if (userRole === "user") {
   }, []);
 
   // fetch Montly Trend
-
   useEffect(() => {
     async function MontlyTrendDataApi() {
       try {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/monthly-trends`,
-          {headers}
+          { headers }
         );
         console.log({ res });
 
@@ -177,7 +179,7 @@ if (userRole === "user") {
           setCallData(formatted);
 
           // Optional: log total calls
-          console.log("Total Calls:", res.data.totalCalls);
+          // console.log("Total Calls:", res.data.totalCalls);
 
           // Optional toast
           if (res.data.totalCalls === 0) {
@@ -206,12 +208,11 @@ if (userRole === "user") {
         const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-10"
 
         const res = await axios.get(
-          `${
-            import.meta.env.VITE_API_BASE_URL
+          `${import.meta.env.VITE_API_BASE_URL
           }/dashboard/calendar-meetings?month=${currentMonth}`,
-          {headers}
+          { headers }
         );
-        console.log("📅 Calendar Meetings:", res.data);
+        // console.log("📅 Calendar Meetings:", res.data);
 
         if (res.data?.success) {
           setCalendarMeetings(res.data.data || []);
@@ -234,6 +235,39 @@ if (userRole === "user") {
     fetchCalendarMeetings();
   }, []);
 
+
+    useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchCustomers = async () => {
+      try {
+       
+        const res = await axios.get(`${base}/customers/count`, {
+          headers,
+          signal: controller.signal,
+        });
+        // console.log("Res ", res.data);
+        
+        setCustomers(res.data?.totalCustomers ?? 0);
+      } catch (err) {
+        if (err.name !== "CanceledError") console.error("Fetch failed:", err);
+      }
+    };
+
+    // 🕒 First call immediately
+    fetchCustomers();
+
+    // ⏱️ Then repeat every 3 seconds
+    const interval = setInterval(fetchCustomers, 30000);
+
+    // 🧹 Cleanup on unmount
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, [customers]);
+
+
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
@@ -242,21 +276,20 @@ if (userRole === "user") {
       setCardsLoading(true);
 
       try {
-        const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
+        const [itemsRes, usersRes, salesRes, notificationsRes] =
           await Promise.all([
-            axios.get(`${base}/customers/count`, {headers}, { signal: controller.signal }),
+           
             axios.get(`${base}/products/count`, { signal: controller.signal }),
             axios.get(`${base}/group-users/count`, {
               signal: controller.signal,
             }),
-            axios.get(`${base}/orders/total`, {headers},{ signal: controller.signal }),
+            axios.get(`${base}/orders/total`, { headers }, { signal: controller.signal }),
             axios.get(`${base}/notifications`, {
               headers: { Authorization: `Bearer ${userInfo.token}` },
               signal: controller.signal,
             }),
           ]);
 
-        setCustomers(customersRes.data?.totalCustomers ?? 0);
         setItems(itemsRes.data?.totalProducts ?? 0);
         setUsers(usersRes.data?.totalUsers ?? 0);
         setSales(salesRes.data?.totalSales ?? 0);
@@ -275,7 +308,34 @@ if (userRole === "user") {
     return () => controller.abort();
   }, []);
 
+  // ✅ Mark single notification as read
+  const clearNotification = async (id) => {
+    try {
+      await axios.put(`${base}/notifications/${id}/read`);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error("Clear failed:", err);
+    }
+  };
 
+  // ✅ Mark all notifications as read
+  const clearAll = async () => {
+    try {
+      await axios.put(
+        `${base}/notifications/mark-all`,
+        {}, // empty body
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        }
+      );
+
+      setNotifications([]); // clear local state
+    } catch (err) {
+      console.error("Clear all failed:", err);
+    }
+  };
 
   // Update time every second
   useEffect(() => {
@@ -317,23 +377,172 @@ if (userRole === "user") {
     },
   ];
 
+const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const openNotifModal = (notif) => {
+    Swal.fire({
+      title: notif?.title ?? "Details",
+      text: notif?.message ?? "No description available.",
+      icon: "info",
+      confirmButtonText: "Close",
+    });
+  };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
-  //       <div className="text-center">
-  //         <PuffLoader color="#1d4ed8" size={80} />
-  //         <p className="mt-4 text-gray-600">Loading dashboard data...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const markNotificationAsRead = (id) => {
+    setNotifications(
+      notifications.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 text-gray-800">
       {/* Header */}
-      <AppHeader/>
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="flex justify-between items-center px-4 py-3 md:px-6">
+          <div className="flex items-center">
+            <button
+              className="md:hidden mr-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+            </button>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-indigo-600">
+                Call Logs Dashboard
+              </h1>
+              <div className="flex items-center mt-1 text-xs md:text-sm text-gray-500">
+                <FiCalendar className="mr-1 hidden sm:block" />
+                <span className="hidden sm:block">
+                  {currentTime.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+                <FiClock className="ml-0 sm:ml-3 mr-1" />
+                <span>{currentTime.toLocaleTimeString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Search - hidden on mobile */}
+            <div className="relative hidden md:block">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-48 transition-all duration-300 focus:w-56"
+              />
+            </div>
+
+            {/* Notifications Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 rounded-full hover:bg-gray-100 relative transition-colors duration-200"
+              >
+                <FiBell size={20} />
+                {unreadCount > 0 && (
+                  <span
+                    className={`absolute -top-0 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${unreadCount < 100 ? "w-4 h-4" : "w-7 h-5 px-[2px] text-[10px]"
+                      }`}
+                  >
+                    {unreadCount < 100 ? unreadCount : "99+"}
+                  </span>
+                )}
+
+              </button>
+
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="flex justify-between items-center p-2 border-b">
+                    <h3 className="font-semibold text-sm">Notifications</h3>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearAll}
+                        className="text-xs text-blue-500 hover:underline"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500">
+                        No new notifications
+                      </p>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif._id}
+                          className="flex justify-between items-start p-3 border-b hover:bg-gray-50"
+                        >
+                          <div>
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            <p className="text-xs text-gray-600">
+                              {notif.message}
+                            </p>
+                          </div>
+                          <div className="flex cursor-pointer items-center gap-1">
+                            <button
+                              onClick={() => openNotifModal(notif)}
+                              className="p-1 hover:text-blue-600"
+                            >
+                              <MdOpenInNew size={12} className="text-primary" />
+                            </button>
+
+                            <button
+                              onClick={() => clearNotification(notif._id)}
+                              className=" text-gray-400  hover:text-red-500"
+                            >
+                              <IoClose size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Profile */}
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white">
+                  <FiUser size={16} />
+                </div>
+                <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
+              </div>
+              <div className="hidden md:block text-right">
+                <div className="text-sm font-medium capitalize">{userName}</div>
+                <div className="text-xs text-gray-500 uppercase">
+                  {userRole}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Search */}
+        <div className="px-4 pb-3 md:hidden transition-all duration-300 ease-in-out">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full transition-all duration-300"
+            />
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="p-4 md:p-6">
@@ -359,44 +568,42 @@ if (userRole === "user") {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {cardsLoading
             ? Array.from({ length: summaryData.length }).map((_, idx) => (
-                <CardSkeleton key={idx} />
-              ))
+              <CardSkeleton key={idx} />
+            ))
             : summaryData.map((item, index) => (
-                <div
-                  key={index}
-                  className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${
-                    cardsLoading ? "opacity-0" : "opacity-100"
+              <div
+                key={index}
+                className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${cardsLoading ? "opacity-0" : "opacity-100"
                   }`}
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              >
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="flex justify-between items-start relative z-10">
-                    <div
-                      className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
-                    >
-                      {item.icon}
-                    </div>
-                    <span
-                      className={`text-xs md:text-sm font-medium ${
-                        item.change.includes("+")
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {item.change}
-                    </span>
+                <div className="flex justify-between items-start relative z-10">
+                  <div
+                    className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                  >
+                    {item.icon}
                   </div>
+                  <span
+                    className={`text-xs md:text-sm font-medium ${item.change.includes("+")
+                      ? "text-green-600"
+                      : "text-red-600"
+                      }`}
+                  >
+                    {item.change}
+                  </span>
+                </div>
 
-                  <div className="mt-4 relative z-10">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-800">
-                      {item.value}
-                    </div>
-                    <div className="text-gray-500 text-sm md:text-base mt-1">
-                      {item.name}
-                    </div>
+                <div className="mt-4 relative z-10">
+                  <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                    {item.value}
+                  </div>
+                  <div className="text-gray-500 text-sm md:text-base mt-1">
+                    {item.name}
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
         </div>
 
         {/* Charts Section */}
@@ -556,11 +763,10 @@ if (userRole === "user") {
                 return (
                   <div
                     key={date}
-                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                      hasMeeting
-                        ? "bg-blue-100 text-blue-600 font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${hasMeeting
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
                   >
                     {date}
                   </div>
