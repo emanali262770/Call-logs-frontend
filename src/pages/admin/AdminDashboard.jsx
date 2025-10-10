@@ -179,7 +179,7 @@ const AdminDashboard = () => {
           setCallData(formatted);
 
           // Optional: log total calls
-          console.log("Total Calls:", res.data.totalCalls);
+          // console.log("Total Calls:", res.data.totalCalls);
 
           // Optional toast
           if (res.data.totalCalls === 0) {

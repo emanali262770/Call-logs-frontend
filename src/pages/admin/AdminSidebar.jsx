@@ -169,7 +169,7 @@ const filteredLinks = links.filter((link) => {
       </div>
       </Link>
 
-      <div className="min-h-full">
+      <div className="min-h-screen">
         {/* Logout */}
       <button
         onClick={handleLogout}
