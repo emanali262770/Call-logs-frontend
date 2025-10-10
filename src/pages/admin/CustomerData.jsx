@@ -1020,49 +1020,83 @@ const CustomerData = () => {
         </div>
       )}
       {/* Pagination Controls */}
-      {filteredCustomers.length > itemsPerPage && (
-        <div className="flex justify-center items-center gap-2 mt-6">
+      {/* Pagination Controls */}
+{filteredCustomers.length > itemsPerPage && (
+  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+    <button
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      className={`px-4 py-2 border rounded-lg ${
+        currentPage === 1
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      Prev
+    </button>
+
+    {(() => {
+      const maxVisible = 5;
+      const pageNumbers = [];
+
+      // Always show first page
+      if (currentPage > 3) {
+        pageNumbers.push(1);
+        if (currentPage > 4) pageNumbers.push("...");
+      }
+
+      // Show nearby pages
+      for (
+        let i = Math.max(1, currentPage - 2);
+        i <= Math.min(totalPages, currentPage + 2);
+        i++
+      ) {
+        pageNumbers.push(i);
+      }
+
+      // Always show last page
+      if (currentPage < totalPages - 2) {
+        if (currentPage < totalPages - 3) pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      }
+
+      return pageNumbers.map((num, i) =>
+        num === "..." ? (
+          <span key={i} className="px-3 py-1 text-gray-500">
+            ...
+          </span>
+        ) : (
           <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg ${
-              currentPage === 1
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100"
+            key={i}
+            onClick={() => setCurrentPage(num)}
+            className={`px-3 py-1 rounded-md border ${
+              currentPage === num
+                ? "bg-newPrimary text-white border-newPrimary"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
             }`}
           >
-            Prev
+            {num}
           </button>
+        )
+      );
+    })()}
 
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border ${
-                currentPage === i + 1
-                  ? "bg-newPrimary text-white border-newPrimary"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+      }
+      className={`px-4 py-2 border rounded-lg ${
+        currentPage === totalPages
+          ? "text-gray-400 border-gray-200 cursor-not-allowed"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      Next
+    </button>
+  </div>
+)}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            className={`px-4 py-2 border rounded-lg ${
-              currentPage === totalPages
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };
