@@ -247,6 +247,9 @@ const ProductsPage = () => {
 
   // Product Save
   const handleSave = async () => {
+  if (!image && !isEdit) {
+  return toast.error("Image is Compulsory");
+}
     const formData = new FormData();
     formData.append("name", formState.name);
     formData.append("price", formState.price);
@@ -269,14 +272,14 @@ const ProductsPage = () => {
           formData,
           { headers }
         );
-        toast.success("✅ Product updated successfully");
+        toast.success(" Product updated successfully");
       } else {
         response = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/products`,
           formData,
           { headers }
         );
-        toast.success("✅ Product added successfully");
+        toast.success(" Product added successfully");
       }
 
       fetchProducts();
@@ -315,9 +318,11 @@ const ProductsPage = () => {
   };
 
   const removeImage = () => {
-    setImagePreview("");
-    setEditFormState({ ...formState, image: "" });
-  };
+  setImage(null);
+  setImagePreview(null);
+  setEditFormState({ ...formState, image: "" });
+};
+
 
   const parseCurrency = (value) => {
     if (value == null) return 0;
