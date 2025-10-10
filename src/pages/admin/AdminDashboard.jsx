@@ -235,6 +235,39 @@ const AdminDashboard = () => {
     fetchCalendarMeetings();
   }, []);
 
+
+    useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchCustomers = async () => {
+      try {
+       
+        const res = await axios.get(`${base}/customers/count`, {
+          headers,
+          signal: controller.signal,
+        });
+        // console.log("Res ", res.data);
+        
+        setCustomers(res.data?.totalCustomers ?? 0);
+      } catch (err) {
+        if (err.name !== "CanceledError") console.error("Fetch failed:", err);
+      }
+    };
+
+    // 🕒 First call immediately
+    fetchCustomers();
+
+    // ⏱️ Then repeat every 3 seconds
+    const interval = setInterval(fetchCustomers, 30000);
+
+    // 🧹 Cleanup on unmount
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, [customers]);
+
+
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
@@ -243,9 +276,9 @@ const AdminDashboard = () => {
       setCardsLoading(true);
 
       try {
-        const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
+        const [itemsRes, usersRes, salesRes, notificationsRes] =
           await Promise.all([
-            axios.get(`${base}/customers/count`, { headers }, { signal: controller.signal }),
+           
             axios.get(`${base}/products/count`, { signal: controller.signal }),
             axios.get(`${base}/group-users/count`, {
               signal: controller.signal,
@@ -257,7 +290,6 @@ const AdminDashboard = () => {
             }),
           ]);
 
-        setCustomers(customersRes.data?.totalCustomers ?? 0);
         setItems(itemsRes.data?.totalProducts ?? 0);
         setUsers(usersRes.data?.totalUsers ?? 0);
         setSales(salesRes.data?.totalSales ?? 0);
