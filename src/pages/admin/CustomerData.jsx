@@ -479,20 +479,59 @@ const CustomerData = () => {
 
           {/* Upload Excel */}
           {/* Excel Upload Box */}
-          <div className="relative group">
-            <label
-              htmlFor="excel-upload"
-              className="flex items-center justify-center px-5 py-2.5 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer 
+          {userInfo?.isAdmin && (
+            <div className="relative group">
+              <label
+                htmlFor="excel-upload"
+                className="flex items-center justify-center px-5 py-2.5 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer 
                bg-white hover:bg-blue-50 transition-all duration-300 text-gray-600 font-medium text-sm
                group-hover:border-blue-400 group-hover:text-blue-600"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-5 h-5 mr-2 text-blue-500 group-hover:text-blue-600 transition-colors"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-9-9v12m0 0l-3-3m3 3l3-3"
+                  />
+                </svg>
+                Upload Excel File
+              </label>
+              <input
+                id="excel-upload"
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {file && (
+                <p className="mt-2 text-xs absolute text-gray-500">
+                  📄 {file.name}
+                </p>
+              )}
+            </div>
+          )}
+          {/* ✅ Download Format Button */}
+          {userInfo?.isAdmin && (
+            <a
+              href="/customers_sample.xlsx"
+              download
+              className="flex items-center justify-center px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-sm text-sm font-medium"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth="1.5"
+                strokeWidth={1.5}
                 stroke="currentColor"
-                className="w-5 h-5 mr-2 text-blue-500 group-hover:text-blue-600 transition-colors"
+                className="w-5 h-5 mr-2"
               >
                 <path
                   strokeLinecap="round"
@@ -500,22 +539,9 @@ const CustomerData = () => {
                   d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-9-9v12m0 0l-3-3m3 3l3-3"
                 />
               </svg>
-              Upload Excel File
-            </label>
-            <input
-              id="excel-upload"
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-            {file && (
-              <p className="mt-2 text-xs absolute text-gray-500">
-                📄 {file.name}
-              </p>
-            )}
-          </div>
+              Download Excel Format
+            </a>
+          )}
 
           {/* Add Customer Btn */}
 
