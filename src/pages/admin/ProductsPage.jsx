@@ -525,6 +525,7 @@ const ProductsPage = () => {
     <table className="min-w-full text-sm text-left border-collapse">
       <thead>
         <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+          <th className="py-3 px-4">Sr</th>
           <th className="py-3 px-4">Name</th>
           <th className="py-3 px-4">Price</th>
           <th className="py-3 px-4">Total Orders</th>
@@ -547,6 +548,9 @@ const ProductsPage = () => {
                 key={index}
                 className="border-b hover:bg-gray-50 transition"
               >
+                 <td className="py-3 px-4 text-gray-700">
+                 {indexOfFirstItem + index + 1}
+                </td>
                 {/* Product Name */}
                 <td className="py-3 px-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg border overflow-hidden flex items-center justify-center bg-gray-50">

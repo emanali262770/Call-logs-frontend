@@ -608,6 +608,7 @@ const AddMeeting = () => {
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Sr</th>
               <th className="py-3 px-4">Company Name</th>
               <th className="py-3 px-4">Person</th>
               <th className="py-3 px-4">Product</th>
@@ -635,6 +636,10 @@ const AddMeeting = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
+                   {/* Sr No */}
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                   {indexOfFirstItem + index + 1}
+                  </td>
                   {/* Company Name */}
                   <td className="py-3 px-4 text-gray-900 font-medium truncate">
                     {meeting.companyName || "—"}

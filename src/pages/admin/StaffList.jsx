@@ -390,9 +390,10 @@ const StaffList = () => {
             {/* ✅ Table Headers */}
             <div
               className={`hidden md:grid ${
-                userInfo?.isAdmin ? "grid-cols-8" : "grid-cols-7"
+                userInfo?.isAdmin ? "grid-cols-9" : "grid-cols-8"
               } gap-4 bg-gray-50 py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase rounded-lg`}
             >
+              <div>Sr</div>
               <div>Name</div>
               <div>Department</div>
               {/* <div>Designation</div> */}
@@ -414,11 +415,14 @@ const StaffList = () => {
                     <div
                       key={index}
                       className={`grid grid-cols-1 ${
-                        userInfo?.isAdmin ? "md:grid-cols-8" : "md:grid-cols-7"
+                        userInfo?.isAdmin ? "md:grid-cols-9" : "md:grid-cols-8"
                       } items-center gap-4 bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100`}
                     >
                       {/* ✅ Desktop View */}
                       <div className="hidden md:flex items-center gap-3">
+                         <td className="py-3 px-4 text-gray-700">
+                       {indexOfFirstItem + index + 1}
+                      </td>
                         <div className="w-10 h-10 flex items-center justify-center rounded-full">
                           <img
                             src={

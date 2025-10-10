@@ -602,7 +602,7 @@ const CustomerData = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="py-3 px-4 ">{index+1}</td>
+                  <td className="py-3 px-4 ">{indexOfFirstItem + index + 1}</td>
                   <td className="py-3 px-4 flex items-center gap-2">
                     <img
                       src={
