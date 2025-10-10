@@ -52,7 +52,6 @@ const AdminDashboard = () => {
   const [items, setItems] = useState(0);
   const [sales, setSales] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
@@ -68,22 +67,22 @@ const AdminDashboard = () => {
 
   const abortRef = useRef(null);
   // Get user info from localStorage
-    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const userName = userInfo?.username || "Admin User";
   const userEmail = userInfo?.email || "admin@example.com";
-let userRole = userInfo?.role || "Administrator";
-if (userRole === "user") {
-  userRole = "Staff";
-}
+  let userRole = userInfo?.role || "Administrator";
+  if (userRole === "user") {
+    userRole = "Staff";
+  }
   const base = import.meta.env.VITE_API_BASE_URL;
 
 
-  console.log("userInfo ", userInfo);
-  
-  
+  // console.log("userInfo ", userInfo);
+
+
   const headers = {
-        Authorization: `Bearer ${userInfo?.token}`,
-      };
+    Authorization: `Bearer ${userInfo?.token}`,
+  };
   // fetch pie data
   useEffect(() => {
     async function pieDataApi() {
@@ -91,7 +90,7 @@ if (userRole === "user") {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/performance-summary`,
-          {headers}
+          { headers }
         );
 
         const formattedPie = [
@@ -133,7 +132,7 @@ if (userRole === "user") {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/weekly-volume`,
-        {headers}
+          { headers }
         );
         console.log({ res });
 
@@ -161,14 +160,13 @@ if (userRole === "user") {
   }, []);
 
   // fetch Montly Trend
-
   useEffect(() => {
     async function MontlyTrendDataApi() {
       try {
         setLoading(true);
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/dashboard/monthly-trends`,
-          {headers}
+          { headers }
         );
         console.log({ res });
 
@@ -210,12 +208,11 @@ if (userRole === "user") {
         const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-10"
 
         const res = await axios.get(
-          `${
-            import.meta.env.VITE_API_BASE_URL
+          `${import.meta.env.VITE_API_BASE_URL
           }/dashboard/calendar-meetings?month=${currentMonth}`,
-          {headers}
+          { headers }
         );
-        console.log("📅 Calendar Meetings:", res.data);
+        // console.log("📅 Calendar Meetings:", res.data);
 
         if (res.data?.success) {
           setCalendarMeetings(res.data.data || []);
@@ -248,12 +245,12 @@ if (userRole === "user") {
       try {
         const [customersRes, itemsRes, usersRes, salesRes, notificationsRes] =
           await Promise.all([
-            axios.get(`${base}/customers/count`, {headers}, { signal: controller.signal }),
+            axios.get(`${base}/customers/count`, { headers }, { signal: controller.signal }),
             axios.get(`${base}/products/count`, { signal: controller.signal }),
             axios.get(`${base}/group-users/count`, {
               signal: controller.signal,
             }),
-            axios.get(`${base}/orders/total`, {headers},{ signal: controller.signal }),
+            axios.get(`${base}/orders/total`, { headers }, { signal: controller.signal }),
             axios.get(`${base}/notifications`, {
               headers: { Authorization: `Bearer ${userInfo.token}` },
               signal: controller.signal,
@@ -292,12 +289,17 @@ if (userRole === "user") {
   // ✅ Mark all notifications as read
   const clearAll = async () => {
     try {
-      await axios.put(`${base}/notifications/mark-all`, {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      });
-      setNotifications([]);
+      await axios.put(
+        `${base}/notifications/mark-all`,
+        {}, // empty body
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        }
+      );
+
+      setNotifications([]); // clear local state
     } catch (err) {
       console.error("Clear all failed:", err);
     }
@@ -343,7 +345,7 @@ if (userRole === "user") {
     },
   ];
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const openNotifModal = (notif) => {
     Swal.fire({
@@ -362,16 +364,6 @@ if (userRole === "user") {
     );
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
-  //       <div className="text-center">
-  //         <PuffLoader color="#1d4ed8" size={80} />
-  //         <p className="mt-4 text-gray-600">Loading dashboard data...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 text-gray-800">
@@ -424,10 +416,14 @@ if (userRole === "user") {
               >
                 <FiBell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                    {unreadCount}
+                  <span
+                    className={`absolute -top-0 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${unreadCount < 100 ? "w-4 h-4" : "w-7 h-5 px-[2px] text-[10px]"
+                      }`}
+                  >
+                    {unreadCount < 100 ? unreadCount : "99+"}
                   </span>
                 )}
+
               </button>
 
               {/* Notifications Dropdown */}
@@ -540,44 +536,42 @@ if (userRole === "user") {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {cardsLoading
             ? Array.from({ length: summaryData.length }).map((_, idx) => (
-                <CardSkeleton key={idx} />
-              ))
+              <CardSkeleton key={idx} />
+            ))
             : summaryData.map((item, index) => (
-                <div
-                  key={index}
-                  className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${
-                    cardsLoading ? "opacity-0" : "opacity-100"
+              <div
+                key={index}
+                className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${cardsLoading ? "opacity-0" : "opacity-100"
                   }`}
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              >
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="flex justify-between items-start relative z-10">
-                    <div
-                      className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
-                    >
-                      {item.icon}
-                    </div>
-                    <span
-                      className={`text-xs md:text-sm font-medium ${
-                        item.change.includes("+")
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {item.change}
-                    </span>
+                <div className="flex justify-between items-start relative z-10">
+                  <div
+                    className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                  >
+                    {item.icon}
                   </div>
+                  <span
+                    className={`text-xs md:text-sm font-medium ${item.change.includes("+")
+                      ? "text-green-600"
+                      : "text-red-600"
+                      }`}
+                  >
+                    {item.change}
+                  </span>
+                </div>
 
-                  <div className="mt-4 relative z-10">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-800">
-                      {item.value}
-                    </div>
-                    <div className="text-gray-500 text-sm md:text-base mt-1">
-                      {item.name}
-                    </div>
+                <div className="mt-4 relative z-10">
+                  <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                    {item.value}
+                  </div>
+                  <div className="text-gray-500 text-sm md:text-base mt-1">
+                    {item.name}
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
         </div>
 
         {/* Charts Section */}
@@ -737,11 +731,10 @@ if (userRole === "user") {
                 return (
                   <div
                     key={date}
-                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                      hasMeeting
-                        ? "bg-blue-100 text-blue-600 font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${hasMeeting
+                      ? "bg-blue-100 text-blue-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
                   >
                     {date}
                   </div>
