@@ -26,7 +26,7 @@ import MoreProductAssign from "./pages/admin/MoreProductAssign";
 
 function AppContent() {
   return (
-    <div className="max-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
