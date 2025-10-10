@@ -565,49 +565,86 @@ const FollowUp = () => {
         </div>
       )}
       {/* Pagination Controls */}
-      {filteredFollowUps.length > itemsPerPage && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg transition ${
-              currentPage === 1
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100 border-gray-300"
-            }`}
-          >
-            Prev
-          </button>
+     
+{filteredFollowUps.length > itemsPerPage && (
+  <div className="flex flex-col items-center gap-3 mt-6">
+    {/* Pagination Buttons */}
+    <div className="flex justify-center items-center gap-2 flex-wrap">
+      {/* Prev Button */}
+      <button
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+          currentPage === 1
+            ? "text-gray-400 border-gray-200 cursor-not-allowed"
+            : "text-gray-700 hover:bg-gray-100 border-gray-300"
+        }`}
+      >
+        Prev
+      </button>
 
-          {[...Array(totalPages)].map((_, i) => (
+      {/* Dynamic Page Numbers */}
+      {(() => {
+        const pageButtons = [];
+        const totalVisible = 5;
+
+        if (currentPage > 3) {
+          pageButtons.push(1);
+          if (currentPage > 4) pageButtons.push("...");
+        }
+
+        for (
+          let i = Math.max(1, currentPage - 2);
+          i <= Math.min(totalPages, currentPage + 2);
+          i++
+        ) {
+          pageButtons.push(i);
+        }
+
+        if (currentPage < totalPages - 2) {
+          if (currentPage < totalPages - 3) pageButtons.push("...");
+          pageButtons.push(totalPages);
+        }
+
+        return pageButtons.map((page, index) =>
+          page === "..." ? (
+            <span key={index} className="px-3 py-1 text-gray-500">
+              ...
+            </span>
+          ) : (
             <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded-md border transition ${
-                currentPage === i + 1
-                  ? "bg-newPrimary text-white border-newPrimary"
+              key={index}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                currentPage === page
+                  ? "bg-newPrimary text-white border-newPrimary shadow-sm"
                   : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
               }`}
             >
-              {i + 1}
+              {page}
             </button>
-          ))}
+          )
+        );
+      })()}
 
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            className={`px-4 py-2 border rounded-lg transition ${
-              currentPage === totalPages
-                ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                : "text-gray-700 hover:bg-gray-100 border-gray-300"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {/* Next Button */}
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+          currentPage === totalPages
+            ? "text-gray-400 border-gray-200 cursor-not-allowed"
+            : "text-gray-700 hover:bg-gray-100 border-gray-300"
+        }`}
+      >
+        Next
+      </button>
+    </div>
+
+ 
+  </div>
+)}
+
     </div>
   );
 };
