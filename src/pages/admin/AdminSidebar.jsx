@@ -57,6 +57,7 @@ const AdminSidebar = () => {
   const isAdmin = userInfo?.isAdmin === true;
 
   const handleLogout = () => {
+    
     localStorage.removeItem("userInfo");
     navigate("/");
   };
@@ -168,14 +169,18 @@ const filteredLinks = links.filter((link) => {
       </div>
       </Link>
 
-      {/* Logout */}
+      <div className="min-h-full">
+        {/* Logout */}
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-600 hover:text-white font-semibold transition"
+        className="mt-2 w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-600 hover:text-white font-semibold transition"
       >
         <FaSignOutAlt className="text-lg" />
         <span className="hidden md:block">Logout</span>
       </button>
+      </div>
+
+      
     </aside>
   );
 };
