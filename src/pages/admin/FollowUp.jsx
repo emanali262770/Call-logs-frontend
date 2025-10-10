@@ -348,14 +348,14 @@ const FollowUp = () => {
                   <td className="py-3 px-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${followUp.status === "Follow Up Required"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : followUp.status === "Not Interested"
-                            ? "bg-red-100 text-red-800"
-                            : followUp.status === "All Ready Installed"
-                              ? "bg-green-100 text-green-800"
-                              : followUp.status === "Phone Number Responding"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : followUp.status === "Not Interested"
+                          ? "bg-red-100 text-red-800"
+                          : followUp.status === "All Ready Installed"
+                            ? "bg-green-100 text-green-800"
+                            : followUp.status === "Phone Number Responding"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                         }`}
                     >
                       {followUp.status || "—"}
@@ -571,9 +571,8 @@ const FollowUp = () => {
           </div>
         </div>
       )}
-      {/* Pagination Controls */}
-
-      {filteredFollowUps.length > itemsPerPage && (
+     
+     {filteredFollowUps.length > itemsPerPage && (
         <div className="flex flex-col items-center gap-3 mt-6">
           {/* Pagination Buttons */}
           <div className="flex justify-center items-center gap-2 flex-wrap">
@@ -581,75 +580,14 @@ const FollowUp = () => {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === 1
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === 1
                   ? "text-gray-400 border-gray-200 cursor-not-allowed"
                   : "text-gray-700 hover:bg-gray-100 border-gray-300"
-                }`}
+              }`}
             >
               Prev
             </button>
-
-            {/* Dynamic Page Numbers */}
-            {(() => {
-              const pageButtons = [];
-              const totalVisible = 5;
-
-              if (currentPage > 3) {
-                pageButtons.push(1);
-                if (currentPage > 4) pageButtons.push("...");
-              }
-
-              for (
-                let i = Math.max(1, currentPage - 2);
-                i <= Math.min(totalPages, currentPage + 2);
-                i++
-              ) {
-                pageButtons.push(i);
-              }
-
-              if (currentPage < totalPages - 2) {
-                if (currentPage < totalPages - 3) pageButtons.push("...");
-                pageButtons.push(totalPages);
-              }
-
-              return pageButtons.map((page, index) =>
-                page === "..." ? (
-                  <span key={index} className="px-3 py-1 text-gray-500">
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${currentPage === page
-                        ? "bg-newPrimary text-white border-newPrimary shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                )
-              );
-            })()}
-
-            {/* Next Button */}
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === totalPages
-                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
-                }`}
-            >
-              Next
-            </button>
-          </div>
-
-
-        </div>
-      )}
-
 
             {/* Dynamic Page Numbers */}
             {(() => {
@@ -712,7 +650,7 @@ const FollowUp = () => {
           </div>
         </div>
       )}
-    </div>
+    </div >
   );
 };
 
