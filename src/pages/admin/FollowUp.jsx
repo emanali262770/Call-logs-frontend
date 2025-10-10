@@ -259,6 +259,7 @@ const FollowUp = () => {
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Sr</th>
               <th className="py-3 px-4">Company Name</th>
               <th className="py-3 px-4">Number</th>
               <th className="py-3 px-4">Description</th>
@@ -282,11 +283,14 @@ const FollowUp = () => {
                 </td>
               </tr>
             ) : (
-              currentFollowUps.map((followUp) => (
+              currentFollowUps.map((followUp,index) => (
                 <tr
                   key={followUp.id}
                   className="border-b hover:bg-gray-50 transition"
                 >
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    {indexOfFirstItem + index + 1}
+                  </td>
                   {/* Company Name */}
                   <td className="py-3 px-4 text-gray-900 font-medium truncate">
                     <div className="flex items-center gap-2">

@@ -508,7 +508,7 @@ const CustomerData = () => {
           </div>
 
           {/* Add Customer Btn */}
-          {userInfo?.isAdmin && (
+       
             <button
               onClick={handleAddCustomer}
               className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
@@ -516,7 +516,7 @@ const CustomerData = () => {
               <FiPlus className="text-lg" />
               <span>Add Customer</span>
             </button>
-          )}
+         
         </div>
 
         {/* 🧾 PREVIEW MODAL */}
@@ -602,7 +602,7 @@ const CustomerData = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="py-3 px-4 ">{index+1}</td>
+                  <td className="py-3 px-4 ">{indexOfFirstItem + index + 1}</td>
                   <td className="py-3 px-4 flex items-center gap-2">
                     <img
                       src={

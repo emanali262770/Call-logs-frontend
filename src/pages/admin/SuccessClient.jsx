@@ -118,6 +118,7 @@ const SuccessClient = () => {
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Sr</th>
               <th className="py-3 px-4">Client Name</th>
               <th className="py-3 px-4">Number</th>
               <th className="py-3 px-4">Project</th>
@@ -140,11 +141,14 @@ const SuccessClient = () => {
                 </td>
               </tr>
             ) : (
-              currentClients.map((client) => (
+              currentClients.map((client,index) => (
                 <tr
                   key={client._id}
                   className="border-b hover:bg-gray-50 transition"
                 >
+                   <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    {indexOfFirstItem + index + 1}
+                  </td>
                   {/* Client Name */}
                   <td className="py-3 px-4 text-gray-900 font-medium truncate">
                     <div className="flex items-center gap-2">
