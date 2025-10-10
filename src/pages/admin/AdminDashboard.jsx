@@ -43,10 +43,14 @@ import { MdOpenInNew } from "react-icons/md";
 import Swal from "sweetalert2";
 import { CardSkeleton } from "./CardSkeleton";
 import { toast } from "react-toastify";
+import {
+  FollowUpMeetingsSkeleton,
+  MonthlyCallTrendsSkeleton,
+  PerformanceSummarySkeleton,
+  WeeklyCallVolumeSkeleton,
+} from "./ChartSkeleton";
 
 const AdminDashboard = () => {
-  const [recentProducts, setRecentProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [customers, setCustomers] = useState(0);
   const [items, setItems] = useState(0);
@@ -56,11 +60,11 @@ const AdminDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [performanceData, setPerformanceData] = useState([]);
+
   const [callData, setCallData] = useState([]);
   const [dayData, setDayData] = useState([]);
   const [pieData, setPieData] = useState([]);
-  const [radialData, setRadialData] = useState([]);
+
   const [cardsLoading, setCardsLoading] = useState(true);
   const [calendarMeetings, setCalendarMeetings] = useState([]);
   const [totalMeetings, setTotalMeetings] = useState(0);
@@ -76,9 +80,7 @@ const AdminDashboard = () => {
   }
   const base = import.meta.env.VITE_API_BASE_URL;
 
-
   // console.log("userInfo ", userInfo);
-
 
   const headers = {
     Authorization: `Bearer ${userInfo?.token}`,
@@ -208,7 +210,8 @@ const AdminDashboard = () => {
         const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-10"
 
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL
+          `${
+            import.meta.env.VITE_API_BASE_URL
           }/dashboard/calendar-meetings?month=${currentMonth}`,
           { headers }
         );
@@ -235,19 +238,17 @@ const AdminDashboard = () => {
     fetchCalendarMeetings();
   }, []);
 
-
-    useEffect(() => {
+  useEffect(() => {
     const controller = new AbortController();
 
     const fetchCustomers = async () => {
       try {
-       
         const res = await axios.get(`${base}/customers/count`, {
           headers,
           signal: controller.signal,
         });
         // console.log("Res ", res.data);
-        
+
         setCustomers(res.data?.totalCustomers ?? 0);
       } catch (err) {
         if (err.name !== "CanceledError") console.error("Fetch failed:", err);
@@ -267,7 +268,6 @@ const AdminDashboard = () => {
     };
   }, [customers]);
 
-
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
@@ -278,12 +278,15 @@ const AdminDashboard = () => {
       try {
         const [itemsRes, usersRes, salesRes, notificationsRes] =
           await Promise.all([
-           
             axios.get(`${base}/products/count`, { signal: controller.signal }),
             axios.get(`${base}/group-users/count`, {
               signal: controller.signal,
             }),
-            axios.get(`${base}/orders/total`, { headers }, { signal: controller.signal }),
+            axios.get(
+              `${base}/orders/total`,
+              { headers },
+              { signal: controller.signal }
+            ),
             axios.get(`${base}/notifications`, {
               headers: { Authorization: `Bearer ${userInfo.token}` },
               signal: controller.signal,
@@ -377,7 +380,7 @@ const AdminDashboard = () => {
     },
   ];
 
-const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const openNotifModal = (notif) => {
     Swal.fire({
@@ -395,7 +398,6 @@ const unreadCount = notifications.filter(n => !n.isRead).length;
       )
     );
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 text-gray-800">
@@ -449,13 +451,15 @@ const unreadCount = notifications.filter(n => !n.isRead).length;
                 <FiBell size={20} />
                 {unreadCount > 0 && (
                   <span
-                    className={`absolute -top-0 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${unreadCount < 100 ? "w-4 h-4" : "w-7 h-5 px-[2px] text-[10px]"
-                      }`}
+                    className={`absolute -top-0 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${
+                      unreadCount < 100
+                        ? "w-4 h-4"
+                        : "w-7 h-5 px-[2px] text-[10px]"
+                    }`}
                   >
                     {unreadCount < 100 ? unreadCount : "99+"}
                   </span>
                 )}
-
               </button>
 
               {/* Notifications Dropdown */}
@@ -568,226 +572,264 @@ const unreadCount = notifications.filter(n => !n.isRead).length;
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {cardsLoading
             ? Array.from({ length: summaryData.length }).map((_, idx) => (
-              <CardSkeleton key={idx} />
-            ))
+                <CardSkeleton key={idx} />
+              ))
             : summaryData.map((item, index) => (
-              <div
-                key={index}
-                className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${cardsLoading ? "opacity-0" : "opacity-100"
+                <div
+                  key={index}
+                  className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${
+                    cardsLoading ? "opacity-0" : "opacity-100"
                   }`}
-              >
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                >
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                <div className="flex justify-between items-start relative z-10">
-                  <div
-                    className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
-                  >
-                    {item.icon}
-                  </div>
-                  <span
-                    className={`text-xs md:text-sm font-medium ${item.change.includes("+")
-                      ? "text-green-600"
-                      : "text-red-600"
+                  <div className="flex justify-between items-start relative z-10">
+                    <div
+                      className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                    >
+                      {item.icon}
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-medium ${
+                        item.change.includes("+")
+                          ? "text-green-600"
+                          : "text-red-600"
                       }`}
-                  >
-                    {item.change}
-                  </span>
-                </div>
+                    >
+                      {item.change}
+                    </span>
+                  </div>
 
-                <div className="mt-4 relative z-10">
-                  <div className="text-2xl md:text-3xl font-bold text-gray-800">
-                    {item.value}
-                  </div>
-                  <div className="text-gray-500 text-sm md:text-base mt-1">
-                    {item.name}
+                  <div className="mt-4 relative z-10">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                      {item.value}
+                    </div>
+                    <div className="text-gray-500 text-sm md:text-base mt-1">
+                      {item.name}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
         </div>
 
         {/* Charts Section */}
+        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-          {/* Performance Summary */}
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Performance Summary
-              </h2>
-              <FiTarget className="text-indigo-500" />
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              {pieData.map((entry, index) => (
-                <div key={index} className="text-center">
-                  <div className="h-40 w-40 mx-auto relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { value: entry.value },
-                            { value: 100 - entry.value },
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={60}
-                          startAngle={90}
-                          endAngle={-270}
-                          dataKey="value"
-                        >
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                          <Cell key={`cell-bg-${index}`} fill="#e5e7eb" />
-                        </Pie>
-                        <Tooltip
-                          formatter={(value) => [`${value}%`, "Percentage"]}
-                          contentStyle={{
-                            backgroundColor: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "6px",
-                            boxShadow:
-                              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span
-                        className="text-lg font-bold"
-                        style={{ color: entry.color }}
-                      >
-                        {entry.value}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-gray-500 text-sm mt-2">{entry.name}</div>
+          {loading ? (
+            // 🦴 Skeletons while data is loading
+            <>
+              <PerformanceSummarySkeleton />
+              <WeeklyCallVolumeSkeleton />
+            </>
+          ) : (
+            <>
+              {/* 🎯 Performance Summary Chart */}
+              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Performance Summary
+                  </h2>
+                  <FiTarget className="text-indigo-500" />
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Weekly Call Volume */}
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Weekly Call Volume
-              </h2>
-              <FiTrendingUp className="text-green-500" />
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dayData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                      boxShadow:
-                        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Bar dataKey="calls" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                  {pieData.map((entry, index) => (
+                    <div key={index} className="text-center">
+                      <div className="h-40 w-40 mx-auto relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { value: entry.value },
+                                { value: 100 - entry.value },
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={40}
+                              outerRadius={60}
+                              startAngle={90}
+                              endAngle={-270}
+                              dataKey="value"
+                            >
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell key={`cell-bg-${index}`} fill="#e5e7eb" />
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) => [`${value}%`, "Percentage"]}
+                              contentStyle={{
+                                backgroundColor: "#fff",
+                                border: "1px solid #e5e7eb",
+                                borderRadius: "6px",
+                                boxShadow:
+                                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span
+                            className="text-lg font-bold"
+                            style={{ color: entry.color }}
+                          >
+                            {entry.value}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-gray-500 text-sm mt-2">
+                        {entry.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 📊 Weekly Call Volume Chart */}
+              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Weekly Call Volume
+                  </h2>
+                  <FiTrendingUp className="text-green-500" />
+                </div>
+
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dayData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "6px",
+                          boxShadow:
+                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                        }}
+                      />
+                      <Bar
+                        dataKey="calls"
+                        fill="#3b82f6"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Total Calls and Follow up Meetings side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-          {/* Total Calls */}
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Monthly Call Trends
-              </h2>
-              <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200 flex items-center">
-                View report <FiChevronRight className="ml-1" />
-              </button>
-            </div>
-            <div className="text-2xl md:text-3xl font-bold text-newPrimary mb-4">
-              {callData.reduce((total, month) => total + month.calls, 0)} calls
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={callData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                      boxShadow:
-                        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Monthly Call Trends + Follow-up Meetings Section */}
+        {loading ? (
+          // 🦴 Skeleton view
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            <MonthlyCallTrendsSkeleton />
+            <FollowUpMeetingsSkeleton />
           </div>
+        ) : (
+          // 📊 Actual charts view
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* 📞 Monthly Call Trends */}
+            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Monthly Call Trends
+                </h2>
+                <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200 flex items-center">
+                  View report <FiChevronRight className="ml-1" />
+                </button>
+              </div>
 
-          {/* Follow up Meetings */}
-          {/* Follow up Meetings */}
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Follow up Meetings
-              </h2>
-              <div className="text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                {currentTime.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
+              {/* Total calls text */}
+              <div className="text-2xl md:text-3xl font-bold text-newPrimary mb-4">
+                {callData.reduce((total, month) => total + month.calls, 0)}{" "}
+                calls
+              </div>
+
+              {/* Chart */}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={callData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        boxShadow:
+                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* 📅 Follow-up Meetings */}
+            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Follow-up Meetings
+                </h2>
+                <div className="text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
+                  {currentTime.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </div>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
+                {/* Weekday headers */}
+                {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                  <div
+                    key={day + idx}
+                    className="font-medium text-gray-500 py-2"
+                  >
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar dates */}
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
+                  const hasMeeting = calendarMeetings.some(
+                    (m) => new Date(m.date).getDate() === date
+                  );
+                  return (
+                    <div
+                      key={date}
+                      className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                        hasMeeting
+                          ? "bg-blue-100 text-blue-600 font-medium"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {date}
+                    </div>
+                  );
                 })}
               </div>
-            </div>
 
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
-              {/* Weekday names */}
-              {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
-                <div key={day + idx} className="font-medium text-gray-500 py-2">
-                  {day}
+              {/* Summary row */}
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm text-gray-600">
+                    Scheduled meetings this month
+                  </span>
                 </div>
-              ))}
-
-              {/* Dynamic date cells */}
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
-                const hasMeeting = calendarMeetings.some(
-                  (m) => new Date(m.date).getDate() === date
-                );
-                return (
-                  <div
-                    key={date}
-                    className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${hasMeeting
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                  >
-                    {date}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Summary row */}
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600">
-                  Scheduled meetings this month
+                <span className="text-sm font-medium text-blue-600">
+                  {totalMeetings} meetings
                 </span>
               </div>
-              <span className="text-sm font-medium text-blue-600">
-                {totalMeetings} meetings
-              </span>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

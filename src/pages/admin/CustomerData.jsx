@@ -614,20 +614,20 @@ const CustomerData = () => {
       </div>
 
       {/* Customer Table */}
-      <div className="rounded-xl  shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-        <table className="min-w-full text-sm text-left border-collapse">
+      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+        <table className="min-w-[1100px] w-full text-sm text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
-              <th className="py-3 px-4">Sr</th>
-              <th className="py-3 px-4">Name</th>
-              <th className="py-3 px-4">Email</th>
-              <th className="py-3 px-4">Designation</th>
-              <th className="py-3 px-4">Address</th>
-              <th className="py-3 px-4">Department</th>
-              <th className="py-3 px-4">Assigned Staff</th>
-              <th className="py-3 px-4">Assigned Product</th>
+              <th className="py-3 px-4 w-[60px]">Sr</th>
+              <th className="py-3 px-4 w-[220px]">Name</th>
+              <th className="py-3 px-4 w-[200px]">Email</th>
+              <th className="py-3 px-4 w-[160px]">Designation</th>
+              <th className="py-3 px-4 w-[180px]">Address</th>
+              <th className="py-3 px-4 w-[150px]">Department</th>
+              <th className="py-3 px-4 w-[160px]">Assigned Staff</th>
+              <th className="py-3 px-4 w-[160px]">Assigned Product</th>
               {userInfo?.isAdmin && (
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
               )}
             </tr>
           </thead>
@@ -639,7 +639,12 @@ const CustomerData = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="py-3 px-4 ">{indexOfFirstItem + index + 1}</td>
+                  {/* Sr No */}
+                  <td className="py-3 px-4 text-gray-900 font-medium">
+                    {indexOfFirstItem + index + 1}
+                  </td>
+
+                  {/* Company Name */}
                   <td className="py-3 px-4 flex items-center gap-2">
                     <img
                       src={
@@ -649,7 +654,7 @@ const CustomerData = () => {
                       alt="Logo"
                       className="w-8 h-8 rounded-full border object-cover"
                     />
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 truncate">
                       {client.companyName
                         ? client.companyName.length > 20
                           ? `${client.companyName.slice(0, 20)}...`
@@ -657,28 +662,42 @@ const CustomerData = () => {
                         : "N/A"}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-green-600">
+
+                  {/* Email */}
+                  <td className="py-3 px-4 text-green-600 truncate">
                     {client.email || "N/A"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+
+                  {/* Designation */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.persons?.[0]?.designation || "N/A"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+
+                  {/* Address */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.address
                       ? client.address.length > 20
                         ? `${client.address.slice(0, 20)}...`
                         : client.address
                       : "N/A"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+
+                  {/* Department */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.persons?.[0]?.department || "N/A"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+
+                  {/* Assigned Staff */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.assignedStaff?.username || "N/A"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+
+                  {/* Assigned Product */}
+                  <td className="py-3 px-4 text-gray-700 truncate">
                     {client.assignedProducts?.name || "N/A"}
                   </td>
+
+                  {/* Actions */}
                   {userInfo?.isAdmin && (
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end space-x-2">
@@ -702,7 +721,7 @@ const CustomerData = () => {
             ) : (
               <tr>
                 <td
-                  colSpan={userInfo?.isAdmin ? 8 : 7}
+                  colSpan={userInfo?.isAdmin ? 9 : 8}
                   className="text-center py-6 text-gray-500"
                 >
                   No customers found.
@@ -1021,82 +1040,81 @@ const CustomerData = () => {
       )}
       {/* Pagination Controls */}
       {/* Pagination Controls */}
-{filteredCustomers.length > itemsPerPage && (
-  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
-    <button
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-      className={`px-4 py-2 border rounded-lg ${
-        currentPage === 1
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      Prev
-    </button>
-
-    {(() => {
-      const maxVisible = 5;
-      const pageNumbers = [];
-
-      // Always show first page
-      if (currentPage > 3) {
-        pageNumbers.push(1);
-        if (currentPage > 4) pageNumbers.push("...");
-      }
-
-      // Show nearby pages
-      for (
-        let i = Math.max(1, currentPage - 2);
-        i <= Math.min(totalPages, currentPage + 2);
-        i++
-      ) {
-        pageNumbers.push(i);
-      }
-
-      // Always show last page
-      if (currentPage < totalPages - 2) {
-        if (currentPage < totalPages - 3) pageNumbers.push("...");
-        pageNumbers.push(totalPages);
-      }
-
-      return pageNumbers.map((num, i) =>
-        num === "..." ? (
-          <span key={i} className="px-3 py-1 text-gray-500">
-            ...
-          </span>
-        ) : (
+      {filteredCustomers.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
           <button
-            key={i}
-            onClick={() => setCurrentPage(num)}
-            className={`px-3 py-1 rounded-md border ${
-              currentPage === num
-                ? "bg-newPrimary text-white border-newPrimary"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            {num}
+            Prev
           </button>
-        )
-      );
-    })()}
 
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() =>
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-      }
-      className={`px-4 py-2 border rounded-lg ${
-        currentPage === totalPages
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      Next
-    </button>
-  </div>
-)}
+          {(() => {
+            const maxVisible = 5;
+            const pageNumbers = [];
 
+            // Always show first page
+            if (currentPage > 3) {
+              pageNumbers.push(1);
+              if (currentPage > 4) pageNumbers.push("...");
+            }
+
+            // Show nearby pages
+            for (
+              let i = Math.max(1, currentPage - 2);
+              i <= Math.min(totalPages, currentPage + 2);
+              i++
+            ) {
+              pageNumbers.push(i);
+            }
+
+            // Always show last page
+            if (currentPage < totalPages - 2) {
+              if (currentPage < totalPages - 3) pageNumbers.push("...");
+              pageNumbers.push(totalPages);
+            }
+
+            return pageNumbers.map((num, i) =>
+              num === "..." ? (
+                <span key={i} className="px-3 py-1 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(num)}
+                  className={`px-3 py-1 rounded-md border ${
+                    currentPage === num
+                      ? "bg-newPrimary text-white border-newPrimary"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {num}
+                </button>
+              )
+            );
+          })()}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

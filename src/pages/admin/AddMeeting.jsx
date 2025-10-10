@@ -204,8 +204,6 @@ const AddMeeting = () => {
     </svg>
   );
 
-
-
   // Filter meetings based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -291,13 +289,13 @@ const AddMeeting = () => {
   // Fetch meetings
   const fetchMeetingData = useCallback(async () => {
     const headers = {
-        Authorization: `Bearer ${userInfo?.token}`,
-      };
+      Authorization: `Bearer ${userInfo?.token}`,
+    };
     try {
       setLoading(true);
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/meetings`,
-        {headers}
+        { headers }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch Meeting");
@@ -591,7 +589,7 @@ const AddMeeting = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-          {userInfo?.isAdmin && (
+        
             <button
               onClick={handleAddClick}
               className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
@@ -599,23 +597,23 @@ const AddMeeting = () => {
               <FiPlus className="text-lg" />
               <span>Add Meeting</span>
             </button>
-          )}
+        
         </div>
       </div>
 
       {/* Meeting Table */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-        <table className="min-w-full text-sm text-left border-collapse">
+        <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
-              <th className="py-3 px-4">Sr</th>
-              <th className="py-3 px-4">Company Name</th>
-              <th className="py-3 px-4">Person</th>
-              <th className="py-3 px-4">Product</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 text-center">Date & Time</th>
+              <th className="py-3 px-4 w-[60px]">Sr</th>
+              <th className="py-3 px-4 w-[200px]">Company Name</th>
+              <th className="py-3 px-4 w-[180px]">Person</th>
+              <th className="py-3 px-4 w-[180px]">Product</th>
+              <th className="py-3 px-4 w-[160px]">Status</th>
+              <th className="py-3 px-4 text-center w-[180px]">Date & Time</th>
               {userInfo?.isAdmin && (
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
               )}
             </tr>
           </thead>
@@ -624,7 +622,7 @@ const AddMeeting = () => {
             {filteredMeetings.length === 0 ? (
               <tr>
                 <td
-                  colSpan={userInfo?.isAdmin ? 6 : 5}
+                  colSpan={userInfo?.isAdmin ? 7 : 6}
                   className="text-center py-8 text-gray-500 bg-white rounded-lg"
                 >
                   No meetings found.
@@ -636,13 +634,16 @@ const AddMeeting = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                   {/* Sr No */}
-                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
-                   {indexOfFirstItem + index + 1}
+                  {/* Sr No */}
+                  <td className="py-3 px-4 text-gray-900 font-medium">
+                    {indexOfFirstItem + index + 1}
                   </td>
+
                   {/* Company Name */}
                   <td className="py-3 px-4 text-gray-900 font-medium truncate">
-                    {meeting.companyName || "—"}
+                    {meeting.companyName?.length > 25
+                      ? `${meeting.companyName.slice(0, 25)}...`
+                      : meeting.companyName || "—"}
                   </td>
 
                   {/* Person */}
@@ -673,7 +674,7 @@ const AddMeeting = () => {
                   </td>
 
                   {/* Date & Time */}
-                  <td className="py-3 px-4 text-center text-gray-700">
+                  <td className="py-3 px-4 text-center text-gray-700 truncate">
                     {meeting.followDates?.length
                       ? new Date(meeting.followDates[0]).toLocaleDateString()
                       : "—"}
@@ -1112,86 +1113,85 @@ const AddMeeting = () => {
         </div>
       )}
       {/* Pagination Controls */}
-    
-{filteredMeetings.length > itemsPerPage && (
-  <div className="flex flex-col items-center gap-3 mt-6">
-    {/* Pagination Buttons */}
-    <div className="flex justify-center items-center gap-2 flex-wrap">
-      {/* Prev Button */}
-      <button
-        disabled={currentPage === 1}
-        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-          currentPage === 1
-            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-            : "text-gray-700 hover:bg-gray-100 border-gray-300"
-        }`}
-      >
-        Prev
-      </button>
 
-      {/* Dynamic Page Numbers */}
-      {(() => {
-        const pageButtons = [];
-        const totalVisible = 5;
-
-        if (currentPage > 3) {
-          pageButtons.push(1);
-          if (currentPage > 4) pageButtons.push("...");
-        }
-
-        for (
-          let i = Math.max(1, currentPage - 2);
-          i <= Math.min(totalPages, currentPage + 2);
-          i++
-        ) {
-          pageButtons.push(i);
-        }
-
-        if (currentPage < totalPages - 2) {
-          if (currentPage < totalPages - 3) pageButtons.push("...");
-          pageButtons.push(totalPages);
-        }
-
-        return pageButtons.map((page, index) =>
-          page === "..." ? (
-            <span key={index} className="px-3 py-1 text-gray-500">
-              ...
-            </span>
-          ) : (
+      {filteredMeetings.length > itemsPerPage && (
+        <div className="flex flex-col items-center gap-3 mt-6">
+          {/* Pagination Buttons */}
+          <div className="flex justify-center items-center gap-2 flex-wrap">
+            {/* Prev Button */}
             <button
-              key={index}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
-                currentPage === page
-                  ? "bg-newPrimary text-white border-newPrimary shadow-sm"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === 1
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
               }`}
             >
-              {page}
+              Prev
             </button>
-          )
-        );
-      })()}
 
-      {/* Next Button */}
-      <button
-        disabled={currentPage === totalPages}
-        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-          currentPage === totalPages
-            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-            : "text-gray-700 hover:bg-gray-100 border-gray-300"
-        }`}
-      >
-        Next
-      </button>
-    </div>
+            {/* Dynamic Page Numbers */}
+            {(() => {
+              const pageButtons = [];
+              const totalVisible = 5;
 
-    
-  </div>
-)}
+              if (currentPage > 3) {
+                pageButtons.push(1);
+                if (currentPage > 4) pageButtons.push("...");
+              }
 
+              for (
+                let i = Math.max(1, currentPage - 2);
+                i <= Math.min(totalPages, currentPage + 2);
+                i++
+              ) {
+                pageButtons.push(i);
+              }
+
+              if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) pageButtons.push("...");
+                pageButtons.push(totalPages);
+              }
+
+              return pageButtons.map((page, index) =>
+                page === "..." ? (
+                  <span key={index} className="px-3 py-1 text-gray-500">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                      currentPage === page
+                        ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              );
+            })()}
+
+            {/* Next Button */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === totalPages
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
