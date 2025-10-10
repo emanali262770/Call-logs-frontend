@@ -64,14 +64,14 @@ const FollowUp = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/meetings/followUp`,
+        `${import.meta.env.VITE_API_BASE_URL}/meetings`,
         {headers}
       );
       
       console.log("response ", response.data);
       
-      setViewModalDataShow(response.data);
-      const mappedData = response.data.map((item) => ({
+      setViewModalDataShow(response.data.data);
+      const mappedData = response.data.data.map((item) => ({
         id: item._id,
         customerName: item.companyName || "N/A",
         customerNumber: item?.person?.persons?.[0]?.phoneNumber || "N/A",
