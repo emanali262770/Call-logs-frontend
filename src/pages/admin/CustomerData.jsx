@@ -583,6 +583,7 @@ const CustomerData = () => {
         <table className="min-w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4">Sr</th>
               <th className="py-3 px-4">Name</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Designation</th>
@@ -601,6 +602,7 @@ const CustomerData = () => {
                   key={index}
                   className="border-b hover:bg-gray-50 transition"
                 >
+                  <td className="py-3 px-4 ">{index+1}</td>
                   <td className="py-3 px-4 flex items-center gap-2">
                     <img
                       src={
