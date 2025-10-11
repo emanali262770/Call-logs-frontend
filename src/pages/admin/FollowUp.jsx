@@ -35,7 +35,7 @@ const FollowUp = () => {
   const [selectedFollowUp, setSelectedFollowUp] = useState(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const filteredFollowUps = followUpList.filter((followUp) => {
     const query = searchQuery.toLowerCase();

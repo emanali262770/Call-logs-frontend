@@ -42,7 +42,7 @@ const AddMeeting = () => {
   const [contactMethod, setContactMethod] = useState("By Visit");
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
 
 

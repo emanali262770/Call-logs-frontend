@@ -22,7 +22,7 @@ const SuccessClient = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const filteredClients = clientList.filter((client) => {
     const query = searchQuery.toLowerCase();
