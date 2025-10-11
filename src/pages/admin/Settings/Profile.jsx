@@ -22,100 +22,120 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // ✅ Fetch user data from /auth/users
   // ✅ Fetch profile data only from /api/staff
-  useEffect(() => {
+ 
     const fetchUserData = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/staff`,
-        
+          `${import.meta.env.VITE_API_BASE_URL}/staff/${userInfo.id}`
         );
+        console.log({ res }, "data");
 
-        if (res.data?.success && Array.isArray(res.data.data)) {
-          // Find the logged-in user's data
-          const user = res.data.data.find(
-            (u) => u.email === userInfo.email || u._id === userInfo._id
-          );
+        // ✅ The API returns a single object inside res.data.data
+        if (res.data?.success && res.data?.data) {
+          const user = res.data.data; // direct object access
 
-          if (user) {
-            setFormData((prev) => ({
-              ...prev,
-              image: null,
-              imagePreview: user.image?.url || user.image || null,
-              name: user.name || "",
-              username: user.username || "",
-              email: user.email || "",
-              password: user.password || "",
-              department: user.department || "",
-              designation: user.designation || "",
-              address: user.address || "",
-              number: user.number || "",
-              role: user.role || "",
-            }));
-          } else {
-            toast.error("⚠️ User not found in staff records");
-          }
+          setFormData((prev) => ({
+            ...prev,
+            image: null,
+            imagePreview: user.image?.url || user.image || null,
+            username: user.username || "",
+            email: user.email || "",
+            password: user.password || "",
+            department: user.department || "",
+            designation: user.designation || "",
+            address: user.address || "",
+            number: user.number || "",
+            role: user.role || "",
+          }));
+        } else {
+          toast.error("⚠️ User data not found");
         }
       } catch (err) {
         console.error(err);
         toast.error("❌ Failed to load profile data");
       }
     };
-
+ useEffect(() => {
     fetchUserData();
   }, []);
 
   // ✅ Handle changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
     if (name === "image") {
-      const file = files[0];
-      setFormData((prev) => ({
-        ...prev,
-        image: file,
-        imagePreview: file ? URL.createObjectURL(file) : prev.imagePreview,
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      const file = files?.[0];
+      if (file) {
+        setFormData((prev) => ({
+          ...prev,
+          image: file, // ✅ same as CustomerData’s image
+          imagePreview: URL.createObjectURL(file), // instant preview
+        }));
+        console.log(
+          "📸 Selected image:",
+          file.name,
+          file.type,
+          file.size,
+          "bytes"
+        );
+      }
+      return;
     }
+
+    // ✅ for text inputs
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   // ✅ Save (PUT /auth/profile/update)
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const data = new FormData();
+ const handleSave = async () => {
+  try {
+    setLoading(true);
 
-      // Append all keys to form-data
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value && key !== "imagePreview") data.append(key, value);
-      });
+    const formDataToSend = new FormData();
+    formDataToSend.append("username", formData.username);
+    formDataToSend.append("email", formData.email);
+    formDataToSend.append("password", formData.password);
+    formDataToSend.append("department", formData.department);
+    formDataToSend.append("designation", formData.designation);
+    formDataToSend.append("address", formData.address);
+    formDataToSend.append("number", formData.number);
+    formDataToSend.append("role", formData.role);
 
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/profile/update`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${userInfo?.token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (res.data?.success) {
-        toast.success("✅ Profile updated successfully!");
-        setEditing(false);
-      } else {
-        toast.error("❌ Failed to update profile");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("❌ Error updating profile");
-    } finally {
-      setLoading(false);
+    if (formData.image) {
+      formDataToSend.append("image", formData.image);
+    
     }
-  };
+
+    const res = await axios.put(
+      `${import.meta.env.VITE_API_BASE_URL}/auth/profile/update`,
+      formDataToSend,
+      {
+        headers: {
+          Authorization: `Bearer ${userInfo?.token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    if (res.data?.success) {
+      toast.success("✅ Profile updated successfully!");
+      setEditing(false);
+    } else {
+      toast.error("❌ Failed to update profile");
+    }
+    fetchUserData()
+  } catch (err) {
+    console.error("Save error:", err);
+    toast.error("❌ Error updating profile");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
@@ -162,13 +182,14 @@ const Profile = () => {
                 accept="image/*"
                 onChange={handleChange}
                 className="hidden"
+                disabled={!editing} // disables selection if not editing
               />
             )}
           </label>
 
           <div>
             <p className="text-lg font-medium text-gray-800 capitalize">
-              {formData.name || "No name"}
+              {formData.username || "No name"}
             </p>
             <p className="text-sm text-gray-500">{formData.email}</p>
             <p className="text-xs text-gray-400 uppercase">{formData.role}</p>
@@ -178,7 +199,6 @@ const Profile = () => {
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
-            "name",
             "username",
             "email",
             "password",
