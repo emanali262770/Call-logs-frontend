@@ -232,8 +232,8 @@ const CustomerData = () => {
       formData.append(`persons[${index}][email]`, person.email);
     });
 
-    formData.append("assignedStaff", assignedStaff);
-    formData.append("assignedProducts", assignedProduct);
+    // formData.append("assignedStaff", assignedStaff);
+    // formData.append("assignedProducts", assignedProduct);
 
     try {
       const headers = {
@@ -998,7 +998,7 @@ const CustomerData = () => {
               </div>
 
               {/* Assign Section */}
-              <div className="border rounded-lg p-4">
+              {/* <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Assign</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -1036,7 +1036,7 @@ const CustomerData = () => {
                     </select>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex justify-end gap-3 pt-4">
                 <button
