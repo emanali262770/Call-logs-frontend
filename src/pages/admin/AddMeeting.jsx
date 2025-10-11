@@ -458,9 +458,9 @@ return (
             <th className="py-3 px-4 w-[180px]">Product</th>
             <th className="py-3 px-4 w-[160px]">Status</th>
             <th className="py-3 px-4 text-center w-[180px]">Date & Time</th>
-            {userInfo?.isAdmin && (
+           
               <th className="py-3 px-4 text-right w-[120px]">Actions</th>
-            )}
+          
           </tr>
         </thead>
 
@@ -469,7 +469,7 @@ return (
             <tr>
               <td
                 colSpan={userInfo?.isAdmin ? 7 : 6}
-                className="text-center py-8 text-gray-500 bg-white rounded-lg"
+                className="text-center py-8 text-gray-500 rounded-lg"
               >
                 No meetings found.
               </td>
@@ -528,7 +528,7 @@ return (
                 </td>
 
                 {/* Actions */}
-                {userInfo?.isAdmin && (
+               
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end space-x-2">
                       <button
@@ -537,15 +537,17 @@ return (
                       >
                         <FiEdit size={16} />
                       </button>
+                       {userInfo?.isAdmin && (
                       <button
                         onClick={() => handleDeleteClick(meeting._id)}
                         className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                       >
                         <FiTrash2 size={16} />
                       </button>
+                        )}
                     </div>
                   </td>
-                )}
+              
               </tr>
             ))
           )}
@@ -554,405 +556,400 @@ return (
     </div>
 
     {showModal && (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-            <h2 className="text-xl font-bold text-newPrimary">
-              {selectedMeeting ? "Edit Meeting" : "Add Meeting"}
-            </h2>
-            <button
-              className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
-              onClick={handleCloseModal}
-            >
-              &times;
-            </button>
+  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
+        <h2 className="text-xl font-bold text-newPrimary">
+          {selectedMeeting ? "Edit Meeting" : "Add Meeting"}
+        </h2>
+        <button
+          className="w-6 h-6 text-white rounded-full flex justify-center items-center hover:text-gray-400 text-xl bg-newPrimary"
+          onClick={handleCloseModal}
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
+
+        {/* ===========================================================
+            COMPANY & PERSON SECTION
+        =========================================================== */}
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-4">Company & Person</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Company Name */}
+            <div>
+              <label className="block text-gray-700 mb-2 font-medium">
+                Company Name
+              </label>
+              <select
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                required
+              >
+                <option value="">Select Company</option>
+                {customerList.map((client) => (
+                  <option key={client._id} value={client.companyName}>
+                    {client.companyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Person */}
+            <div>
+              <label className="block text-gray-700 mb-2 font-medium">
+                Person
+              </label>
+              <div className="relative">
+                <FiUser className="absolute left-3 top-3 text-gray-400" />
+                {(() => {
+                  const selectedCompany = customerList.find(
+                    (client) => client.companyName === companyName
+                  );
+
+                  if (selectedCompany?.persons?.length === 1) {
+                    const onlyPerson = selectedCompany.persons[0];
+                    return (
+                      <input
+                        type="text"
+                        readOnly
+                        value={onlyPerson.fullName}
+                        className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
+                      />
+                    );
+                  }
+
+                  return (
+                    <select
+                      value={personName}
+                      onChange={(e) => {
+                        setPersonName(e.target.value);
+                        const personObj = selectedCompany?.persons?.find(
+                          (p) => p.fullName === e.target.value
+                        );
+                        setDesignation(personObj?.designation || "");
+                      }}
+                      disabled={!companyName}
+                      className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    >
+                      <option value="">Select person</option>
+                      {selectedCompany?.persons?.map((p, idx) => (
+                        <option key={idx} value={p.fullName}>
+                          {p.fullName}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
-          <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
+        </div>
+
+        {/* ===========================================================
+            DESIGNATION & PRODUCT SECTION
+        =========================================================== */}
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-4">Designation & Product</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Designation */}
+            <div>
+              <label className="block text-gray-700 mb-2 font-medium">
+                Designation
+              </label>
+              <div className="relative">
+                <FiBriefcase className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                  placeholder="Operator"
+                />
+              </div>
+            </div>
+
+            {/* Product */}
+            <div>
+              <label className="block text-gray-700 mb-2 font-medium">
+                Products
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={products}
+                className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
+                placeholder="Auto-filled product"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ===========================================================
+            FOLLOW-UP STATUS SECTION
+        =========================================================== */}
+        <div className="border rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-4">Follow-up Status</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Follow-up options */}
+            <label
+              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border border-transparent hover:scale-105 ${
+                followUpStatus === "Follow Up Required"
+                  ? "bg-green-100 text-green-700 ring-2 ring-green-400"
+                  : "bg-green-50 hover:bg-green-100 text-green-600"
+              }`}
+            >
+              <input
+                type="radio"
+                name="status"
+                value="Follow Up Required"
+                checked={followUpStatus === "Follow Up Required"}
+                onChange={(e) => setFollowUpStatus(e.target.value)}
+                className="mr-2 accent-blue-600"
+              />
+              Follow Up Required
+            </label>
+
+            <label
+              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border border-transparent hover:scale-105 ${
+                followUpStatus === "Not Interested"
+                  ? "bg-rose-100 text-rose-700 ring-2 ring-rose-400"
+                  : "bg-rose-50 hover:bg-rose-100 text-rose-600"
+              }`}
+            >
+              <input
+                type="radio"
+                name="status"
+                value="Not Interested"
+                checked={followUpStatus === "Not Interested"}
+                onChange={(e) => setFollowUpStatus(e.target.value)}
+                className="mr-2 accent-rose-600"
+              />
+              Not Interested
+            </label>
+
+            <label
+              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border border-transparent hover:scale-105 ${
+                followUpStatus === "All Ready Installed"
+                  ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
+                  : "bg-blue-50 hover:bg-blue-100 text-blue-600"
+              }`}
+            >
+              <input
+                type="radio"
+                name="status"
+                value="All Ready Installed"
+                checked={followUpStatus === "All Ready Installed"}
+                onChange={(e) => setFollowUpStatus(e.target.value)}
+                className="mr-2 accent-green-600"
+              />
+              Already Installed
+            </label>
+
+            <label
+              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all border border-transparent hover:scale-105 ${
+                followUpStatus === "Phone Number Responding"
+                  ? "bg-amber-100 text-amber-700 ring-2 ring-amber-400"
+                  : "bg-amber-50 hover:bg-amber-100 text-amber-600"
+              }`}
+            >
+              <input
+                type="radio"
+                name="status"
+                value="Phone Number Responding"
+                checked={followUpStatus === "Phone Number Responding"}
+                onChange={(e) => setFollowUpStatus(e.target.value)}
+                className="mr-2 accent-amber-600"
+              />
+              Phone Responding
+            </label>
+          </div>
+        </div>
+
+        {/* ===========================================================
+            FOLLOW-UP DETAILS (IF REQUIRED)
+        =========================================================== */}
+        {followUpStatus === "Follow Up Required" && (
+          <div className="border rounded-lg p-4 space-y-6">
+            <h3 className="text-lg font-semibold mb-2">Follow-up Details</h3>
+
+            {/* Next Follow-up Date & Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-gray-700 mb-2 font-medium">
-                  Company Name
+                  Next Follow-up Date
+                </label>
+                <div className="relative">
+                  <FiCalendar className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="date"
+                    value={nextFollowUpDate}
+                    onChange={(e) => setNextFollowUpDate(e.target.value)}
+                    className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+                      focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+                      focus:border-newPrimary transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2 font-medium">
+                  Time
+                </label>
+                <div className="relative">
+                  <FiClock className="absolute left-3 top-3 text-gray-400" />
+                  <input
+                    type="time"
+                    value={nextFollowUpTime}
+                    onChange={(e) => setNextFollowUpTime(e.target.value)}
+                    className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+                      focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+                      focus:border-newPrimary transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Next Visit Details */}
+            <div>
+              <label className="block text-gray-700 mb-2 font-medium">
+                Next Visit Details
+              </label>
+              <textarea
+                value={nextVisitDetails}
+                onChange={(e) => setNextVisitDetails(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+                  focus:border-newPrimary transition-all"
+                placeholder="Write here..."
+                rows="3"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  "Send Profile",
+                  "Send Quotation",
+                  "Product Information",
+                  "Require Visit/Meeting",
+                ].map((action) => (
+                  <label
+                    key={action}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="details"
+                      value={action}
+                      checked={detailsOption === action}
+                      onChange={(e) => setDetailsOption(e.target.value)}
+                      className="mr-2 text-newPrimary focus:ring-newPrimary"
+                    />
+                    {action}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Reference Provided / Staff */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2 font-medium">
+                  Reference Provided By
+                </label>
+                <input
+                  type="text"
+                  value={referenceProvidedBy}
+                  onChange={(e) => setReferenceProvidedBy(e.target.value)}
+                  placeholder="Enter reference name"
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2 font-medium">
+                  Refer To Staff
                 </label>
                 <select
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
+                  value={referToStaff}
+                  onChange={(e) => setReferToStaff(e.target.value)}
                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                  required
                 >
-                  <option value="">Select Company</option>
-                  {customerList.map((client) => (
-                    <option key={client._id} value={client.companyName}>
-                      {client.companyName}
+                  <option value="">Select Staff</option>
+                  {referToStaffList?.map((staff) => (
+                    <option key={staff._id} value={staff.username}>
+                      {staff.username}
                     </option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-gray-700 mb-2 font-medium">
-                  Person
-                </label>
-                <div className="relative">
-                  <FiUser className="absolute left-3 top-3 text-gray-400" />
-                  {(() => {
-                    const selectedCompany = customerList.find(
-                      (client) => client.companyName === companyName
-                    );
-
-                    // If only one person, show input field
-                    if (selectedCompany?.persons?.length === 1) {
-                      const onlyPerson = selectedCompany.persons[0];
-                      return (
-                        <input
-                          type="text"
-                          readOnly
-                          value={onlyPerson.fullName}
-                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
-                        />
-                      );
-                    }
-
-                    // If multiple, show select field
-                    return (
-                      <select
-                        value={personName}
-                        onChange={(e) => {
-                          setPersonName(e.target.value);
-                          const personObj = selectedCompany?.persons?.find(
-                            (p) => p.fullName === e.target.value
-                          );
-                          setDesignation(personObj?.designation || "");
-                        }}
-                        disabled={!companyName}
-                        className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                      >
-                        <option value="">Select person</option>
-                        {selectedCompany?.persons?.map((p, idx) => (
-                          <option key={idx} value={p.fullName}>
-                            {p.fullName}
-                          </option>
-                        ))}
-                      </select>
-                    );
-                  })()}
-                </div>
-              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div>
-                <label className="block text-gray-700 mb-2 font-medium">
-                  Designation
-                </label>
-                <div className="relative">
-                  <FiBriefcase className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    value={designation}
-                    onChange={(e) => setDesignation(e.target.value)}
-                    className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                    placeholder="Operator"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2 font-medium">
-                  Products
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={products}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
-                  placeholder="Auto-filled product"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              <label
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
-    border border-transparent hover:scale-105 
-    ${followUpStatus === "Follow Up Required"
-                    ? "bg-green-100 text-green-700 ring-2 ring-green-400"
-                    : "bg-green-50 hover:bg-green-100 text-green-600"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value="Follow Up Required"
-                  checked={followUpStatus === "Follow Up Required"}
-                  onChange={(e) => setFollowUpStatus(e.target.value)}
-                  className="mr-2 accent-blue-600"
-                />
-                Follow Up Required
-              </label>
-
-              <label
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
-    border border-transparent hover:scale-105 
-    ${followUpStatus === "Not Interested"
-                    ? "bg-rose-100 text-rose-700 ring-2 ring-rose-400"
-                    : "bg-rose-50 hover:bg-rose-100 text-rose-600"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value="Not Interested"
-                  checked={followUpStatus === "Not Interested"}
-                  onChange={(e) => setFollowUpStatus(e.target.value)}
-                  className="mr-2 accent-rose-600"
-                />
-                Not Interested
-              </label>
-
-              <label
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
-    border border-transparent hover:scale-105 
-    ${followUpStatus === "All Ready Installed"
-                    ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
-                    : "bg-blue-50 hover:bg-blue-100 text-blue-600"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value="All Ready Installed"
-                  checked={followUpStatus === "All Ready Installed"}
-                  onChange={(e) => setFollowUpStatus(e.target.value)}
-                  className="mr-2 accent-green-600"
-                />
-                Already Installed
-              </label>
-
-              <label
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all 
-    border border-transparent hover:scale-105 
-    ${followUpStatus === "Phone Number Responding"
-                    ? "bg-amber-100 text-amber-700 ring-2 ring-amber-400"
-                    : "bg-amber-50 hover:bg-amber-100 text-amber-600"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value="Phone Number Responding"
-                  checked={followUpStatus === "Phone Number Responding"}
-                  onChange={(e) => setFollowUpStatus(e.target.value)}
-                  className="mr-2 accent-amber-600"
-                />
-                Phone Responding
-              </label>
-            </div>
-
-            {followUpStatus === "Follow Up Required" && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div>
-                    <label className="block text-gray-700 mb-2 font-medium">
-                      Next Follow-up Date
-                    </label>
-                    <div className="relative">
-                      <FiCalendar className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="date"
-                        value={nextFollowUpDate}
-                        onChange={(e) => setNextFollowUpDate(e.target.value)}
-                        className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
-               focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
-               focus:border-newPrimary transition-all"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2 font-medium">
-                      Time
-                    </label>
-                    <div className="relative">
-                      <FiClock className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="time"
-                        value={nextFollowUpTime}
-                        onChange={(e) => setNextFollowUpTime(e.target.value)}
-                        className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
-               focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
-               focus:border-newPrimary transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2 font-medium">
-                    Next Visit Details
+            {/* Contact Method */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Contact Method</h3>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                {[
+                  { label: "By Visit", icon: <FiMapPin className="mr-1 text-gray-500" /> },
+                  { label: "By Phone", icon: <FiPhone className="mr-1 text-gray-500" /> },
+                  { label: "By Email", icon: <FiMail className="mr-1 text-gray-500" /> },
+                ].map((opt) => (
+                  <label
+                    key={opt.label}
+                    className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <input
+                      type="radio"
+                      name="contact"
+                      value={opt.label}
+                      checked={contactMethod === opt.label}
+                      onChange={(e) => setContactMethod(e.target.value)}
+                      className="mr-2 text-newPrimary focus:ring-newPrimary"
+                    />
+                    {opt.icon}
+                    {opt.label}
                   </label>
-                  <textarea
-                    value={nextVisitDetails}
-                    onChange={(e) => setNextVisitDetails(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                    placeholder="Write here..."
-                    rows="3"
-                  />
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-4">Actions</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="details"
-                        value="Send Profile"
-                        checked={detailsOption === "Send Profile"}
-                        onChange={(e) => setDetailsOption(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      Send Profile
-                    </label>
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="details"
-                        value="Send Quotation"
-                        checked={detailsOption === "Send Quotation"}
-                        onChange={(e) => setDetailsOption(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      Send Quotation
-                    </label>
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="details"
-                        value="Product Information"
-                        checked={detailsOption === "Product Information"}
-                        onChange={(e) => setDetailsOption(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      Product Information
-                    </label>
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="details"
-                        value="Require Visit/Meeting"
-                        checked={detailsOption === "Require Visit/Meeting"}
-                        onChange={(e) => setDetailsOption(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      Require Visit/Meeting
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div>
-                    <label className="block text-gray-700 mb-2 font-medium">
-                      Reference Provided By
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={referenceProvidedBy}
-                        onChange={(e) =>
-                          setReferenceProvidedBy(e.target.value)
-                        }
-                        placeholder="Enter reference name"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2 font-medium">
-                      Refer To Staff
-                    </label>
-                    <select
-                      value={referToStaff}
-                      onChange={(e) => setReferToStaff(e.target.value)}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                    >
-                      <option value="">Select Staff</option>
-                      {referToStaffList?.map((staff) => (
-                        <option key={staff._id} value={staff.username}>
-                          {staff.username}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Contact Method
-                  </h3>
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="contact"
-                        value="By Visit"
-                        checked={contactMethod === "By Visit"}
-                        onChange={(e) => setContactMethod(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      <FiMapPin className="mr-1 text-gray-500" />
-                      By Visit
-                    </label>
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="contact"
-                        value="By Phone"
-                        checked={contactMethod === "By Phone"}
-                        onChange={(e) => setContactMethod(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      <FiPhone className="mr-1 text-gray-500" />
-                      By Phone
-                    </label>
-                    <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                      <input
-                        type="radio"
-                        name="contact"
-                        value="By Email"
-                        checked={contactMethod === "By Email"}
-                        onChange={(e) => setContactMethod(e.target.value)}
-                        className="mr-2 text-newPrimary focus:ring-newPrimary"
-                      />
-                      <FiMail className="mr-1 text-gray-500" />
-                      By Email
-                    </label>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-newPrimary text-white px-4 md:px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
-              >
-                {loading
-                  ? "Saving..."
-                  : selectedMeeting
-                    ? "Update Meeting"
-                    : "Save Meeting"}
-              </button>
+                ))}
+              </div>
             </div>
-          </form>
+          </div>
+        )}
+
+        {/* ===========================================================
+            FOOTER BUTTONS
+        =========================================================== */}
+        <div className="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={handleCloseModal}
+            className="px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-newPrimary text-white px-4 md:px-6 py-2 rounded-lg hover:bg-primaryDark transition-colors duration-200"
+          >
+            {loading
+              ? "Saving..."
+              : selectedMeeting
+              ? "Update Meeting"
+              : "Save Meeting"}
+          </button>
         </div>
-      </div>
-    )}
+      </form>
+    </div>
+  </div>
+)}
+
     {/* Pagination Controls */}
 
     {filteredMeetings.length > itemsPerPage && (
