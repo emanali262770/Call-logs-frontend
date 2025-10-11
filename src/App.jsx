@@ -26,7 +26,11 @@ import MoreProductAssign from "./pages/admin/MoreProductAssign";
 import AssignTo from "./pages/admin/AssignTo";
 import ActivityTrack from "./pages/History/ActivityTrack";
 import CustomerTrack from "./pages/History/CustomerTrack";
-import MeetingTrack from "./pages/admin/MeetingTrack";
+import MeetingTrack from "./pages/History/MeetingTrack";
+import FollowUpTrack from "./pages/History/FollowUpTrack";
+import SuccessClientTrack from "./pages/History/SuccessClientTrack";
+import StaffTrack from "./pages/History/StaffTrack";
+import Profile from "./pages/admin/Settings/Profile";
 
 function AppContent() {
   return (
@@ -69,9 +73,12 @@ function AppContent() {
             <Route path="history" element={<ActivityTrack />} />
             <Route path="history/customers" element={<CustomerTrack />} />
             <Route path="history/meetings" element={<MeetingTrack />} />
-            {/* <Route path="history/followups" element={<FollowUpTrack />} />
+            <Route path="history/followups" element={<FollowUpTrack />} />
             <Route path="history/success" element={<SuccessClientTrack />} />
-            <Route path="history/staff" element={<StaffTrack />} /> */}
+            <Route path="history/staff" element={<StaffTrack />} />
+
+            {/* Settings */}
+             <Route path="settings/profile" element={<Profile />} />
 
             <Route path="access-rights" element={<AssignRights />} />
             <Route path="modules" element={<Modules />} />
