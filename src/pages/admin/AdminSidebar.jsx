@@ -34,6 +34,7 @@ const links = [
   { to: "/admin/success-client", label: "Success Client", icon: <FaDiagramSuccessor />,  },
   { to: "/admin/calendar", label: "Calendar", icon: <FaCalendarAlt />, key: "isCalendar" },
     { to: "/admin/history", label: "Activity Track", icon: <FaHistory  />, key: "isHistory" },
+    { to: "/admin/settings/profile", label: "Settings", icon: <FaUsers />, },
   // { to: "/admin/report", label: "Report", icon: <FaFileAlt /> },
 
   {

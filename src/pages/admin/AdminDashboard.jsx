@@ -49,9 +49,14 @@ import {
   PerformanceSummarySkeleton,
   WeeklyCallVolumeSkeleton,
 } from "./ChartSkeleton";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef(null);
+  const navigate = useNavigate();
+
   const [customers, setCustomers] = useState(0);
   const [items, setItems] = useState(0);
   const [sales, setSales] = useState(0);
@@ -80,7 +85,23 @@ const AdminDashboard = () => {
   }
   const base = import.meta.env.VITE_API_BASE_URL;
 
-  // console.log("userInfo ", userInfo);
+
+    // ✅ Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("userInfo");
+    navigate("/"); // go back to login page
+  };
+
+  // ✅ Close menu when clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const headers = {
     Authorization: `Bearer ${userInfo?.token}`,
@@ -119,14 +140,13 @@ const AdminDashboard = () => {
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
 
-       setTimeout(() => {
-        toast.error(`❌ ${backendMessage}`);
-       }, 2000); 
+        setTimeout(() => {
+          toast.error(`❌ ${backendMessage}`);
+        }, 2000);
       } finally {
         setTimeout(() => {
           setLoading(false);
         }, 2000);
-        
       }
     }
     pieDataApi();
@@ -158,11 +178,11 @@ const AdminDashboard = () => {
         const backendMessage =
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
-         setTimeout(() => {
-        toast.error(`❌ ${backendMessage}`);
-       }, 2000); 
+        setTimeout(() => {
+          toast.error(`❌ ${backendMessage}`);
+        }, 2000);
       } finally {
-         setTimeout(() => {
+        setTimeout(() => {
           setLoading(false);
         }, 2000);
       }
@@ -201,9 +221,9 @@ const AdminDashboard = () => {
         const backendMessage =
           error.response?.data?.message ||
           "Something went wrong. Please try again.";
-         setTimeout(() => {
-        toast.error(`❌ ${backendMessage}`);
-       }, 2000); 
+        setTimeout(() => {
+          toast.error(`❌ ${backendMessage}`);
+        }, 2000);
       } finally {
         setTimeout(() => {
           setLoading(false);
@@ -243,10 +263,10 @@ const AdminDashboard = () => {
           error.response?.data?.message ||
           "Something went wrong fetching calendar meetings.";
         setTimeout(() => {
-        toast.error(`❌ ${backendMessage}`);
-       }, 2000); 
+          toast.error(`❌ ${backendMessage}`);
+        }, 2000);
       } finally {
-         setTimeout(() => {
+        setTimeout(() => {
           setLoading(false);
         }, 2000);
       }
@@ -535,19 +555,52 @@ const AdminDashboard = () => {
             </div>
 
             {/* User Profile */}
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white">
-                  <FiUser size={16} />
+            {/* User Profile with Popover */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2 focus:outline-none"
+              >
+                <div className="relative">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white shadow-md">
+                    <FiUser size={16} />
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
                 </div>
-                <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
-              </div>
-              <div className="hidden md:block text-right">
-                <div className="text-sm font-medium capitalize">{userName}</div>
-                <div className="text-xs text-gray-500 uppercase">
-                  {userRole}
+
+                <div className="hidden md:block text-right">
+                  <div className="text-sm font-medium capitalize">
+                    {userName}
+                  </div>
+                  <div className="text-xs text-gray-500 uppercase">
+                    {userRole}
+                  </div>
                 </div>
-              </div>
+              </button>
+
+              {/* Popover Menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fadeIn">
+                  <div className="px-4 py-3 border-b">
+                    <p className="text-sm font-medium capitalize text-gray-800">
+                      {userName}
+                    </p>
+                    <p className="text-xs text-gray-500">{userEmail}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate("/profile")}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600  transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -700,66 +753,65 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-             
-               {/* 📅 Follow-up Meetings */}
-            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Follow-up Meetings
-                </h2>
-                <div className="text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                  {currentTime.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
+              {/* 📅 Follow-up Meetings */}
+              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Follow-up Meetings
+                  </h2>
+                  <div className="text-sm text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
+                    {currentTime.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
+                  {/* Weekday headers */}
+                  {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                    <div
+                      key={day + idx}
+                      className="font-medium text-gray-500 py-2"
+                    >
+                      {day}
+                    </div>
+                  ))}
+
+                  {/* Calendar dates */}
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
+                    const hasMeeting = calendarMeetings.some(
+                      (m) => new Date(m.date).getDate() === date
+                    );
+                    return (
+                      <div
+                        key={date}
+                        className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
+                          hasMeeting
+                            ? "bg-blue-100 text-blue-600 font-medium"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {date}
+                      </div>
+                    );
                   })}
                 </div>
-              </div>
 
-              {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1 text-center text-xs mb-4">
-                {/* Weekday headers */}
-                {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
-                  <div
-                    key={day + idx}
-                    className="font-medium text-gray-500 py-2"
-                  >
-                    {day}
+                {/* Summary row */}
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="text-sm text-gray-600">
+                      Scheduled meetings this month
+                    </span>
                   </div>
-                ))}
-
-                {/* Calendar dates */}
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
-                  const hasMeeting = calendarMeetings.some(
-                    (m) => new Date(m.date).getDate() === date
-                  );
-                  return (
-                    <div
-                      key={date}
-                      className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                        hasMeeting
-                          ? "bg-blue-100 text-blue-600 font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      {date}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Summary row */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                  <span className="text-sm text-gray-600">
-                    Scheduled meetings this month
+                  <span className="text-sm font-medium text-blue-600">
+                    {totalMeetings} meetings
                   </span>
                 </div>
-                <span className="text-sm font-medium text-blue-600">
-                  {totalMeetings} meetings
-                </span>
               </div>
-            </div>
             </>
           )}
         </div>
@@ -813,39 +865,35 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-           {/* 📊 Weekly Call Volume Chart */}
-              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    Weekly Call Volume
-                  </h2>
-                  <FiTrendingUp className="text-green-500" />
-                </div>
-
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dayData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "6px",
-                          boxShadow:
-                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                        }}
-                      />
-                      <Bar
-                        dataKey="calls"
-                        fill="#3b82f6"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+            {/* 📊 Weekly Call Volume Chart */}
+            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Weekly Call Volume
+                </h2>
+                <FiTrendingUp className="text-green-500" />
               </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dayData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        boxShadow:
+                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Bar dataKey="calls" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         )}
       </main>
