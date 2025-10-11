@@ -24,6 +24,8 @@ import ModulesFunctionalities from "./pages/admin/ModulesFunctionalities";
 import SuccessClient from "./pages/admin/SuccessClient";
 import MoreProductAssign from "./pages/admin/MoreProductAssign";
 import AssignTo from "./pages/admin/AssignTo";
+import ActivityTrack from "./pages/History/ActivityTrack";
+import CustomerTrack from "./pages/History/CustomerTrack";
 
 function AppContent() {
   return (
@@ -50,10 +52,10 @@ function AppContent() {
             <Route path="products/add" element={<AddProduct />} />
             {/* <Route path="more-product-assign" element={<MoreProductAssign />} /> */}
             <Route path="customers" element={<CustomerData />} />
-             <Route path="assign" element={<AssignTo />} />
+            <Route path="assign" element={<AssignTo />} />
             <Route path="calendar" element={<Calendar />} />
-            <Route path="followup" element={<FollowUp />} /> 
-            <Route path="success-client" element={<SuccessClient />} /> 
+            <Route path="followup" element={<FollowUp />} />
+            <Route path="success-client" element={<SuccessClient />} />
             <Route path="meetingup" element={<MeetingFollowPage />} />
             <Route path="meetings/add" element={<AddMeeting />} />
             <Route path="category" element={<Category />} />
@@ -61,6 +63,14 @@ function AppContent() {
             {/* Security */}
             <Route path="groups" element={<GroupManagement />} />
             <Route path="users" element={<Users />} />
+
+            {/* History */}
+            <Route path="history" element={<ActivityTrack />} />
+            <Route path="history/customers" element={<CustomerTrack />} />
+            {/* <Route path="history/meetings" element={<MeetingTrack />} />
+            <Route path="history/followups" element={<FollowUpTrack />} />
+            <Route path="history/success" element={<SuccessClientTrack />} />
+            <Route path="history/staff" element={<StaffTrack />} /> */}
 
             <Route path="access-rights" element={<AssignRights />} />
             <Route path="modules" element={<Modules />} />
