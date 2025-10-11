@@ -182,22 +182,22 @@ const AddMeeting = () => {
     fetchStaffData();
   }, [fetchStaffData]);
 
-  const handleAddClick = () => {
-    setSelectedMeeting(null);
-    setShowModal(true);
-    setCompanyName("");
-    setPersonName("");
-    setDesignation("");
-    setProducts("");
-    setFollowUpStatus("Follow Up Required");
-    setNextFollowUpDate("Sat 09 Aug, 2025");
-    setNextFollowUpTime("11:36 AM");
-    setNextVisitDetails("");
-    setDetailsOption("Send Profile");
-    setReferenceProvidedBy("");
-    setReferToStaff("");
-    setContactMethod("By Visit");
-  };
+  // const handleAddClick = () => {
+  //   setSelectedMeeting(null);
+  //   setShowModal(true);
+  //   setCompanyName("");
+  //   setPersonName("");
+  //   setDesignation("");
+  //   setProducts("");
+  //   setFollowUpStatus("Follow Up Required");
+  //   setNextFollowUpDate("Sat 09 Aug, 2025");
+  //   setNextFollowUpTime("11:36 AM");
+  //   setNextVisitDetails("");
+  //   setDetailsOption("Send Profile");
+  //   setReferenceProvidedBy("");
+  //   setReferToStaff("");
+  //   setContactMethod("By Visit");
+  // };
 
   const handleEditClick = (meeting) => {
     console.log("Editing:", meeting);
@@ -435,13 +435,7 @@ const AddMeeting = () => {
             />
           </div>
 
-          <button
-            onClick={handleAddClick}
-            className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="text-lg" />
-            <span>Add Meeting</span>
-          </button>
+         
         </div>
       </div>
 

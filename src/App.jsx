@@ -26,6 +26,7 @@ import MoreProductAssign from "./pages/admin/MoreProductAssign";
 import AssignTo from "./pages/admin/AssignTo";
 import ActivityTrack from "./pages/History/ActivityTrack";
 import CustomerTrack from "./pages/History/CustomerTrack";
+import MeetingTrack from "./pages/admin/MeetingTrack";
 
 function AppContent() {
   return (
@@ -67,8 +68,8 @@ function AppContent() {
             {/* History */}
             <Route path="history" element={<ActivityTrack />} />
             <Route path="history/customers" element={<CustomerTrack />} />
-            {/* <Route path="history/meetings" element={<MeetingTrack />} />
-            <Route path="history/followups" element={<FollowUpTrack />} />
+            <Route path="history/meetings" element={<MeetingTrack />} />
+            {/* <Route path="history/followups" element={<FollowUpTrack />} />
             <Route path="history/success" element={<SuccessClientTrack />} />
             <Route path="history/staff" element={<StaffTrack />} /> */}
 

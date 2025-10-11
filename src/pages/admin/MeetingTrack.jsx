@@ -9,8 +9,8 @@ import {
   FiX,
 } from "react-icons/fi";
 
-const CustomerTrack = () => {
-  const [data, setData] = useState([]);
+const MeetingTrack = () => {
+  const [meetings, setMeetings] = useState([]);
   const [staff, setStaff] = useState("");
   const [staffList, setStaffList] = useState([]);
   const [product, setProduct] = useState("");
@@ -29,7 +29,7 @@ const CustomerTrack = () => {
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
-  // ✅ Check if any filters are applied
+  // ✅ Check if any filters are active
   const hasFilters = staff !== "" || product !== "" || range !== "all";
 
   // ✅ Clear all filters
@@ -39,31 +39,31 @@ const CustomerTrack = () => {
     setRange("all");
   };
 
-  // ✅ Fetch data from API
+  // ✅ Fetch Meeting Data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMeetings = async () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/customers/history`,
+          `${import.meta.env.VITE_API_BASE_URL}/meetings/history`,
           {
             headers: { Authorization: `Bearer ${userInfo?.token}` },
             params: { staff, product, range },
           }
         );
-        setData(res.data.data || []);
+        setMeetings(res.data.data || []);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchMeetings();
   }, [staff, product, range]);
 
   // ✅ Fetch Staff
   useEffect(() => {
-    const fetchStaffData = async () => {
+    const fetchStaff = async () => {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/staff`
@@ -73,12 +73,12 @@ const CustomerTrack = () => {
         console.error(err);
       }
     };
-    fetchStaffData();
+    fetchStaff();
   }, []);
 
   // ✅ Fetch Products
   useEffect(() => {
-    const fetchProductData = async () => {
+    const fetchProducts = async () => {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/products`
@@ -88,17 +88,18 @@ const CustomerTrack = () => {
         console.error(err);
       }
     };
-    fetchProductData();
+    fetchProducts();
   }, []);
 
-  // ✅ Filtered data for search
-  const filteredData = data.filter((item) => {
-    const query = searchQuery.toLowerCase();
+  // ✅ Filter by search
+  const filteredMeetings = meetings.filter((m) => {
+    const q = searchQuery.toLowerCase();
     return (
-      item.company?.toLowerCase().includes(query) ||
-      item.staff?.toLowerCase().includes(query) ||
-      item.product?.toLowerCase().includes(query) ||
-      item.action?.toLowerCase().includes(query)
+      m.companyName?.toLowerCase().includes(q) ||
+      m.person?.fullName?.toLowerCase().includes(q) ||
+      m.product?.name?.toLowerCase().includes(q) ||
+      m.status?.toLowerCase().includes(q) ||
+      m.action?.toLowerCase().includes(q)
     );
   });
 
@@ -108,27 +109,23 @@ const CustomerTrack = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
-            Customer Activity History
+            Meeting Activity Tracker
           </h1>
           <p className="text-gray-500 text-sm">
-            View customer tracking logs, activities, and follow-ups
+            Monitor follow-ups, meetings, and assigned staff performance
           </p>
         </div>
 
-        {/* 🔍 Search Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
-            />
-          </div>
+        {/* 🔍 Search */}
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-3 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
+          />
         </div>
       </div>
 
@@ -153,7 +150,7 @@ const CustomerTrack = () => {
               </select>
             </div>
 
-            {/* 🛍️ Product Filter */}
+            {/* 🛍 Product Filter */}
             <div className="relative">
               <FiShoppingBag className="absolute left-3 top-3 text-gray-400" />
               <select
@@ -164,7 +161,7 @@ const CustomerTrack = () => {
                 <option value="">All Products</option>
                 {productList.map((p) => (
                   <option key={p._id} value={p._id}>
-                    {p.name || "Unnamed Product"}
+                    {p.name}
                   </option>
                 ))}
               </select>
@@ -204,84 +201,69 @@ const CustomerTrack = () => {
         </div>
       </div>
 
-      {/* ✅ Table Section */}
+      {/* ✅ Meeting Table */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-      
-          <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
-            <thead>
-              <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
-                <th className="py-3 px-4 w-[60px]">Sr</th>
-                <th className="py-3 px-4 w-[200px]">Company</th>
-                <th className="py-3 px-4 w-[180px]">Staff</th>
-                <th className="py-3 px-4 w-[180px]">Product</th>
-                <th className="py-3 px-4 w-[180px]">Action</th>
-                <th className="py-3 px-4 w-[160px]">Date</th>
-                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((item, i) => (
-                  <tr
-                    key={i}
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-                    <td className="py-3 px-4 text-gray-900 font-medium">
-                      {i + 1}
-                    </td>
-                    <td className="py-3 px-4 text-gray-900 font-medium truncate">
-                      {item.company?.length > 25
-                        ? `${item.company.slice(0, 25)}...`
-                        : item.company || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.staff || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.product || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.action || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700">
-                      {item.date
-                        ? new Date(item.date).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(item._id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="text-center py-8 text-gray-500 rounded-lg"
-                  >
-                    No activity found
+        <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4 w-[60px]">Sr</th>
+              <th className="py-3 px-4 w-[200px]">Company</th>
+              <th className="py-3 px-4 w-[180px]">Person</th>
+              <th className="py-3 px-4 w-[180px]">Product</th>
+              <th className="py-3 px-4 w-[160px]">Status</th>
+              <th className="py-3 px-4 w-[160px]">Assigned Staff</th>
+              <th className="py-3 px-4 text-center w-[180px]">Date & Time</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredMeetings.length > 0 ? (
+              filteredMeetings.map((m, i) => (
+                <tr
+                  key={i}
+                  className="border-b hover:bg-gray-50 transition"
+                >
+                  <td className="py-3 px-4 text-gray-900 font-medium">
+                    {i + 1}
+                  </td>
+                  <td className="py-3 px-4 text-gray-900 truncate">
+                    {m.companyName || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {m.person?.fullName || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {m.product?.name || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {m.status || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {m.referToStaff?.username || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-center text-gray-700">
+                    {m.followDates?.[0]
+                      ? new Date(m.followDates[0]).toLocaleDateString()
+                      : "—"}{" "}
+                    {m.followTimes?.[0] || ""}
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-       
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center py-8 text-gray-500 rounded-lg"
+                >
+                  No meeting records found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
-export default CustomerTrack;
+export default MeetingTrack;
