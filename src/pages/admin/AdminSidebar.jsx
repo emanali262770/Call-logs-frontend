@@ -25,6 +25,7 @@ const links = [
   { to: "/admin/products", label: "Products List", icon: <FaBoxOpen />, key: "isProduct" },
   { to: "/admin/staff", label: "Staff List", icon: <FaUserTie />, key: "isStaff" },
   { to: "/admin/customers", label: "Customer Data", icon: <FaUsers />, key: "isCustomer" },
+  { to: "/admin/assign", label: "Assign To", icon: <FaUsers />, key: "isAssign" },
   // { to: "/admin/more-product-assign", label: "More Product Assign", icon: <FaUsers /> },
   { to: "/admin/meetings/add", label: "Meeting Details", icon: <FaCalendarAlt />, key: "isMeeting" },
   { to: "/admin/followup", label: "Follow Up", icon: <FaTasks />, key: "isFollow" },

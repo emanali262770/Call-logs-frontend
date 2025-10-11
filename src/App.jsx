@@ -23,6 +23,7 @@ import Modules from "./pages/admin/Modules";
 import ModulesFunctionalities from "./pages/admin/ModulesFunctionalities";
 import SuccessClient from "./pages/admin/SuccessClient";
 import MoreProductAssign from "./pages/admin/MoreProductAssign";
+import AssignTo from "./pages/admin/AssignTo";
 
 function AppContent() {
   return (
@@ -49,6 +50,7 @@ function AppContent() {
             <Route path="products/add" element={<AddProduct />} />
             {/* <Route path="more-product-assign" element={<MoreProductAssign />} /> */}
             <Route path="customers" element={<CustomerData />} />
+             <Route path="assign" element={<AssignTo />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="followup" element={<FollowUp />} /> 
             <Route path="success-client" element={<SuccessClient />} /> 

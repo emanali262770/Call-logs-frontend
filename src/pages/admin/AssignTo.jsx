@@ -18,7 +18,7 @@ import {
 import * as XLSX from "xlsx";
 import { X } from "lucide-react";
 
-const CustomerData = () => {
+const AssignTo = () => {
   const [customerList, setCustomerData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -458,7 +458,7 @@ const CustomerData = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
-            Customer List
+            Assign List
           </h1>
           <p className="text-gray-500 text-sm">Manage your customer database</p>
         </div>
@@ -477,140 +477,20 @@ const CustomerData = () => {
             />
           </div>
 
-          {/* Upload Excel */}
-          {/* Excel Upload Box */}
-          {userInfo?.isAdmin && (
-            <div className="relative group">
-              <label
-                htmlFor="excel-upload"
-                className="flex items-center justify-center px-5 py-2.5 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer 
-               bg-white hover:bg-blue-50 transition-all duration-300 text-gray-600 font-medium text-sm
-               group-hover:border-blue-400 group-hover:text-blue-600"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="w-5 h-5 mr-2 text-blue-500 group-hover:text-blue-600 transition-colors"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-9-9v12m0 0l-3-3m3 3l3-3"
-                  />
-                </svg>
-                Upload Excel File
-              </label>
-              <input
-                id="excel-upload"
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
-              {file && (
-                <p className="mt-2 text-xs absolute text-gray-500">
-                  📄 {file.name}
-                </p>
-              )}
-            </div>
-          )}
-          {/* ✅ Download Format Button */}
-          {userInfo?.isAdmin && (
-            <a
-              href="/customers_sample.xlsx"
-              download
-              className="flex items-center justify-center px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-sm text-sm font-medium"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 mr-2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-9-9v12m0 0l-3-3m3 3l3-3"
-                />
-              </svg>
-              Download Excel Format
-            </a>
-          )}
+          
 
           {/* Add Customer Btn */}
 
-          <button
+          {/* <button
             onClick={handleAddCustomer}
             className="bg-newPrimary text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-primaryDark transition-all shadow-md hover:shadow-lg"
           >
             <FiPlus className="text-lg" />
-            <span>Add Customer</span>
-          </button>
+            <span>Add Assign</span>
+          </button> */}
         </div>
 
-        {/* 🧾 PREVIEW MODAL */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white w-[100%] md:w-[1000px] rounded-xl shadow-lg p-6 relative max-h-[80vh] overflow-y-auto">
-              <button
-                onClick={() => setShowPreview(false)}
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-              >
-                <X size={20} />
-              </button>
-              <h2 className="text-lg font-semibold mb-4 text-newPrimary">
-                Excel Preview ({excelData.length} Rows)
-              </h2>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full border text-sm">
-                  <thead className="bg-gray-200 text-gray-700">
-                    <tr>
-                      {Object.keys(excelData[0] || {}).map((key) => (
-                        <th key={key} className="border px-3 py-2 text-left">
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {excelData.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        {Object.values(row).map((val, i) => (
-                          <td key={i} className="border px-3 py-2">
-                            {val || "-"}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex justify-end mt-4 gap-3">
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpload}
-                  disabled={uploading}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-                >
-                  {uploading ? "Uploading..." : "Upload to Backend"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        
       </div>
 
       {/* Customer Table */}
@@ -630,7 +510,7 @@ const CustomerData = () => {
               {/* <th className="py-3 px-4 w-[150px]">Assigned Staff</th>
               <th className="py-3 px-4 w-[150px]">Assigned Product</th> */}
               {userInfo?.isAdmin && (
-                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
+                <th className="py-3 px-4 text-right w-[120px]">Assign</th>
               )}
             </tr>
           </thead>
@@ -721,7 +601,7 @@ const CustomerData = () => {
                           onClick={() => handleEdit(client)}
                           className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                         >
-                          <FiEdit size={16} />
+                          
                         </button>
                         <button
                           onClick={() => handleDelete(client._id)}
@@ -1132,4 +1012,4 @@ const CustomerData = () => {
   );
 };
 
-export default CustomerData;
+export default AssignTo;
