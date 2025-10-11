@@ -401,9 +401,9 @@ useEffect(() => {
               <th className="py-3 px-4">Number</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Password</th>
-              {userInfo?.isAdmin && (
+             
                 <th className="py-3 px-4 text-right">Actions</th>
-              )}
+             
             </tr>
           </thead>
 
@@ -485,7 +485,7 @@ useEffect(() => {
                     </td>
 
                     {/* Actions */}
-                    {userInfo?.isAdmin && (
+                   
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end space-x-2">
                           <button
@@ -494,15 +494,17 @@ useEffect(() => {
                           >
                             <FiEdit size={16} />
                           </button>
+                           {userInfo?.isAdmin && (
                           <button
                             onClick={() => handleDelete(staff._id)}
                             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                           >
                             <FiTrash2 size={16} />
                           </button>
+                           )}
                         </div>
                       </td>
-                    )}
+                   
                   </tr>
                 );
               })

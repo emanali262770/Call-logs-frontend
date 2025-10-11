@@ -123,7 +123,10 @@ const AdminDashboard = () => {
         toast.error(`❌ ${backendMessage}`);
        }, 2000); 
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+        
       }
     }
     pieDataApi();
@@ -159,7 +162,9 @@ const AdminDashboard = () => {
         toast.error(`❌ ${backendMessage}`);
        }, 2000); 
       } finally {
-        setLoading(false);
+         setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       }
     }
     DaysDataApi();
@@ -200,7 +205,9 @@ const AdminDashboard = () => {
         toast.error(`❌ ${backendMessage}`);
        }, 2000); 
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       }
     }
     MontlyTrendDataApi();
@@ -239,7 +246,9 @@ const AdminDashboard = () => {
         toast.error(`❌ ${backendMessage}`);
        }, 2000); 
       } finally {
-        setLoading(false);
+         setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       }
     }
 
@@ -691,93 +700,8 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* 📊 Weekly Call Volume Chart */}
-              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    Weekly Call Volume
-                  </h2>
-                  <FiTrendingUp className="text-green-500" />
-                </div>
-
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dayData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "6px",
-                          boxShadow:
-                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                        }}
-                      />
-                      <Bar
-                        dataKey="calls"
-                        fill="#3b82f6"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Monthly Call Trends + Follow-up Meetings Section */}
-        {loading ? (
-          // 🦴 Skeleton view
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-            <MonthlyCallTrendsSkeleton />
-            <FollowUpMeetingsSkeleton />
-          </div>
-        ) : (
-          // 📊 Actual charts view
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-            {/* 📞 Monthly Call Trends */}
-            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Monthly Call Trends
-                </h2>
-                <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200 flex items-center">
-                  View report <FiChevronRight className="ml-1" />
-                </button>
-              </div>
-
-              {/* Total calls text */}
-              <div className="text-2xl md:text-3xl font-bold text-newPrimary mb-4">
-                {callData.reduce((total, month) => total + month.calls, 0)}{" "}
-                calls
-              </div>
-
-              {/* Chart */}
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={callData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "6px",
-                        boxShadow:
-                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                      }}
-                    />
-                    <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* 📅 Follow-up Meetings */}
+             
+               {/* 📅 Follow-up Meetings */}
             <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-800">
@@ -836,6 +760,92 @@ const AdminDashboard = () => {
                 </span>
               </div>
             </div>
+            </>
+          )}
+        </div>
+
+        {/* Monthly Call Trends + Follow-up Meetings Section */}
+        {loading ? (
+          // 🦴 Skeleton view
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            <MonthlyCallTrendsSkeleton />
+            <FollowUpMeetingsSkeleton />
+          </div>
+        ) : (
+          // 📊 Actual charts view
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* 📞 Monthly Call Trends */}
+            <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Monthly Call Trends
+                </h2>
+                <button className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200 flex items-center">
+                  View report <FiChevronRight className="ml-1" />
+                </button>
+              </div>
+
+              {/* Total calls text */}
+              <div className="text-2xl md:text-3xl font-bold text-newPrimary mb-4">
+                {callData.reduce((total, month) => total + month.calls, 0)}{" "}
+                calls
+              </div>
+
+              {/* Chart */}
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={callData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        boxShadow:
+                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Bar dataKey="calls" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+           {/* 📊 Weekly Call Volume Chart */}
+              <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Weekly Call Volume
+                  </h2>
+                  <FiTrendingUp className="text-green-500" />
+                </div>
+
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dayData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "6px",
+                          boxShadow:
+                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                        }}
+                      />
+                      <Bar
+                        dataKey="calls"
+                        fill="#3b82f6"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
           </div>
         )}
       </main>
