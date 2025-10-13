@@ -250,7 +250,7 @@ useEffect(() => {
               <th className="py-3 px-4 w-[180px]">PhoneNumber</th>
               <th className="py-3 px-4 w-[160px]">person</th>
 
-              <th className="py-3 px-4 w-[160px]">Staff</th>
+              <th className="py-3 px-4 w-[160px]">Created By</th>
               <th className="py-3 px-4 w-[160px]">Product</th>
 
               <th className="py-3 px-4 w-[160px]">Date</th>
