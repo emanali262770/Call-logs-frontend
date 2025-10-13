@@ -20,10 +20,10 @@ const StaffTrack = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filters = [
-    { label: "Today", value: "1" },
-    { label: "1 Week", value: "7" },
-    { label: "14 Days", value: "14" },
-    { label: "1 Month", value: "30" },
+    { label: "Today", value: "today" },
+    { label: "1 Week", value: "1week" },
+    { label: "14 Days", value: "14days" },
+    { label: "1 Month", value: "1month" },
     { label: "All", value: "all" },
   ];
 
