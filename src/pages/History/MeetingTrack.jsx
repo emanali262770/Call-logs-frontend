@@ -8,7 +8,7 @@ import {
   FiCalendar,
   FiX,
 } from "react-icons/fi";
-
+import { PuffLoader } from "react-spinners";
 const MeetingTrack = () => {
   const [meetings, setMeetings] = useState([]);
   const [staff, setStaff] = useState("");
@@ -18,7 +18,8 @@ const MeetingTrack = () => {
   const [range, setRange] = useState("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   const filters = [
     { label: "Today", value: "1" },
     { label: "1 Week", value: "7" },
@@ -45,10 +46,10 @@ const MeetingTrack = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/meetings/history`,
+          `${import.meta.env.VITE_API_BASE_URL}/history/meetings-track`,
           {
             headers: { Authorization: `Bearer ${userInfo?.token}` },
-            params: { staff, product, range },
+            params: { staff, product, date: range },
           }
         );
         setMeetings(res.data.data || []);
@@ -93,15 +94,39 @@ const MeetingTrack = () => {
 
   // ✅ Filter by search
   const filteredMeetings = meetings.filter((m) => {
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
+
     return (
       m.companyName?.toLowerCase().includes(q) ||
-      m.person?.fullName?.toLowerCase().includes(q) ||
-      m.product?.name?.toLowerCase().includes(q) ||
-      m.status?.toLowerCase().includes(q) ||
-      m.action?.toLowerCase().includes(q)
+      m.persons?.some((p) => p.fullName?.toLowerCase().includes(q)) ||
+      m.assignedProducts?.name?.toLowerCase().includes(q) ||
+      m.assignedStaff?.username?.toLowerCase().includes(q) ||
+      m.status?.trim().toLowerCase().includes(q) ||
+      m.Timeline?.trim().toLowerCase().includes(q)
     );
   });
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // ✅ Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredMeetings.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <PuffLoader height="150" width="150" radius={1} color="#1d4ed8" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -208,44 +233,76 @@ const MeetingTrack = () => {
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
               <th className="py-3 px-4 w-[60px]">Sr</th>
               <th className="py-3 px-4 w-[200px]">Company</th>
-              <th className="py-3 px-4 w-[180px]">Person</th>
+              <th className="py-3 px-4 w-[180px]">Persons</th>
               <th className="py-3 px-4 w-[180px]">Product</th>
               <th className="py-3 px-4 w-[160px]">Status</th>
               <th className="py-3 px-4 w-[160px]">Assigned Staff</th>
-              <th className="py-3 px-4 text-center w-[180px]">Date & Time</th>
+              <th className="py-3 px-4 text-center w-[160px]">Timeline</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredMeetings.length > 0 ? (
-              filteredMeetings.map((m, i) => (
-                <tr
-                  key={i}
-                  className="border-b hover:bg-gray-50 transition"
-                >
+              currentItems.map((m, i) => (
+                <tr key={i} className="border-b hover:bg-gray-50 transition">
                   <td className="py-3 px-4 text-gray-900 font-medium">
-                    {i + 1}
+                    {indexOfFirstItem + i + 1}
                   </td>
+
+                  {/* 🏢 Company */}
                   <td className="py-3 px-4 text-gray-900 truncate">
                     {m.companyName || "—"}
                   </td>
+
+                  {/* 👤 Person(s) */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {m.person?.fullName || "—"}
+                    {m.persons?.length
+                      ? m.persons.map((p) => p.fullName).join(", ")
+                      : "—"}
                   </td>
+
+                  {/* 🛍️ Product */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {m.product?.name || "—"}
+                    {m.assignedProducts?.name || "—"}
                   </td>
+
+                  {/* 📋 Status */}
+                  <td className="py-3  ">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+      ${
+        m.status === "Follow Up Required"
+          ? "bg-yellow-100 text-yellow-800"
+          : m.status === "Not Interested"
+          ? "bg-red-100 text-red-700"
+          : "bg-gray-100 text-gray-700"
+      }
+    `}
+                    >
+                      {m.status || "—"}
+                    </span>
+                  </td>
+
+                  {/* 👩‍💼 Assigned Staff */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {m.status || "—"}
+                    {m.assignedStaff?.username || "—"}
                   </td>
-                  <td className="py-3 px-4 text-gray-700 truncate">
-                    {m.referToStaff?.username || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-center text-gray-700">
-                    {m.followDates?.[0]
-                      ? new Date(m.followDates[0]).toLocaleDateString()
-                      : "—"}{" "}
-                    {m.followTimes?.[0] || ""}
+
+                  {/* ⏱️ Timeline */}
+                  <td className={`py-3 px-4 text-center`}>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+      ${
+        m.Timeline === "Active"
+          ? "bg-green-100 text-green-700"
+          : m.Timeline === "Completed"
+          ? "bg-blue-100 text-blue-700"
+          : "bg-gray-100 text-gray-700"
+      }
+    `}
+                    >
+                      {m.Timeline || "—"}
+                    </span>
                   </td>
                 </tr>
               ))
@@ -262,6 +319,84 @@ const MeetingTrack = () => {
           </tbody>
         </table>
       </div>
+      {/* ✅ Pagination Controls */}
+      {filteredMeetings.length > itemsPerPage && (
+        <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex justify-center items-center gap-2 flex-wrap">
+            {/* Prev Button */}
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === 1
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
+              }`}
+            >
+              Prev
+            </button>
+
+            {/* Dynamic Page Numbers */}
+            {(() => {
+              const pageButtons = [];
+              const totalVisible = 5;
+
+              if (currentPage > 3) {
+                pageButtons.push(1);
+                if (currentPage > 4) pageButtons.push("...");
+              }
+
+              for (
+                let i = Math.max(1, currentPage - 2);
+                i <= Math.min(totalPages, currentPage + 2);
+                i++
+              ) {
+                pageButtons.push(i);
+              }
+
+              if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) pageButtons.push("...");
+                pageButtons.push(totalPages);
+              }
+
+              return pageButtons.map((page, index) =>
+                page === "..." ? (
+                  <span key={index} className="px-3 py-1 text-gray-500">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                      currentPage === page
+                        ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              );
+            })()}
+
+            {/* Next Button */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === totalPages
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -357,7 +357,9 @@ const ProductsPage = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
+ useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
   // Show loading spinner
   if (loading) {
     return (

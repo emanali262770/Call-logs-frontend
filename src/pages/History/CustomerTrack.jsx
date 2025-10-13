@@ -8,6 +8,7 @@ import {
   FiCalendar,
   FiX,
 } from "react-icons/fi";
+import { PuffLoader } from "react-spinners";
 
 const CustomerTrack = () => {
   const [data, setData] = useState([]);
@@ -18,6 +19,8 @@ const CustomerTrack = () => {
   const [range, setRange] = useState("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20; // same as AddMeeting
 
   const filters = [
     { label: "Today", value: "1" },
@@ -45,12 +48,13 @@ const CustomerTrack = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/customers/history`,
+          `${import.meta.env.VITE_API_BASE_URL}/history/customers-track`,
           {
             headers: { Authorization: `Bearer ${userInfo?.token}` },
-            params: { staff, product, range },
+            params: { staff, product, date: range },
           }
         );
+
         setData(res.data.data || []);
       } catch (err) {
         console.error(err);
@@ -75,6 +79,7 @@ const CustomerTrack = () => {
     };
     fetchStaffData();
   }, []);
+  
 
   // ✅ Fetch Products
   useEffect(() => {
@@ -93,15 +98,43 @@ const CustomerTrack = () => {
 
   // ✅ Filtered data for search
   const filteredData = data.filter((item) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      item.company?.toLowerCase().includes(query) ||
-      item.staff?.toLowerCase().includes(query) ||
-      item.product?.toLowerCase().includes(query) ||
-      item.action?.toLowerCase().includes(query)
-    );
-  });
+  const query = searchQuery.toLowerCase();
+  return (
+    item.businessType?.toLowerCase().includes(query) ||
+    item.company?.toLowerCase().includes(query) ||
+    item.city?.toLowerCase().includes(query) ||
+    item.phoneNumber?.toLowerCase().includes(query) ||
+    item.person?.toLowerCase().includes(query) ||
+    item.designation?.toLowerCase().includes(query) ||
+    item.department?.toLowerCase().includes(query) ||
+    item.staff?.toLowerCase().includes(query) ||
+    item.product?.toLowerCase().includes(query) ||
+    item.action?.toLowerCase().includes(query) ||
+    new Date(item.date)
+      .toLocaleDateString()
+      .toLowerCase()
+      .includes(query)
+  );
+});
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchQuery]);
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  if (loading) {
+  return (
+    <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <PuffLoader height="150" width="150" radius={1} color="#1d4ed8" />
+      </div>
+    </div>
+  );
+}
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* ✅ Header Section */}
@@ -206,80 +239,150 @@ const CustomerTrack = () => {
 
       {/* ✅ Table Section */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-      
-          <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
-            <thead>
-              <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
-                <th className="py-3 px-4 w-[60px]">Sr</th>
-                <th className="py-3 px-4 w-[200px]">Company</th>
-                <th className="py-3 px-4 w-[180px]">Staff</th>
-                <th className="py-3 px-4 w-[180px]">Product</th>
-                <th className="py-3 px-4 w-[180px]">Action</th>
-                <th className="py-3 px-4 w-[160px]">Date</th>
-                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((item, i) => (
-                  <tr
-                    key={i}
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-                    <td className="py-3 px-4 text-gray-900 font-medium">
-                      {i + 1}
-                    </td>
-                    <td className="py-3 px-4 text-gray-900 font-medium truncate">
-                      {item.company?.length > 25
-                        ? `${item.company.slice(0, 25)}...`
-                        : item.company || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.staff || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.product || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 truncate">
-                      {item.action || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700">
-                      {item.date
-                        ? new Date(item.date).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(item._id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="text-center py-8 text-gray-500 rounded-lg"
-                  >
-                    No activity found
+        <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+              <th className="py-3 px-4 w-[60px]">Sr</th>
+              <th className="py-3 px-4 w-[200px]">BusinessType</th>
+              <th className="py-3 px-4 w-[180px]">Company</th>
+              <th className="py-3 px-4 w-[180px]">City</th>
+              <th className="py-3 px-4 w-[180px]">PhoneNumber</th>
+              <th className="py-3 px-4 w-[160px]">person</th>
+
+              <th className="py-3 px-4 w-[160px]">Staff</th>
+              <th className="py-3 px-4 w-[160px]">Product</th>
+
+              <th className="py-3 px-4 w-[160px]">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.length > 0 ? (
+              currentItems.map((item, i) => (
+                <tr key={i} className="border-b hover:bg-gray-50 transition">
+                  <td className="py-3 px-4 text-gray-900 font-medium">
+                    {indexOfFirstItem + i + 1}
+                  </td>
+                  <td className="py-3 px-4 text-gray-900 font-medium truncate">
+                    {item.businessType?.length > 25
+                      ? `${item.businessType.slice(0, 25)}...`
+                      : item.businessType || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.company || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.city || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.phoneNumber || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.person || "—"}
+                  </td>
+
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.staff || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-gray-700 truncate">
+                    {item.product || "—"}
+                  </td>
+
+                  <td className="py-3 px-4 text-gray-700">
+                    {item.date ? new Date(item.date).toLocaleDateString() : "—"}
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-       
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="9"
+                  className="text-center py-8 text-gray-500 rounded-lg"
+                >
+                  No activity found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+      {/* Pagination Controls */}
+      {filteredData.length > itemsPerPage && (
+        <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex justify-center items-center gap-2 flex-wrap">
+            {/* Prev Button */}
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === 1
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
+              }`}
+            >
+              Prev
+            </button>
+
+            {/* Dynamic Page Numbers */}
+            {(() => {
+              const pageButtons = [];
+              const totalVisible = 5;
+
+              if (currentPage > 3) {
+                pageButtons.push(1);
+                if (currentPage > 4) pageButtons.push("...");
+              }
+
+              for (
+                let i = Math.max(1, currentPage - 2);
+                i <= Math.min(totalPages, currentPage + 2);
+                i++
+              ) {
+                pageButtons.push(i);
+              }
+
+              if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) pageButtons.push("...");
+                pageButtons.push(totalPages);
+              }
+
+              return pageButtons.map((page, index) =>
+                page === "..." ? (
+                  <span key={index} className="px-3 py-1 text-gray-500">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                      currentPage === page
+                        ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              );
+            })()}
+
+            {/* Next Button */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === totalPages
+                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

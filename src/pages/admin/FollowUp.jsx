@@ -220,6 +220,9 @@ const FollowUp = () => {
     setTime("");
     setStatus("Active");
   };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
