@@ -432,6 +432,10 @@ const CustomerData = () => {
       });
   };
 
+   useEffect(() => {
+      setCurrentPage(1);
+    }, [searchQuery]);
+
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;

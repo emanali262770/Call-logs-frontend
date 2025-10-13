@@ -21,12 +21,12 @@ const tracks = [
     path: "/admin/history/followups",
     desc: "See recent follow-ups and statuses",
   },
-  {
-    label: "Success Client Track",
-    icon: <FaCheckCircle className="text-green-600 text-3xl" />,
-    path: "/admin/history/success",
-    desc: "View successfully closed client deals",
-  },
+  // {
+  //   label: "Success Client Track",
+  //   icon: <FaCheckCircle className="text-green-600 text-3xl" />,
+  //   path: "/admin/history/success",
+  //   desc: "View successfully closed client deals",
+  // },
   {
     label: "Staff Track",
     icon: <FaUserTie className="text-rose-600 text-3xl" />,

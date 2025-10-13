@@ -328,6 +328,9 @@ useEffect(() => {
         }
       });
   };
+   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Show loading spinner
   if (loading) {

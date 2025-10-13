@@ -488,7 +488,7 @@ const AdminDashboard = () => {
                 <FiBell size={20} />
                 {unreadCount > 0 && (
                   <span
-                    className={`absolute -top-0 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${
+                    className={`absolute -top-0 -right-0 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${
                       unreadCount < 100
                         ? "w-4 h-4"
                         : "w-7 h-5 px-[2px] text-[10px]"
@@ -588,7 +588,7 @@ const AdminDashboard = () => {
                     <p className="text-xs text-gray-500">{userEmail}</p>
                   </div>
                   <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/admin/settings/profile")}
                     className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
                   >
                     Profile

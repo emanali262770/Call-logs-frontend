@@ -148,7 +148,9 @@ const AddMeeting = () => {
       setMeetings(result.data);
     } catch (error) {
       console.error("Error fetching Meeting data:", error);
-      toast.error("Failed to load Meeting data");
+      setTimeout(() => {
+        toast.error("Failed to load Meeting data");
+      }, 2000); 
     } finally {
       setLoading(false);
     }
@@ -393,6 +395,10 @@ const AddMeeting = () => {
     setReferToStaff("");
     setContactMethod("By Visit");
   };
+
+   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -409,7 +415,7 @@ const AddMeeting = () => {
       </div>
     );
   }
-  console.log(currentMeetings);
+
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">

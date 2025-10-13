@@ -158,6 +158,9 @@ const AssignTo = () => {
     }
   };
 
+   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredCustomers.slice(

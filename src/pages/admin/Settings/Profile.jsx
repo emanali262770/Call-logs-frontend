@@ -122,7 +122,7 @@ const Profile = () => {
     );
 
     if (res.data?.success) {
-      toast.success("✅ Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setEditing(false);
     } else {
       toast.error("❌ Failed to update profile");
