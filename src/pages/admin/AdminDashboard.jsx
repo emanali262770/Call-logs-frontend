@@ -53,7 +53,7 @@ import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
@@ -85,8 +85,7 @@ const AdminDashboard = () => {
   }
   const base = import.meta.env.VITE_API_BASE_URL;
 
-
-    // ✅ Logout handler
+  // ✅ Logout handler
   const handleLogout = () => {
     localStorage.removeItem("userInfo");
     navigate("/"); // go back to login page
@@ -488,11 +487,15 @@ const AdminDashboard = () => {
                 <FiBell size={20} />
                 {unreadCount > 0 && (
                   <span
-                    className={`absolute -top-0 -right-0 bg-red-500 text-white rounded-full flex items-center justify-center text-xs border-2 border-white ${
-                      unreadCount < 100
-                        ? "w-4 h-4"
-                        : "w-7 h-5 px-[2px] text-[10px]"
-                    }`}
+                    className={`absolute -top-1 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center font-semibold border-2 border-white
+    ${
+      unreadCount < 10
+        ? "w-4 h-4 text-[10px]"
+        : unreadCount < 100
+        ? "w-5 h-5 text-[10px]"
+        : "min-w-[26px] h-5 px-[4px] text-[9px]"
+    }
+  `}
                   >
                     {unreadCount < 100 ? unreadCount : "99+"}
                   </span>
