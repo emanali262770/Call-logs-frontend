@@ -242,8 +242,7 @@ const AdminDashboard = () => {
         const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-10"
 
         const res = await axios.get(
-          `${
-            import.meta.env.VITE_API_BASE_URL
+          `${import.meta.env.VITE_API_BASE_URL
           }/dashboard/calendar-meetings?month=${currentMonth}`,
           { headers }
         );
@@ -488,13 +487,12 @@ const AdminDashboard = () => {
                 {unreadCount > 0 && (
                   <span
                     className={`absolute -top-1 -right-1 bg-red-500 text-white rounded-full flex items-center justify-center font-semibold border-2 border-white
-    ${
-      unreadCount < 10
-        ? "w-4 h-4 text-[10px]"
-        : unreadCount < 100
-        ? "w-5 h-5 text-[10px]"
-        : "min-w-[26px] h-5 px-[4px] text-[9px]"
-    }
+    ${unreadCount < 10
+                        ? "w-4 h-4 text-[10px]"
+                        : unreadCount < 100
+                          ? "w-5 h-5 text-[10px]"
+                          : "min-w-[26px] h-5 px-[4px] text-[9px]"
+                      }
   `}
                   >
                     {unreadCount < 100 ? unreadCount : "99+"}
@@ -645,47 +643,44 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {cardsLoading
             ? Array.from({ length: summaryData.length }).map((_, idx) => (
-                <CardSkeleton key={idx} />
-              ))
+              <CardSkeleton key={idx} />
+            ))
             : summaryData.map((item, index) => (
-                <div
-                  key={index}
-                  className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${
-                    cardsLoading ? "opacity-0" : "opacity-100"
+              <div
+                key={index}
+                className={`bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transform hover:-translate-y-1 transition-all duration-500 ${cardsLoading ? "opacity-0" : "opacity-100"
                   }`}
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              >
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="flex justify-between items-start relative z-10">
-                    <div
-                      className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
-                    >
-                      {item.icon}
-                    </div>
-                    <span
-                      className={`text-xs md:text-sm font-medium ${
-                        item.change.includes("+")
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {item.change}
-                    </span>
+                <div className="flex justify-between items-start relative z-10">
+                  <div
+                    className={`p-2 md:p-3 rounded-lg ${item.color} transition-colors duration-300 group-hover:scale-110`}
+                  >
+                    {item.icon}
                   </div>
+                  <span
+                    className={`text-xs md:text-sm font-medium ${item.change.includes("+")
+                      ? "text-green-600"
+                      : "text-red-600"
+                      }`}
+                  >
+                    {item.change}
+                  </span>
+                </div>
 
-                  <div className="mt-4 relative z-10">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-800">
-                      {item.value}
-                    </div>
-                    <div className="text-gray-500 text-sm md:text-base mt-1">
-                      {item.name}
-                    </div>
+                <div className="mt-4 relative z-10">
+                  <div className="text-2xl md:text-3xl font-bold text-gray-800">
+                    {item.value}
+                  </div>
+                  <div className="text-gray-500 text-sm md:text-base mt-1">
+                    {item.name}
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
         </div>
 
-        {/* Charts Section */}
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
           {loading ? (
@@ -713,7 +708,7 @@ const AdminDashboard = () => {
                           <PieChart>
                             <Pie
                               data={[
-                                { value: entry.value },
+                                { value: entry.value > 99.5 ? 99.5 : entry.value < 3 && entry.value > 0 ? 3 : entry.value },
                                 { value: 100 - entry.value },
                               ]}
                               cx="50%"
@@ -727,6 +722,7 @@ const AdminDashboard = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                               <Cell key={`cell-bg-${index}`} fill="#e5e7eb" />
                             </Pie>
+
                             <Tooltip
                               formatter={(value) => [`${value}%`, "Percentage"]}
                               contentStyle={{
@@ -790,11 +786,10 @@ const AdminDashboard = () => {
                     return (
                       <div
                         key={date}
-                        className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${
-                          hasMeeting
-                            ? "bg-blue-100 text-blue-600 font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
+                        className={`p-1 md:p-2 rounded-full transition-colors duration-200 ${hasMeeting
+                          ? "bg-blue-100 text-blue-600 font-medium"
+                          : "text-gray-700 hover:bg-gray-100"
+                          }`}
                       >
                         {date}
                       </div>
