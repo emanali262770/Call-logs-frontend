@@ -294,8 +294,8 @@ const AdminDashboard = () => {
     // 🕒 First call immediately
     fetchCustomers();
 
-    // ⏱️ Then repeat every 3 seconds
-    const interval = setInterval(fetchCustomers, 30000);
+    // ⏱️ Then repeat every 60 seconds
+    const interval = setInterval(fetchCustomers, 60000);
 
     // 🧹 Cleanup on unmount
     return () => {
