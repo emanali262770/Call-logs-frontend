@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 
 const Profile = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const [formData, setFormData] = useState({
     image: null,
     imagePreview: null, // for showing existing image or new upload
@@ -23,40 +26,40 @@ const Profile = () => {
   const fileInputRef = useRef(null);
 
   // ✅ Fetch profile data only from /api/staff
- 
-    const fetchUserData = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/staff/${userInfo.id}`
-        );
-        console.log({ res }, "data");
 
-        // ✅ The API returns a single object inside res.data.data
-        if (res.data?.success && res.data?.data) {
-          const user = res.data.data; // direct object access
+  const fetchUserData = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/staff/${userInfo.id}`
+      );
+      console.log({ res }, "data");
 
-          setFormData((prev) => ({
-            ...prev,
-            image: null,
-            imagePreview: user.image?.url || user.image || null,
-            username: user.username || "",
-            email: user.email || "",
-            password: user.password || "",
-            department: user.department || "",
-            designation: user.designation || "",
-            address: user.address || "",
-            number: user.number || "",
-            role: user.role || "",
-          }));
-        } else {
-          toast.error("⚠️ User data not found");
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error("❌ Failed to load profile data");
+      // ✅ The API returns a single object inside res.data.data
+      if (res.data?.success && res.data?.data) {
+        const user = res.data.data; // direct object access
+
+        setFormData((prev) => ({
+          ...prev,
+          image: null,
+          imagePreview: user.image?.url || user.image || null,
+          username: user.username || "",
+          email: user.email || "",
+          password: user.password || "",
+          department: user.department || "",
+          designation: user.designation || "",
+          address: user.address || "",
+          number: user.number || "",
+          role: user.role || "",
+        }));
+      } else {
+        toast.error("⚠️ User data not found");
       }
-    };
- useEffect(() => {
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Failed to load profile data");
+    }
+  };
+  useEffect(() => {
     fetchUserData();
   }, []);
 
@@ -91,50 +94,58 @@ const Profile = () => {
   };
 
   // ✅ Save (PUT /auth/profile/update)
- const handleSave = async () => {
-  try {
-    setLoading(true);
-
-    const formDataToSend = new FormData();
-    formDataToSend.append("username", formData.username);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("password", formData.password);
-    formDataToSend.append("department", formData.department);
-    formDataToSend.append("designation", formData.designation);
-    formDataToSend.append("address", formData.address);
-    formDataToSend.append("number", formData.number);
-    formDataToSend.append("role", formData.role);
-
-    if (formData.image) {
-      formDataToSend.append("image", formData.image);
-    
-    }
-
-    const res = await axios.put(
-      `${import.meta.env.VITE_API_BASE_URL}/auth/profile/update`,
-      formDataToSend,
-      {
-        headers: {
-          Authorization: `Bearer ${userInfo?.token}`,
-          "Content-Type": "multipart/form-data",
-        },
+  const handleSave = async () => {
+    try {
+      if (formData.password !== confirmPassword) {
+        setPasswordError("Passwords do not match");
+        toast.error("⚠️ Passwords do not match");
+        return;
+      } else {
+        setPasswordError("");
       }
-    );
 
-    if (res.data?.success) {
-      toast.success("Profile updated successfully!");
-      setEditing(false);
-    } else {
-      toast.error("❌ Failed to update profile");
+      setLoading(true);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("username", formData.username);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("department", formData.department);
+      formDataToSend.append("designation", formData.designation);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("number", formData.number);
+      formDataToSend.append("role", formData.role);
+
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+
+      }
+
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/profile/update`,
+        formDataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.data?.success) {
+        toast.success("Profile updated successfully!");
+        setEditing(false);
+      } else {
+        toast.error("❌ Failed to update profile");
+      }
+      fetchUserData()
+    } catch (err) {
+      console.error("Save error:", err);
+      toast.error("❌ Error updating profile");
+    } finally {
+      setLoading(false);
     }
-    fetchUserData()
-  } catch (err) {
-    console.error("Save error:", err);
-    toast.error("❌ Error updating profile");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   return (
@@ -148,11 +159,10 @@ const Profile = () => {
               if (editing) handleSave();
               else setEditing(true);
             }}
-            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors ${
-              editing
+            className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors ${editing
                 ? "bg-green-100 text-green-700 hover:bg-green-200"
                 : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
-            }`}
+              }`}
           >
             {editing ? <FiSave size={16} /> : <FiEdit2 size={16} />}
             {editing ? "Save" : "Edit"}
@@ -192,46 +202,76 @@ const Profile = () => {
               {formData.username || "No name"}
             </p>
             <p className="text-sm text-gray-500">{formData.email}</p>
-            <p className="text-xs text-gray-400 uppercase">{formData.role}</p>
+            <p className="text-xs text-gray-400 uppercase">{formData.role === "user" ? "STAFF" : formData.role}</p>
           </div>
         </div>
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            "username",
-            "email",
-            "password",
-            "department",
-            "designation",
-            "address",
-            "number",
-          ].map((field) => (
-            <div key={field}>
-              <label className="text-sm font-medium text-gray-600 capitalize">
-                {field}
-              </label>
-              <input
-                type={
-                  field === "password"
-                    ? "password"
-                    : field === "email"
-                    ? "email"
-                    : "text"
-                }
-                name={field}
-                value={formData[field] || ""}
-                onChange={handleChange}
-                disabled={!editing}
-                className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${
-                  editing
-                    ? "border-gray-300 bg-white"
-                    : "bg-gray-100 border-gray-200 cursor-not-allowed"
+          {/* Map for all fields except password */}
+          {["username", "email", "department", "designation", "address", "number"].map(
+            (field) => (
+              <div key={field}>
+                <label className="text-sm font-medium text-gray-600 capitalize">
+                  {field}
+                </label>
+                <input
+                  type={
+                    field === "email" ? "email" : "text"
+                  }
+                  name={field}
+                  value={formData[field] || ""}
+                  onChange={handleChange}
+                  disabled={!editing}
+                  className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${editing
+                      ? "border-gray-300 bg-white"
+                      : "bg-gray-100 border-gray-200 cursor-not-allowed"
+                    }`}
+                />
+              </div>
+            )
+          )}
+
+          {/* Password Field */}
+          <div>
+            <label className="text-sm font-medium text-gray-600 capitalize">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              disabled={!editing}
+              className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${editing
+                  ? "border-gray-300 bg-white"
+                  : "bg-gray-100 border-gray-200 cursor-not-allowed"
                 }`}
-              />
-            </div>
-          ))}
+            />
+          </div>
+
+          {/* Confirm Password — appears to the right of Password */}
+          <div>
+            <label className="text-sm font-medium text-gray-600 capitalize">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={!editing}
+              className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${editing
+                  ? "border-gray-300 bg-white"
+                  : "bg-gray-100 border-gray-200 cursor-not-allowed"
+                }`}
+            />
+            {passwordError && (
+              <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+            )}
+          </div>
         </div>
+
 
         {/* Save button (for mobile) */}
         {editing && (
