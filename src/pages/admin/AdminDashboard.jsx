@@ -257,7 +257,7 @@ const AdminDashboard = () => {
           }
         }
       } catch (error) {
-        const backendMessage =
+        const backendMessage =``
           error.response?.data?.message ||
           "Something went wrong fetching calendar meetings.";
         setTimeout(() => {
