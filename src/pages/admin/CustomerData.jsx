@@ -44,9 +44,13 @@ const CustomerData = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [file, setFile] = useState(null);
-  const [excelData, setExcelData] = useState([]); // preview data
+  const [excelData, setExcelData] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Default image constant
+ const DEFAULT_IMAGE = "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
+
 
   // Token
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
@@ -90,6 +94,7 @@ const CustomerData = () => {
     setIsSliderOpen(false);
     setIsSliderOpen(true);
   };
+
   // Excel file upload in the backend
   const handleUpload = async () => {
     if (!file) return alert("Please select an Excel file!");
@@ -232,9 +237,6 @@ const CustomerData = () => {
       formData.append(`persons[${index}][email]`, person.email);
     });
 
-    // formData.append("assignedStaff", assignedStaff);
-    // formData.append("assignedProducts", assignedProduct);
-
     try {
       const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
@@ -292,6 +294,11 @@ const CustomerData = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPG, JPEG, and PNG images are allowed!');
+        return;
+      }
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -300,7 +307,7 @@ const CustomerData = () => {
   // Remove Image
   const removeImage = () => {
     setImage(null);
-    setImagePreview(null);
+    setImagePreview(DEFAULT_IMAGE);
   };
 
   // Add Person
@@ -358,7 +365,7 @@ const CustomerData = () => {
       setImagePreview(client.companyLogo.url);
       setImage(null);
     } else {
-      setImagePreview(null);
+      setImagePreview(DEFAULT_IMAGE);
       setImage(null);
     }
 
@@ -432,9 +439,9 @@ const CustomerData = () => {
       });
   };
 
-   useEffect(() => {
-      setCurrentPage(1);
-    }, [searchQuery]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -630,12 +637,7 @@ const CustomerData = () => {
               <th className="py-3 px-4 w-[140px]">Department</th>
               <th className="py-3 px-4 w-[140px]">Designation</th>
               <th className="py-3 px-4 w-[150px]">Phone No.</th>
-              
-              {/* <th className="py-3 px-4 w-[150px]">Assigned Staff</th>
-              <th className="py-3 px-4 w-[150px]">Assigned Product</th> */}
-             
-                <th className="py-3 px-4 text-right w-[120px]">Actions</th>
-             
+              <th className="py-3 px-4 text-right w-[120px]">Actions</th>
             </tr>
           </thead>
 
@@ -655,10 +657,7 @@ const CustomerData = () => {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <img
-                        src={
-                          client.companyLogo?.url ||
-                          "https://via.placeholder.com/40?text=Logo"
-                        }
+                        src={client.companyLogo?.url || DEFAULT_IMAGE}
                         alt="Logo"
                         className="w-9 h-9 rounded-full border object-cover flex-shrink-0"
                       />
@@ -679,17 +678,16 @@ const CustomerData = () => {
                     </span>
                   </td>
 
-
                   {/* City */}
                   <td className="py-3 px-4 text-green-600 truncate">
                     {client.city || " "}
                   </td>
 
-                      {/* Person */}
+                  {/* Person */}
                   <td className="py-3 px-4 text-gray-700 truncate">
                     {client.persons?.[0]?.fullName || " "}
                   </td>
-                   {/* Department */}
+                  {/* Department */}
                   <td className="py-3 px-4 text-gray-700 truncate">
                     {client.persons?.[0]?.department || "N/A"}
                   </td>
@@ -701,43 +699,28 @@ const CustomerData = () => {
 
                   {/* phoneNumber */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                   {client.persons?.[0]?.phoneNumber || " "}
-                     
+                    {client.persons?.[0]?.phoneNumber || " "}
                   </td>
 
-                 
-
-                  {/* Assigned Staff */}
-                  {/* <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.assignedStaff?.username || "N/A"}
-                  </td> */}
-
-                  {/* Assigned Product */}
-                  {/* <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.assignedProducts?.name || "N/A"}
-                  </td> */}
-
                   {/* Actions */}
-                 
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => handleEdit(client)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-                         {userInfo?.isAdmin && (
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleEdit(client)}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                      {userInfo?.isAdmin && (
                         <button
                           onClick={() => handleDelete(client._id)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                         >
                           <FiTrash2 size={16} />
                         </button>
-                         )}
-                      </div>
-                    </td>
-                 
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -848,6 +831,7 @@ const CustomerData = () => {
                     </h3>
                     <input
                       type="file"
+                      accept="image/jpeg,image/jpg,image/png"
                       onChange={handleImageUpload}
                       className="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
@@ -857,23 +841,25 @@ const CustomerData = () => {
                         hover:file:bg-primaryDark
                         file:transition-colors file:duration-200"
                     />
-                    {imagePreview && (
+                    {(imagePreview || DEFAULT_IMAGE) && (
                       <div className="mt-4">
                         <h3 className="text-sm font-medium text-gray-700 mb-2">
                           Company Logo Preview
                         </h3>
                         <div className="relative group w-48 h-32">
                           <img
-                            src={imagePreview}
+                            src={imagePreview || DEFAULT_IMAGE}
                             alt="Preview"
                             className="w-full h-full object-cover rounded-md border border-gray-200"
                           />
-                          <button
-                            onClick={removeImage}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
+                          {imagePreview && imagePreview !== DEFAULT_IMAGE && (
+                            <button
+                              onClick={removeImage}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1002,7 +988,7 @@ const CustomerData = () => {
               </div>
 
               {/* Assign Section */}
-              {/* <div className="border rounded-lg p-4">
+              <div className="border rounded-lg p-4">
                 <h3 className="text-lg font-semibold mb-4">Assign</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -1040,7 +1026,7 @@ const CustomerData = () => {
                     </select>
                   </div>
                 </div>
-              </div> */}
+              </div>
 
               <div className="flex justify-end gap-3 pt-4">
                 <button

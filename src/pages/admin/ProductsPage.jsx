@@ -15,7 +15,6 @@ import {
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { FaRupeeSign } from "react-icons/fa6";
-
 import { PuffLoader } from "react-spinners";
 import AppHeader from "./AppHeader";
 
@@ -27,12 +26,12 @@ const ProductsPage = () => {
   const [productsByMonths, setProductsByMonths] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const [orders, setOrders] = useState([]);
   const [formState, setEditFormState] = useState({
     name: "",
     price: "",
     image: "",
+    assignedStaff: "", // Added new field for assigned staff
   });
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -41,9 +40,33 @@ const ProductsPage = () => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [staffMembers, setStaffMembers] = useState([]); // Added state for staff members
 
   // Get User from the LocalStorage
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+  // Fetch Staff Data
+  const fetchStaff = useCallback(async () => {
+    try {
+      const headers = {
+        Authorization: `Bearer ${userInfo?.token}`,
+        "Content-Type": "application/json",
+      };
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/staff`,
+        { headers }
+      );
+      const result = await response.json();
+      setStaffMembers(result.data || []);
+    } catch (error) {
+      console.error("Error fetching staff data:", error);
+      toast.error("Failed to fetch staff data");
+    }
+  }, [userInfo?.token]);
+
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
 
   // Search functionality
   useEffect(() => {
@@ -248,16 +271,16 @@ const ProductsPage = () => {
 
   // Product Save
   const handleSave = async () => {
-  if (!image && !isEdit) {
-  return toast.error("Image is Compulsory");
-}
+    if (!image && !isEdit) {
+      return toast.error("Image is Compulsory");
+    }
     const formData = new FormData();
     formData.append("name", formState.name);
     formData.append("price", formState.price);
-
+    formData.append("assignedStaff", formState.assignedStaff); // Added assignedStaff to formData
     formData.append("image", image); // single file
 
-    console.log("payload (FormData)", formState.name, formState.price, image);
+    console.log("payload (FormData)", formState.name, formState.price, formState.assignedStaff, image);
 
     let response;
     try {
@@ -287,7 +310,7 @@ const ProductsPage = () => {
       fetchProductsAddMonths();
 
       // reset form
-      setEditFormState({ name: "", price: "" });
+      setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
       setImage(null);
       setImagePreview(null);
       setIsSliderOpen(false);
@@ -319,11 +342,10 @@ const ProductsPage = () => {
   };
 
   const removeImage = () => {
-  setImage(null);
-  setImagePreview(null);
-  setEditFormState({ ...formState, image: "" });
-};
-
+    setImage(null);
+    setImagePreview(null);
+    setEditFormState({ ...formState, image: "", assignedStaff: formState.assignedStaff });
+  };
 
   const parseCurrency = (value) => {
     if (value == null) return 0;
@@ -344,6 +366,7 @@ const ProductsPage = () => {
       name: product.name || "",
       price: product.price || "",
       image: product.image?.[0]?.url || "",
+      assignedStaff: product.assignedStaff?._id || "", // Populate assignedStaff
     });
     setImagePreview(product.image?.[0]?.url || "");
     setIsSliderOpen(true);
@@ -357,9 +380,10 @@ const ProductsPage = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
- useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
   // Show loading spinner
   if (loading) {
     return (
@@ -391,504 +415,517 @@ const ProductsPage = () => {
     (sum, order) => sum + (order.totalSales || 0),
     0
   );
-  console.log({ products });
 
   return (
     <>
-    
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <style>
-        {`
-          @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-          }
-          .animate-shimmer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(
-              90deg,
-              transparent,
-              rgba(255, 255, 255, 0.4),
-              transparent
-            );
-            animation: shimmer 1.5s infinite;
-          }
-          .progress-bar-glow {
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-          }
-        `}
-      </style>
-    
-      {/* Page Header with Add Product Button and Search */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-newPrimary">
-            Manage Products
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage your products inventory
-          </p>
-        </div>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <style>
+          {`
+            @keyframes shimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(100%); }
+            }
+            .animate-shimmer {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 50%;
+              height: 100%;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+              );
+              animation: shimmer 1.5s infinite;
+            }
+            .progress-bar-glow {
+              box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            }
+          `}
+        </style>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          {/* Search Input */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
+        {/* Page Header with Add Product Button and Search */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-newPrimary">
+              Manage Products
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Manage your products inventory
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Search Input */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none  focus:ring-2 focus:ring-newPrimary focus:border-newPrimary w-full shadow-sm"
+                placeholder="Search products..."
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <FiX className="text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none  focus:ring-2 focus:ring-newPrimary focus:border-newPrimary w-full shadow-sm"
-              placeholder="Search products..."
-            />
-            {searchTerm && (
+            {userInfo?.isAdmin && (
               <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                onClick={handleAddProduct}
               >
-                <FiX className="text-gray-400 hover:text-gray-600" />
+                <FiPlus className="w-5 h-5 mr-2" />
+                Add Product
               </button>
             )}
           </div>
-          {userInfo?.isAdmin && (
-            <button
-              className="bg-newPrimary text-white px-5 py-3 rounded-lg hover:bg-newPrimary/80 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-              onClick={handleAddProduct}
-            >
-              <FiPlus className="w-5 h-5 mr-2" />
-              Add Product
-            </button>
-          )}
         </div>
-      </div>
 
-      {/* Results count */}
-      {searchTerm && (
-        <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-          Found {filteredProducts.length} product
-          {filteredProducts.length !== 1 ? "s" : ""} matching "{searchTerm}"
-        </div>
-      )}
-
-      {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-blue-100 mr-4">
-              <FiBarChart2 className="text-newPrimarytext-xl" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Total Products</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {products.length}
-              </h3>
-            </div>
+        {/* Results count */}
+        {searchTerm && (
+          <div className="mb-4 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+            Found {filteredProducts.length} product
+            {filteredProducts.length !== 1 ? "s" : ""} matching "{searchTerm}"
           </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-green-100 mr-4">
-              <FaRupeeSign className="text-green-600 text-xl" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Total Sales</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                RS {totalSales.toLocaleString()}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center">
-            <div className="p-3 rounded-lg bg-purple-100 mr-4">
-              <FiTrendingUp className="text-purple-600 text-xl" />
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm">Confirmed Orders</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {totalConfirmed}
-              </h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content with Table and Cards */}
-     <div className="flex flex-col lg:flex-row gap-6">
-  {/* Product List Table */}
-  <div className="bg-white rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-    <div className="mb-4 flex items-center justify-between">
-      <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
-      <span className="text-sm text-gray-500">
-        {filteredProducts.length} items
-      </span>
-    </div>
-
-    <table className="min-w-full text-sm text-left border-collapse">
-      <thead>
-        <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
-          <th className="py-3 px-4">Sr</th>
-          <th className="py-3 px-4">Name</th>
-          <th className="py-3 px-4">Price</th>
-          <th className="py-3 px-4">Total Orders</th>
-          <th className="py-3 px-4">Total Sales</th>
-          {userInfo?.isAdmin && (
-            <th className="py-3 px-4 text-right">Actions</th>
-          )}
-        </tr>
-      </thead>
-
-      <tbody>
-        {filteredProducts.length > 0 ? (
-          currentProducts.map((product, index) => {
-            const price = parseCurrency(product.price);
-            const totalOrders = parseCurrency(product.totalOrders);
-            const totalSales = price * totalOrders;
-
-            return (
-              <tr
-                key={index}
-                className="border-b hover:bg-gray-50 transition"
-              >
-                 <td className="py-3 px-4 text-gray-700">
-                 {indexOfFirstItem + index + 1}
-                </td>
-                {/* Product Name */}
-                <td className="py-3 px-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg border overflow-hidden flex items-center justify-center bg-gray-50">
-                    <img
-                      src={
-                        product.image?.[0]?.url ||
-                        "https://via.placeholder.com/40"
-                      }
-                      alt="Product"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="font-medium text-gray-900">
-                    {capitalizeFirstLetter(product.name) || "N/A"}
-                  </span>
-                </td>
-
-                {/* Price */}
-                <td className="py-3 px-4 text-gray-700">
-                  RS {price.toLocaleString()}
-                </td>
-
-                {/* Total Orders */}
-                <td className="py-3 px-4 text-gray-700">
-                  {totalOrders} Orders
-                </td>
-
-                {/* Total Sales */}
-                <td className="py-3 px-4 font-semibold text-green-600">
-                  RS {totalSales.toLocaleString()}
-                </td>
-
-                {/* Actions */}
-                {userInfo?.isAdmin && (
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                      >
-                        <FiEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                )}
-              </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td
-              colSpan={userInfo?.isAdmin ? 5 : 4}
-              className="text-center py-8 text-gray-500"
-            >
-              <div className="flex flex-col items-center justify-center">
-                <div className="mb-2 text-4xl">📦</div>
-                {searchTerm
-                  ? "No products found matching your search"
-                  : "No products available"}
-              </div>
-            </td>
-          </tr>
         )}
-      </tbody>
-    </table>
-  </div>
-</div>
 
-
-      {/* Enhanced Right-Side Slider */}
-      {isSliderOpen && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity duration-300 flex justify-end">
-          <div
-            ref={sliderRef}
-            className="h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col"
-          >
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-                <h2 className="text-xl font-bold text-newPrimary">
-                  {" "}
-                  {isEdit ? "Edit Product" : "Add New Product"}
-                </h2>
-                <button
-                  className="text-gray-500 hover:text-gray-700 text-2xl p-1 rounded-full hover:bg-gray-100 transition-colors"
-                  onClick={() => {
-                    setIsSliderOpen(false);
-                    setIsEdit(false);
-                    setEditId(null);
-                    setEditFormState({ name: "", price: "", image: "" });
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
-                >
-                  &times;
-                </button>
+        {/* Stats Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-blue-100 mr-4">
+                <FiBarChart2 className="text-newPrimary text-xl" />
               </div>
+              <div>
+                <p className="text-gray-500 text-sm">Total Products</p>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {products.length}
+                </h3>
+              </div>
+            </div>
+          </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="space-y-6">
-                  {/* Product Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product Name
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.name}
-                      onChange={(e) =>
-                        setEditFormState({ ...formState, name: e.target.value })
-                      }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Enter product name"
-                    />
-                  </div>
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-green-100 mr-4">
+                <FaRupeeSign className="text-green-600 text-xl" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Total Sales</p>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  RS {totalSales.toLocaleString()}
+                </h3>
+              </div>
+            </div>
+          </div>
 
-                  {/* Price */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <div className="relative rounded-lg shadow-sm">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">RS </span>
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-purple-100 mr-4">
+                <FiTrendingUp className="text-purple-600 text-xl" />
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Confirmed Orders</p>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {totalConfirmed}
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content with Table and Cards */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Product List Table */}
+          <div className="bg-white rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
+              <span className="text-sm text-gray-500">
+                {filteredProducts.length} items
+              </span>
+            </div>
+
+            <table className="min-w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
+                  <th className="py-3 px-4">Sr</th>
+                  <th className="py-3 px-4">Name</th>
+                  <th className="py-3 px-4">Price</th>
+                  <th className="py-3 px-4">Total Orders</th>
+                  <th className="py-3 px-4">Total Sales</th>
+                  {userInfo?.isAdmin && (
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  )}
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredProducts.length > 0 ? (
+                  currentProducts.map((product, index) => {
+                    const price = parseCurrency(product.price);
+                    const totalOrders = parseCurrency(product.totalOrders);
+                    const totalSales = price * totalOrders;
+
+                    return (
+                      <tr
+                        key={index}
+                        className="border-b hover:bg-gray-50 transition"
+                      >
+                        <td className="py-3 px-4 text-gray-700">
+                          {indexOfFirstItem + index + 1}
+                        </td>
+                        {/* Product Name */}
+                        <td className="py-3 px-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg border overflow-hidden flex items-center justify-center bg-gray-50">
+                            <img
+                              src={
+                                product.image?.[0]?.url ||
+                                "https://via.placeholder.com/40"
+                              }
+                              alt="Product"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="font-medium text-gray-900">
+                            {capitalizeFirstLetter(product.name) || "N/A"}
+                          </span>
+                        </td>
+
+                        {/* Price */}
+                        <td className="py-3 px-4 text-gray-700">
+                          RS {price.toLocaleString()}
+                        </td>
+
+                        {/* Total Orders */}
+                        <td className="py-3 px-4 text-gray-700">
+                          {totalOrders} Orders
+                        </td>
+
+                        {/* Total Sales */}
+                        <td className="py-3 px-4 font-semibold text-green-600">
+                          RS {totalSales.toLocaleString()}
+                        </td>
+
+                        {/* Actions */}
+                        {userInfo?.isAdmin && (
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => handleEdit(product)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                              >
+                                <FiEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product._id)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                              >
+                                <FiTrash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={userInfo?.isAdmin ? 5 : 4}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="mb-2 text-4xl">📦</div>
+                        {searchTerm
+                          ? "No products found matching your search"
+                          : "No products available"}
                       </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Enhanced Right-Side Slider */}
+        {isSliderOpen && (
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity duration-300 flex justify-end">
+            <div
+              ref={sliderRef}
+              className="h-full w-full sm:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col"
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+                  <h2 className="text-xl font-bold text-newPrimary">
+                    {isEdit ? "Edit Product" : "Add New Product"}
+                  </h2>
+                  <button
+                    className="text-gray-500 hover:text-gray-700 text-2xl p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    onClick={() => {
+                      setIsSliderOpen(false);
+                      setIsEdit(false);
+                      setEditId(null);
+                      setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
+                      setImage(null);
+                      setImagePreview(null);
+                    }}
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="space-y-6">
+                    {/* Product Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Product Name
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
                       <input
                         type="text"
-                        value={formState.price}
+                        value={formState.name}
                         onChange={(e) =>
-                          setEditFormState({
-                            ...formState,
-                            price: e.target.value,
-                          })
+                          setEditFormState({ ...formState, name: e.target.value })
                         }
-                        className="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="0.00"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Enter product name"
                       />
                     </div>
-                  </div>
 
-                  {/* Image Upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product Image
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
-                      <div className="space-y-1 text-center">
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
-                          stroke="currentColor"
-                          fill="none"
-                          viewBox="0 0 48 48"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <div className="flex text-sm text-gray-600 justify-center">
-                          <label
-                            htmlFor="file-upload"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
-                          >
-                            <span>Upload a file</span>
-                            <input
-                              id="file-upload"
-                              name="file-upload"
-                              type="file"
-                              onChange={handleImageUpload}
-                              className="sr-only"
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
+                    {/* Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Price
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="relative rounded-lg shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500">RS </span>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 10MB
-                        </p>
+                        <input
+                          type="text"
+                          value={formState.price}
+                          onChange={(e) =>
+                            setEditFormState({
+                              ...formState,
+                              price: e.target.value,
+                            })
+                          }
+                          className="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder="0.00"
+                        />
                       </div>
                     </div>
 
-                    {/* Image Preview */}
-                    {imagePreview && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">
-                          Image Preview
-                        </h3>
-                        <div className="relative group w-full h-48">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-full object-contain rounded-lg border border-gray-200"
-                          />
-                          <button
-                            onClick={removeImage}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity shadow-md"
+                    {/* Image Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Product Image
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors">
+                        <div className="space-y-1 text-center">
+                          <svg
+                            className="mx-auto h-12 w-12 text-gray-400"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 48 48"
+                            aria-hidden="true"
                           >
-                            ×
-                          </button>
+                            <path
+                              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <div className="flex text-sm text-gray-600 justify-center">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                            >
+                              <span>Upload a file</span>
+                              <input
+                                id="file-upload"
+                                name="file-upload"
+                                type="file"
+                                onChange={handleImageUpload}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG, GIF up to 10MB
+                          </p>
                         </div>
                       </div>
-                    )}
+
+                      {/* Image Preview */}
+                      {imagePreview && (
+                        <div className="mt-4">
+                          <h3 className="text-sm font-medium text-gray-700 mb-2">
+                            Image Preview
+                          </h3>
+                          <div className="relative group w-full h-48">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-full h-full object-contain rounded-lg border border-gray-200"
+                            />
+                            <button
+                              onClick={removeImage}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity shadow-md"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Assign Staff */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Assign Staff
+                      </label>
+                      <select
+                        value={formState.assignedStaff}
+                        onChange={(e) =>
+                          setEditFormState({ ...formState, assignedStaff: e.target.value })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option value="">Select Staff</option>
+                        {staffMembers.map((staff) => (
+                          <option key={staff._id} value={staff._id}>
+                            {staff.username}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Footer */}
-              <div className="p-6 border-t border-gray-200 flex justify-end space-x-3 bg-gray-50">
-                <button
-                  type="button"
-                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                  onClick={() => {
-                    setIsSliderOpen(false);
-                    setIsEdit(false);
-                    setEditId(null);
-                    setEditFormState({ name: "", price: "", image: "" });
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-newPrimary transition-colors"
-                  onClick={handleSave}
-                >
-                  {isEdit ? "Update Product" : "Save Product"}
-                </button>
+                {/* Footer */}
+                <div className="p-6 border-t border-gray-200 flex justify-end space-x-3 bg-gray-50">
+                  <button
+                    type="button"
+                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    onClick={() => {
+                      setIsSliderOpen(false);
+                      setIsEdit(false);
+                      setEditId(null);
+                      setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
+                      setImage(null);
+                      setImagePreview(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-newPrimary hover:bg-newPrimary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-newPrimary transition-colors"
+                    onClick={handleSave}
+                  >
+                    {isEdit ? "Update Product" : "Save Product"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      {/* Pagination Controls */}
-      {/* Pagination Controls */}
-{filteredProducts.length > itemsPerPage && (
-  <div className="flex flex-col items-center gap-3 mt-6">
-    {/* Pagination Buttons */}
-    <div className="flex justify-center items-center gap-2 flex-wrap">
-      {/* Prev Button */}
-      <button
-        disabled={currentPage === 1}
-        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-          currentPage === 1
-            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-            : "text-gray-700 hover:bg-gray-100 border-gray-300"
-        }`}
-      >
-        Prev
-      </button>
+        )}
+        {/* Pagination Controls */}
+        {filteredProducts.length > itemsPerPage && (
+          <div className="flex flex-col items-center gap-3 mt-6">
+            {/* Pagination Buttons */}
+            <div className="flex justify-center items-center gap-2 flex-wrap">
+              {/* Prev Button */}
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                  currentPage === 1
+                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100 border-gray-300"
+                }`}
+              >
+                Prev
+              </button>
 
-      {/* Dynamic Page Numbers */}
-      {(() => {
-        const pageButtons = [];
-        const totalVisible = 5;
+              {/* Dynamic Page Numbers */}
+              {(() => {
+                const pageButtons = [];
+                const totalVisible = 5;
 
-        if (currentPage > 3) {
-          pageButtons.push(1);
-          if (currentPage > 4) pageButtons.push("...");
-        }
+                if (currentPage > 3) {
+                  pageButtons.push(1);
+                  if (currentPage > 4) pageButtons.push("...");
+                }
 
-        for (
-          let i = Math.max(1, currentPage - 2);
-          i <= Math.min(totalPages, currentPage + 2);
-          i++
-        ) {
-          pageButtons.push(i);
-        }
+                for (
+                  let i = Math.max(1, currentPage - 2);
+                  i <= Math.min(totalPages, currentPage + 2);
+                  i++
+                ) {
+                  pageButtons.push(i);
+                }
 
-        if (currentPage < totalPages - 2) {
-          if (currentPage < totalPages - 3) pageButtons.push("...");
-          pageButtons.push(totalPages);
-        }
+                if (currentPage < totalPages - 2) {
+                  if (currentPage < totalPages - 3) pageButtons.push("...");
+                  pageButtons.push(totalPages);
+                }
 
-        return pageButtons.map((page, index) =>
-          page === "..." ? (
-            <span key={index} className="px-3 py-1 text-gray-500">
-              ...
-            </span>
-          ) : (
-            <button
-              key={index}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
-                currentPage === page
-                  ? "bg-newPrimary text-white border-newPrimary shadow-sm"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {page}
-            </button>
-          )
-        );
-      })()}
+                return pageButtons.map((page, index) =>
+                  page === "..." ? (
+                    <span key={index} className="px-3 py-1 text-gray-500">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                        currentPage === page
+                          ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                );
+              })()}
 
-      {/* Next Button */}
-      <button
-        disabled={currentPage === totalPages}
-        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-        className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-          currentPage === totalPages
-            ? "text-gray-400 border-gray-200 cursor-not-allowed"
-            : "text-gray-700 hover:bg-gray-100 border-gray-300"
-        }`}
-      >
-        Next
-      </button>
-    </div>
-
-    
-  </div>
-)}
-
-    </div>
+              {/* Next Button */}
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                  currentPage === totalPages
+                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100 border-gray-300"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };
