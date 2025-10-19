@@ -9,8 +9,11 @@ import {
   FiPhone,
   FiMapPin,
 } from "react-icons/fi";
+import { TbPhoneCall } from "react-icons/tb";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import axios from 'axios'
 
 const MeetingCallsTrack = () => {
   const [loading, setLoading] = useState(false);
@@ -38,13 +41,7 @@ const MeetingCallsTrack = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/meeting-calls`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-        }
+        `${import.meta.env.VITE_API_BASE_URL}/meeting-calls`
       );
 
       if (!response.ok) {
@@ -109,15 +106,15 @@ const MeetingCallsTrack = () => {
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
+            await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/meeting-calls/${id}`);
             setLoading(true);
-            setMeetingList((prev) => prev.filter((item) => item.id !== id));
-            setFilteredMeetings((prev) => prev.filter((item) => item.id !== id));
             toast.success("Meeting deleted successfully!");
             swalWithTailwindButtons.fire(
               "Deleted!",
               "Meeting deleted successfully.",
               "success"
             );
+            fetchMeetingCalls()
           } catch (error) {
             console.error("Delete error:", error);
             toast.error("Failed to delete meeting");
@@ -193,9 +190,9 @@ const MeetingCallsTrack = () => {
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
               <th className="py-3 px-4 w-[60px]">Sr#</th>
               <th className="py-3 px-4 w-[150px]">Customer Name</th>
-              <th className="py-3 px-4 w-[150px]">Staff Name</th>
-              <th className="py-3 px-4 w-[150px]">Location</th>
-              <th className="py-3 px-4 w-[100px]">Mode</th>
+              <th className="py-3 px-4 w-[130px]">Staff Name</th>
+              <th className="py-3 px-4 w-[100px]">Location</th>
+              <th className="py-3 px-4 w-[80px]">Mode</th>
               <th className="py-3 px-4 w-[150px]">Phone No.</th>
               <th className="py-3 px-4 w-[130px]">Date</th>
               <th className="py-3 px-4 w-[100px]">Time</th>
@@ -239,8 +236,15 @@ const MeetingCallsTrack = () => {
                       {meeting.staffName || "N/A"}
                     </div>
                   </td>
-                  <td className="py-3 px-4 truncate relative">
-                    <div className="flex items-center gap-2 group relative">
+                  {/* Location */}
+                  <td className="py-3 px-4 relative text-center">
+                    <div className="pl-6 relative group">
+                      {/* Tooltip */}
+                      <span className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-purple-500 text-white text-xs rounded py-1 px-3 z-20 whitespace-nowrap shadow-md">
+                        {meeting.location || "No location available"}
+                      </span>
+
+                      {/* Icon */}
                       {meeting.location ? (
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -248,24 +252,32 @@ const MeetingCallsTrack = () => {
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center"
+                          className="flex justify-center items-center w-6 h-6"
                         >
                           <FiMapPin className="text-gray-400 cursor-pointer hover:text-newPrimary" />
-                          <span className="absolute left-0 top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-20 max-w-[200px] truncate shadow-md">
-                            {meeting.location}
-                          </span>
                         </a>
                       ) : (
-                        <>
+                        <div className="flex justify-center items-center w-6 h-6">
                           <FiMapPin className="text-gray-400" />
-                          <span className="absolute left-0 top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-20 max-w-[200px] truncate shadow-md">
-                            No location available
-                          </span>
-                        </>
+                        </div>
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-4 truncate">{meeting.mode || "—"}</td>
+
+                  {/* Mode */}
+                  <td className="py-3 text-center">
+                    {meeting?.mode ? (
+                      <div className="pl-6 ">
+                        {meeting.mode === "Call" ? (
+                          <TbPhoneCall className="text-gray-500 text-lg" />
+                        ) : (
+                          <FaWhatsapp className="text-green-500 text-lg" />
+                        )}
+                      </div>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="py-3 px-4 truncate">
                     <div className="flex items-center gap-2">
                       <FiPhone className="text-gray-400" />
@@ -287,7 +299,7 @@ const MeetingCallsTrack = () => {
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end space-x-2">
                       <button
-                        onClick={() => handleDelete(meeting.id)}
+                        onClick={() => handleDelete(meeting._id)}
                         className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition"
                       >
                         <FiTrash2 size={16} />
@@ -307,11 +319,10 @@ const MeetingCallsTrack = () => {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-                currentPage === 1
-                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
-              }`}
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+                }`}
             >
               Prev
             </button>
@@ -346,11 +357,10 @@ const MeetingCallsTrack = () => {
                   <button
                     key={index}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
-                      currentPage === page
-                        ? "bg-newPrimary text-white border-newPrimary shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}
+                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${currentPage === page
+                      ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
                   >
                     {page}
                   </button>
@@ -362,11 +372,10 @@ const MeetingCallsTrack = () => {
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-                currentPage === totalPages
-                  ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-100 border-gray-300"
-              }`}
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+                }`}
             >
               Next
             </button>
