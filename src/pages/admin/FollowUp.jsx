@@ -102,8 +102,6 @@ const FollowUp = () => {
   console.log({ ViewModalDatashow });
 
   const handleEditClick = (followUp) => {
-    // console.log(followUp);
-
     setSelectedFollowUp(followUp);
     setCustomerName(followUp.customerName);
     setCustomerNumber(followUp.customerNumber);
@@ -174,17 +172,16 @@ const FollowUp = () => {
           }
         );
 
-
         // update local state instantly
         setFollowUpList((prev) =>
           prev.map((item) =>
             item.id === selectedFollowUp.id
               ? {
-                ...item,
-                date: nextFollowUpDate,
-                time: formattedTime,
-                customerDescription,
-              }
+                  ...item,
+                  date: nextFollowUpDate,
+                  time: formattedTime,
+                  customerDescription,
+                }
               : item
           )
         );
@@ -272,9 +269,7 @@ const FollowUp = () => {
               <th className="py-3 px-4 w-[130px]">Date</th>
               <th className="py-3 px-4 w-[100px]">Time</th>
               <th className="py-3 px-4 w-[180px]">Status</th>
-
               <th className="py-3 px-4 text-right w-[120px]">Actions</th>
-
             </tr>
           </thead>
 
@@ -337,12 +332,12 @@ const FollowUp = () => {
                       <FiClock className="text-gray-400" />
                       {followUp.time
                         ? new Date(
-                          `1970-01-01T${followUp.time}`
-                        ).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
+                            `1970-01-01T${followUp.time}`
+                          ).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
                         : "—"}
                     </div>
                   </td>
@@ -350,23 +345,23 @@ const FollowUp = () => {
                   {/* Status */}
                   <td className="py-3 px-4">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${followUp.status === "Follow Up Required"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : followUp.status === "Not Interested"
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        followUp.status === "Follow Up Required"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : followUp.status === "Not Interested"
                           ? "bg-red-100 text-red-800"
                           : followUp.status === "All Ready Installed"
-                            ? "bg-green-100 text-green-800"
-                            : followUp.status === "Phone Number Responding"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
+                          ? "bg-green-100 text-green-800"
+                          : followUp.status === "Phone Number Responding"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
                     >
                       {followUp.status || "—"}
                     </span>
                   </td>
 
                   {/* Actions */}
-
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end space-x-2">
                       <button
@@ -382,7 +377,6 @@ const FollowUp = () => {
                         >
                           <FiTrash2 size={16} />
                         </button>
-
                       )}
                       <button
                         onClick={() => {
@@ -400,7 +394,6 @@ const FollowUp = () => {
                       </button>
                     </div>
                   </td>
-
                 </tr>
               ))
             )}
@@ -438,11 +431,11 @@ const FollowUp = () => {
                   <div className="relative">
                     <FiCalendar className="absolute left-3 top-3 text-gray-400" />
                     <input
-                      type="date"
+                      type={selectedFollowUp ? "password" : "date"}
                       value={date}
-                      readOnly
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
+                      readOnly={selectedFollowUp}
                     />
                   </div>
                 </div>
@@ -453,11 +446,11 @@ const FollowUp = () => {
                   <div className="relative">
                     <FiClock className="absolute left-3 top-3 text-gray-400" />
                     <input
-                      type="time"
+                      type={selectedFollowUp ? "password" : "time"}
                       value={time}
-                      readOnly
                       onChange={(e) => setTime(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
+                      readOnly={selectedFollowUp}
                     />
                   </div>
                 </div>
@@ -469,12 +462,12 @@ const FollowUp = () => {
                 <div className="relative">
                   <FiUser className="absolute left-3 top-3 text-gray-400" />
                   <input
-                    type="text"
-                    readOnly
+                    type={selectedFollowUp ? "password" : "text"}
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
                     placeholder="Enter customer name"
+                    readOnly={selectedFollowUp}
                   />
                 </div>
               </div>
@@ -486,7 +479,6 @@ const FollowUp = () => {
                   <FiPhone className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
-                    readOnly
                     value={customerNumber}
                     onChange={(e) => setCustomerNumber(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
@@ -586,10 +578,11 @@ const FollowUp = () => {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === 1
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === 1
                   ? "text-gray-400 border-gray-200 cursor-not-allowed"
                   : "text-gray-700 hover:bg-gray-100 border-gray-300"
-                }`}
+              }`}
             >
               Prev
             </button>
@@ -626,10 +619,11 @@ const FollowUp = () => {
                   <button
                     key={index}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${currentPage === page
+                    className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                      currentPage === page
                         ? "bg-newPrimary text-white border-newPrimary shadow-sm"
                         : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                      }`}
+                    }`}
                   >
                     {page}
                   </button>
@@ -643,17 +637,18 @@ const FollowUp = () => {
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
-              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${currentPage === totalPages
+              className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+                currentPage === totalPages
                   ? "text-gray-400 border-gray-200 cursor-not-allowed"
                   : "text-gray-700 hover:bg-gray-100 border-gray-300"
-                }`}
+              }`}
             >
               Next
             </button>
           </div>
         </div>
       )}
-    </div >
+    </div>
   );
 };
 

@@ -30,6 +30,7 @@ const links = [
   { to: "/admin/assign", label: "Assign To", icon: <MdAssignmentTurnedIn />, key: "isAssign" },
   // { to: "/admin/more-product-assign", label: "More Product Assign", icon: <FaUsers /> },
   { to: "/admin/meetings/add", label: "Meeting Details", icon: <FaCalendarAlt />, key: "isMeeting" },
+  { to: "/admin/meetings-tracking", label: "Meeting Calls Tracking", icon: <FaCalendarAlt />},
   { to: "/admin/followup", label: "Follow Up", icon: <FaTasks />, key: "isFollow" },
   { to: "/admin/success-client", label: "Success Client", icon: <FaDiagramSuccessor />,  },
   { to: "/admin/calendar", label: "Calendar", icon: <FaCalendarAlt />, key: "isCalendar" },

@@ -31,7 +31,7 @@ import FollowUpTrack from "./pages/History/FollowUpTrack";
 import SuccessClientTrack from "./pages/History/SuccessClientTrack";
 import StaffTrack from "./pages/History/StaffTrack";
 import Profile from "./pages/admin/Settings/Profile";
-
+import MeetingCallsTrack from "./pages/admin/MeetingCallsTrack";
 function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -73,6 +73,7 @@ function AppContent() {
             <Route path="history" element={<ActivityTrack />} />
             <Route path="history/customers" element={<CustomerTrack />} />
             <Route path="history/meetings" element={<MeetingTrack />} />
+            <Route path="meetings-tracking" element={<MeetingCallsTrack />} />
             <Route path="history/followups" element={<FollowUpTrack />} />
             <Route path="history/success" element={<SuccessClientTrack />} />
             <Route path="history/staff" element={<StaffTrack />} />
