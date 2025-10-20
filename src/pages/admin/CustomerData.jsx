@@ -49,7 +49,7 @@ const CustomerData = () => {
   const [uploading, setUploading] = useState(false);
 
   // Default image constant
- const DEFAULT_IMAGE = "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
+  const DEFAULT_IMAGE = "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
 
 
   // Token
@@ -177,7 +177,7 @@ const CustomerData = () => {
           ) ||
           (customer.assignedStaff &&
             typeof customer.assignedStaff === "object" &&
-            (customer.assignedStaff.username || "")
+            (customer.assignedStaff || "")
               .toLowerCase()
               .includes(query)) ||
           (customer.assignedProducts &&
@@ -237,6 +237,16 @@ const CustomerData = () => {
       formData.append(`persons[${index}][email]`, person.email);
     });
 
+    formData.append("assignedStaff", assignedStaff);
+    formData.append("assignedProducts", assignedProduct);
+
+    // 🧠 LOG each entry properly
+console.log("📦 FormData entries:");
+for (let [key, value] of formData.entries()) {
+  console.log(`${key}:`, value);
+}
+    // return
+    
     try {
       const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
@@ -632,7 +642,7 @@ const CustomerData = () => {
               <th className="py-3 px-2 w-[25px]">Sr</th>
               <th className="py-3 px-4 w-[180px]">Business Nature</th>
               <th className="py-3 px-4 w-[220px]">Company Name</th>
-              <th className="py-3 px-4 w-[100px]">City</th> 
+              <th className="py-3 px-4 w-[100px]">City</th>
               <th className="py-3 px-4 w-[160px]">Person</th>
               <th className="py-3 px-4 w-[140px]">Department</th>
               <th className="py-3 px-4 w-[140px]">Designation</th>
@@ -997,13 +1007,13 @@ const CustomerData = () => {
                     </label>
                     <select
                       value={assignedStaff}
-                      onChange={(e) => setAssignedStaff(e.target.value)}
+                      onChange={(e) => setAssignedStaff(e.target.value)} // 👈 now stores staff.username
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
                     >
                       <option value="">Select Staff</option>
                       {staffMembers.map((staff) => (
-                        <option key={staff._id} value={staff._id}>
-                          {staff.username}
+                        <option key={staff._id} value={staff.username}> {/* 👈 use staff.name, not staff._id */}
+                          {staff.username} {/* Display readable name */}
                         </option>
                       ))}
                     </select>
