@@ -31,7 +31,6 @@ const Signup = () => {
       !form.name ||
       !form.username ||
       !form.email ||
-      !form.role ||
       !form.password ||
       !form.confirm
     ) {
@@ -47,6 +46,7 @@ const Signup = () => {
       return;
     }
     setLoading(true);
+    
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/auth/register`,
@@ -120,19 +120,7 @@ const Signup = () => {
               required
             />
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1 font-medium">Role</label>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              required
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+          
           <div>
             <label className="block text-gray-700 mb-1 font-medium">Password</label>
             <input
