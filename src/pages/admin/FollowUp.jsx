@@ -163,7 +163,9 @@ const FollowUp = () => {
         console.log({ headers });
 
         await axios.patch(
-          `${import.meta.env.VITE_API_BASE_URL}/meetings/${selectedFollowUp.id}/followup`,
+          `${import.meta.env.VITE_API_BASE_URL}/meetings/${
+            selectedFollowUp.id
+          }/followup`,
           payload, // 🟢 This is your request body
           {
             headers: {
@@ -431,10 +433,12 @@ const FollowUp = () => {
                   <div className="relative">
                     <FiCalendar className="absolute left-3 top-3 text-gray-400" />
                     <input
-                      type={selectedFollowUp ? "password" : "date"}
+                      type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg 
+    focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all 
+    ${selectedFollowUp ? "text-gray-500 bg-gray-100 cursor-not-allowed" : ""}`}
                       readOnly={selectedFollowUp}
                     />
                   </div>
@@ -446,10 +450,12 @@ const FollowUp = () => {
                   <div className="relative">
                     <FiClock className="absolute left-3 top-3 text-gray-400" />
                     <input
-                      type={selectedFollowUp ? "password" : "time"}
+                      type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg 
+    focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all 
+    ${selectedFollowUp ? "text-gray-500 bg-gray-100 cursor-not-allowed" : ""}`}
                       readOnly={selectedFollowUp}
                     />
                   </div>
@@ -462,10 +468,12 @@ const FollowUp = () => {
                 <div className="relative">
                   <FiUser className="absolute left-3 top-3 text-gray-400" />
                   <input
-                    type={selectedFollowUp ? "password" : "text"}
+                    type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all ${selectedFollowUp ? "blur-sm bg-gray-200 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg 
+    focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all 
+    ${selectedFollowUp ? "text-gray-500 bg-gray-100 cursor-not-allowed" : ""}`}
                     placeholder="Enter customer name"
                     readOnly={selectedFollowUp}
                   />
@@ -481,8 +489,11 @@ const FollowUp = () => {
                     type="text"
                     value={customerNumber}
                     onChange={(e) => setCustomerNumber(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg 
+    focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all 
+    ${selectedFollowUp ? "text-gray-500 bg-gray-100 cursor-not-allowed" : ""}`}
                     placeholder="Enter customer number"
+                    readOnly={selectedFollowUp}
                   />
                 </div>
               </div>
