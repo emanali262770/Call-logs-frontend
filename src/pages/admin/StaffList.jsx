@@ -150,10 +150,10 @@ useEffect(() => {
 
   //  Staff saved
   const handleSave = async () => {
-    if (!image) {
-      toast.error("Image is compulsory");
-      return;
-    }
+     if (!image && !isEdit) {
+    toast.error("Image is compulsory");
+    return;
+  }
     const formData = new FormData();
     formData.append("username", staffName);
     formData.append("department", department);
