@@ -279,7 +279,7 @@ const CustomerData = () => {
 
       fetchCustomerData();
     } catch (error) {
-      console.error("Save error:", error);
+      // console.error("Save error:", error);
 
       // ✅ Extract message from backend
       const backendMessage =

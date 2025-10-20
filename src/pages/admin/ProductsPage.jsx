@@ -7,23 +7,19 @@ import {
   FiSearch,
   FiX,
   FiTrendingUp,
-  FiTrendingDown,
   FiPlus,
-  FiDollarSign,
   FiBarChart2,
   FiTrash2,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { FaRupeeSign } from "react-icons/fa6";
 import { PuffLoader } from "react-spinners";
-import AppHeader from "./AppHeader";
 
 const ProductsPage = () => {
   // State for slider
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [productsByMonths, setProductsByMonths] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [orders, setOrders] = useState([]);
@@ -143,39 +139,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Fetch All Product Add by Month
-  const fetchProductsAddMonths = useCallback(async () => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      if (!userInfo?.token) {
-        throw new Error("Token not found");
-      }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/products/analytics/monthly`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch product analytics");
-      }
-
-      const result = await response.json();
-      setProductsByMonths(result.data);
-    } catch (err) {
-      console.error("Fetch product analytics error:", err);
-      toast.error("Failed to fetch product analytics!");
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProductsAddMonths();
-  }, [fetchProductsAddMonths]);
 
   // Delete Product
   const handleDelete = async (id) => {
@@ -280,8 +244,7 @@ const ProductsPage = () => {
     formData.append("assignedStaff", formState.assignedStaff); // Added assignedStaff to formData
     formData.append("image", image); // single file
 
-    console.log("payload (FormData)", formState.name, formState.price, formState.assignedStaff, image);
-
+    // console.log("payload (FormData)", formState.name, formState.price, formState.assignedStaff, image);
     let response;
     try {
       const { token } = JSON.parse(localStorage.getItem("userInfo")) || {};
@@ -307,7 +270,6 @@ const ProductsPage = () => {
       }
 
       fetchProducts();
-      fetchProductsAddMonths();
 
       // reset form
       setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
@@ -323,7 +285,7 @@ const ProductsPage = () => {
       const backendMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
-
+      
       toast.error(`❌ ${backendMessage}`);
     }
   };
@@ -403,14 +365,7 @@ const ProductsPage = () => {
     (o) => o.orderStatus === "Canceled"
   ).length;
   const totalOrdersCount = orders.length;
-  const confirmedPercent =
-    totalOrdersCount > 0
-      ? Math.round((totalConfirmed / totalOrdersCount) * 100)
-      : 0;
-  const canceledPercent =
-    totalOrdersCount > 0
-      ? Math.round((totalCanceled / totalOrdersCount) * 100)
-      : 0;
+
   const totalSales = orders.reduce(
     (sum, order) => sum + (order.totalSales || 0),
     0
