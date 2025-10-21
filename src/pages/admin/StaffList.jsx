@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { PuffLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 import gsap from "gsap";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -22,7 +22,7 @@ const StaffList = () => {
   const [staffList, setStaffList] = useState([]);
   const [filteredStaffList, setFilteredStaffList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [isSaving, setIsSaving] = useState(false);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [staffName, setStaffName] = useState("");
   const [department, setDepartment] = useState("");
@@ -57,23 +57,23 @@ const StaffList = () => {
   const [loading, setLoading] = useState(true);
 
   // Search functionality
-// Search functionality
-useEffect(() => {
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase();
-    const filtered = staffList.filter((staff) =>
-      (staff.name || "").toLowerCase().includes(query) ||
-      (staff.department || "").toLowerCase().includes(query) ||
-      (staff.designation || "").toLowerCase().includes(query) ||
-      (staff.email || "").toLowerCase().includes(query) ||
-      (staff.number || "").toLowerCase().includes(query)
-    );
-    setFilteredStaffList(filtered);
-  } else {
-    setFilteredStaffList(staffList);
-  }
-}, [searchQuery, staffList]);
-
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const filtered = staffList.filter(
+        (staff) =>
+          (staff.name || "").toLowerCase().includes(query) ||
+          (staff.department || "").toLowerCase().includes(query) ||
+          (staff.designation || "").toLowerCase().includes(query) ||
+          (staff.email || "").toLowerCase().includes(query) ||
+          (staff.number || "").toLowerCase().includes(query)
+      );
+      setFilteredStaffList(filtered);
+    } else {
+      setFilteredStaffList(staffList);
+    }
+  }, [searchQuery, staffList]);
 
   // slider styling
   useEffect(() => {
@@ -150,10 +150,11 @@ useEffect(() => {
 
   //  Staff saved
   const handleSave = async () => {
-     if (!image && !isEdit) {
-    toast.error("Image is compulsory");
-    return;
-  }
+    if (!image && !isEdit) {
+      toast.error("Image is compulsory");
+      return;
+    }
+    setIsSaving(true);
     const formData = new FormData();
     formData.append("username", staffName);
     formData.append("department", department);
@@ -214,6 +215,10 @@ useEffect(() => {
         "Something went wrong. Please try again.";
 
       toast.error(`❌ ${backendMessage}`);
+    } finally {
+    
+      setIsSaving(false);
+     
     }
   };
 
@@ -238,6 +243,8 @@ useEffect(() => {
 
   // Open the edit modal and populate the form
   const handleEdit = (staff) => {
+    console.log({staff});
+    
     setIsEdit(true);
     setEditId(staff._id);
     setStaffName(staff.name || "");
@@ -328,7 +335,7 @@ useEffect(() => {
         }
       });
   };
-   useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
@@ -404,9 +411,8 @@ useEffect(() => {
               <th className="py-3 px-4">Number</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Password</th>
-             
-                <th className="py-3 px-4 text-right">Actions</th>
-             
+
+              <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
 
@@ -488,26 +494,25 @@ useEffect(() => {
                     </td>
 
                     {/* Actions */}
-                   
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => handleEdit(staff)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                           {userInfo?.isAdmin && (
+
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEdit(staff)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        {userInfo?.isAdmin && (
                           <button
                             onClick={() => handleDelete(staff._id)}
                             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                           >
                             <FiTrash2 size={16} />
                           </button>
-                           )}
-                        </div>
-                      </td>
-                   
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 );
               })
@@ -532,6 +537,11 @@ useEffect(() => {
             ref={sliderRef}
             className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg"
           >
+            {isSaving && (
+          <div className="absolute top-0 left-0 w-full h-[120vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-50">
+                <ScaleLoader color="#605BFF" size={60} />
+              </div>
+            )}
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">
                 {isEdit ? "Update Staff" : "Add a New Staff"}
@@ -742,81 +752,82 @@ useEffect(() => {
         </div>
       )}
       {/* Pagination Controls */}
-     {/* Pagination Controls */}
-{filteredStaffList.length > itemsPerPage && (
-  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
-    {/* Prev Button */}
-    <button
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-      className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-        currentPage === 1
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100 border-gray-300"
-      }`}
-    >
-      Prev
-    </button>
-
-    {/* Dynamic Page Buttons */}
-    {(() => {
-      const pageButtons = [];
-      const totalVisible = 5;
-
-      if (currentPage > 3) {
-        pageButtons.push(1);
-        if (currentPage > 4) pageButtons.push("...");
-      }
-
-      for (
-        let i = Math.max(1, currentPage - 2);
-        i <= Math.min(totalPages, currentPage + 2);
-        i++
-      ) {
-        pageButtons.push(i);
-      }
-
-      if (currentPage < totalPages - 2) {
-        if (currentPage < totalPages - 3) pageButtons.push("...");
-        pageButtons.push(totalPages);
-      }
-
-      return pageButtons.map((page, index) =>
-        page === "..." ? (
-          <span key={index} className="px-3 py-1 text-gray-500">
-            ...
-          </span>
-        ) : (
+      {/* Pagination Controls */}
+      {filteredStaffList.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+          {/* Prev Button */}
           <button
-            key={index}
-            onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
-              currentPage === page
-                ? "bg-newPrimary text-white border-newPrimary shadow-sm"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
             }`}
           >
-            {page}
+            Prev
           </button>
-        )
-      );
-    })()}
 
-    {/* Next Button */}
-    <button
-      disabled={currentPage === totalPages}
-      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-      className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
-        currentPage === totalPages
-          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-          : "text-gray-700 hover:bg-gray-100 border-gray-300"
-      }`}
-    >
-      Next
-    </button>
-  </div>
-)}
+          {/* Dynamic Page Buttons */}
+          {(() => {
+            const pageButtons = [];
+            const totalVisible = 5;
 
+            if (currentPage > 3) {
+              pageButtons.push(1);
+              if (currentPage > 4) pageButtons.push("...");
+            }
+
+            for (
+              let i = Math.max(1, currentPage - 2);
+              i <= Math.min(totalPages, currentPage + 2);
+              i++
+            ) {
+              pageButtons.push(i);
+            }
+
+            if (currentPage < totalPages - 2) {
+              if (currentPage < totalPages - 3) pageButtons.push("...");
+              pageButtons.push(totalPages);
+            }
+
+            return pageButtons.map((page, index) =>
+              page === "..." ? (
+                <span key={index} className="px-3 py-1 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded-md border text-sm font-medium transition-all duration-200 ${
+                    currentPage === page
+                      ? "bg-newPrimary text-white border-newPrimary shadow-sm"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            );
+          })()}
+
+          {/* Next Button */}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100 border-gray-300"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

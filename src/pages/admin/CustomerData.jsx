@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { PuffLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 import Swal from "sweetalert2";
 import {
   FiSearch,
@@ -32,6 +32,7 @@ const CustomerData = () => {
   const [customerCity, setCustomerCity] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [businessType, setBusinessType] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [persons, setPersons] = useState([
     { fullName: "", phone: "", email: "", designation: "", department: "" },
   ]);
@@ -49,8 +50,8 @@ const CustomerData = () => {
   const [uploading, setUploading] = useState(false);
 
   // Default image constant
-  const DEFAULT_IMAGE = "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
-
+  const DEFAULT_IMAGE =
+    "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
 
   // Token
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
@@ -177,9 +178,7 @@ const CustomerData = () => {
           ) ||
           (customer.assignedStaff &&
             typeof customer.assignedStaff === "object" &&
-            (customer.assignedStaff || "")
-              .toLowerCase()
-              .includes(query)) ||
+            (customer.assignedStaff || "").toLowerCase().includes(query)) ||
           (customer.assignedProducts &&
             typeof customer.assignedProducts === "object" &&
             (customer.assignedProducts.name || "")
@@ -219,6 +218,7 @@ const CustomerData = () => {
 
   // Save Customer Data
   const handleSave = async () => {
+    setIsSaving(true);
     const formData = new FormData();
     formData.append("businessType", businessType);
     formData.append("companyName", companyName);
@@ -241,12 +241,12 @@ const CustomerData = () => {
     formData.append("assignedProducts", assignedProduct);
 
     // 🧠 LOG each entry properly
-console.log("📦 FormData entries:");
-for (let [key, value] of formData.entries()) {
-  console.log(`${key}:`, value);
-}
+    console.log("📦 FormData entries:");
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
     // return
-    
+
     try {
       const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
@@ -297,6 +297,8 @@ for (let [key, value] of formData.entries()) {
         "Something went wrong. Please try again.";
 
       toast.error(`❌ ${backendMessage}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -304,9 +306,9 @@ for (let [key, value] of formData.entries()) {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(file.type)) {
-        toast.error('Only JPG, JPEG, and PNG images are allowed!');
+        toast.error("Only JPG, JPEG, and PNG images are allowed!");
         return;
       }
       setImage(file);
@@ -750,7 +752,12 @@ for (let [key, value] of formData.entries()) {
       {/* Modal */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+          <div className="relative  bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            {isSaving && (
+              <div className="absolute inset-0 h-[140vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+                <ScaleLoader color="#605BFF" size={60} />
+              </div>
+            )}
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">
                 {isEdit ? "Edit Client" : "Add Client"}
@@ -1012,7 +1019,9 @@ for (let [key, value] of formData.entries()) {
                     >
                       <option value="">Select Staff</option>
                       {staffMembers.map((staff) => (
-                        <option key={staff._id} value={staff.username}> {/* 👈 use staff.name, not staff._id */}
+                        <option key={staff._id} value={staff.username}>
+                          {" "}
+                          {/* 👈 use staff.name, not staff._id */}
                           {staff.username} {/* Display readable name */}
                         </option>
                       ))}
@@ -1063,10 +1072,11 @@ for (let [key, value] of formData.entries()) {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className={`px-4 py-2 border rounded-lg ${currentPage === 1
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Prev
           </button>
@@ -1105,10 +1115,11 @@ for (let [key, value] of formData.entries()) {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(num)}
-                  className={`px-3 py-1 rounded-md border ${currentPage === num
-                    ? "bg-newPrimary text-white border-newPrimary"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}
+                  className={`px-3 py-1 rounded-md border ${
+                    currentPage === num
+                      ? "bg-newPrimary text-white border-newPrimary"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  }`}
                 >
                   {num}
                 </button>
@@ -1121,10 +1132,11 @@ for (let [key, value] of formData.entries()) {
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className={`px-4 py-2 border rounded-lg ${currentPage === totalPages
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 border rounded-lg ${
+              currentPage === totalPages
+                ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Next
           </button>

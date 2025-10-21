@@ -13,11 +13,12 @@ import {
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { FaRupeeSign } from "react-icons/fa6";
-import { PuffLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 
 const ProductsPage = () => {
   // State for slider
   const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,8 +140,6 @@ const ProductsPage = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-
-
   // Delete Product
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
@@ -238,6 +237,7 @@ const ProductsPage = () => {
     if (!image && !isEdit) {
       return toast.error("Image is Compulsory");
     }
+    setIsSaving(true);
     const formData = new FormData();
     formData.append("name", formState.name);
     formData.append("price", formState.price);
@@ -285,8 +285,10 @@ const ProductsPage = () => {
       const backendMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
-      
+
       toast.error(`❌ ${backendMessage}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -306,7 +308,11 @@ const ProductsPage = () => {
   const removeImage = () => {
     setImage(null);
     setImagePreview(null);
-    setEditFormState({ ...formState, image: "", assignedStaff: formState.assignedStaff });
+    setEditFormState({
+      ...formState,
+      image: "",
+      assignedStaff: formState.assignedStaff,
+    });
   };
 
   const parseCurrency = (value) => {
@@ -503,7 +509,9 @@ const ProductsPage = () => {
           {/* Product List Table */}
           <div className="bg-white rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">Product List</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Product List
+              </h2>
               <span className="text-sm text-gray-500">
                 {filteredProducts.length} items
               </span>
@@ -631,7 +639,12 @@ const ProductsPage = () => {
                       setIsSliderOpen(false);
                       setIsEdit(false);
                       setEditId(null);
-                      setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
+                      setEditFormState({
+                        name: "",
+                        price: "",
+                        image: "",
+                        assignedStaff: "",
+                      });
                       setImage(null);
                       setImagePreview(null);
                     }}
@@ -653,7 +666,10 @@ const ProductsPage = () => {
                         type="text"
                         value={formState.name}
                         onChange={(e) =>
-                          setEditFormState({ ...formState, name: e.target.value })
+                          setEditFormState({
+                            ...formState,
+                            name: e.target.value,
+                          })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="Enter product name"
@@ -760,7 +776,10 @@ const ProductsPage = () => {
                       <select
                         value={formState.assignedStaff}
                         onChange={(e) =>
-                          setEditFormState({ ...formState, assignedStaff: e.target.value })
+                          setEditFormState({
+                            ...formState,
+                            assignedStaff: e.target.value,
+                          })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       >
@@ -784,7 +803,12 @@ const ProductsPage = () => {
                       setIsSliderOpen(false);
                       setIsEdit(false);
                       setEditId(null);
-                      setEditFormState({ name: "", price: "", image: "", assignedStaff: "" });
+                      setEditFormState({
+                        name: "",
+                        price: "",
+                        image: "",
+                        assignedStaff: "",
+                      });
                       setImage(null);
                       setImagePreview(null);
                     }}
@@ -799,6 +823,11 @@ const ProductsPage = () => {
                     {isEdit ? "Update Product" : "Save Product"}
                   </button>
                 </div>
+                {isSaving && (
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-50">
+                    <ScaleLoader color="#605BFF" size={60} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -868,7 +897,9 @@ const ProductsPage = () => {
               {/* Next Button */}
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 className={`px-4 py-2 border rounded-lg transition-all duration-200 ${
                   currentPage === totalPages
                     ? "text-gray-400 border-gray-200 cursor-not-allowed"
