@@ -15,9 +15,11 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Eye } from "lucide-react";
 import FollowUpViewModal from "./FollowUpViewModal";
+import { ScaleLoader } from "react-spinners";
 
 const FollowUp = () => {
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isView, setIsView] = useState(false);
   const [selectedViewData, setSelectedViewData] = useState(null);
   const [followUpList, setFollowUpList] = useState([]);
@@ -137,6 +139,7 @@ const FollowUp = () => {
   };
 
   const handleSave = async () => {
+    setIsSaving(true)
     if (selectedFollowUp) {
       try {
         const formattedTime = (() => {
@@ -198,6 +201,9 @@ const FollowUp = () => {
           "Something went wrong. Please try again.";
 
         toast.error(`❌ ${backendMessage}`);
+      }
+      finally {
+        setIsSaving(false);
       }
     }
 
@@ -412,7 +418,12 @@ const FollowUp = () => {
       )}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-end z-50">
-          <div className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
+          <div className="relative w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg">
+           {isSaving && (
+              <div className="absolute inset-0  bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+                <ScaleLoader color="#605BFF" size={60} />
+              </div>
+            )}
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">
                 {selectedFollowUp ? "Edit Follow Up" : "Add Follow Up"}

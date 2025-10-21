@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PuffLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -21,6 +21,7 @@ import axios from "axios";
 
 const AddMeeting = () => {
   const [showModal, setShowModal] = useState(false);
+   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customerList, setCustomerList] = useState([]);
   const [meetings, setMeetings] = useState([]);
@@ -283,7 +284,8 @@ const AddMeeting = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      setIsSaving(true)
+    
 
       const selectedCompany = customerList.find(
         (c) => c.companyName === companyName
@@ -357,7 +359,8 @@ const AddMeeting = () => {
 
       toast.error(`❌ ${backendMessage}`);
     } finally {
-      setLoading(false);
+   
+      setIsSaving(false)
     }
   };
 
@@ -422,7 +425,7 @@ const AddMeeting = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-newPrimary">
-            Meeting Details
+            Meeting Detail
           </h1>
           <p className="text-gray-500 text-sm">Book your meetings</p>
         </div>
@@ -559,7 +562,12 @@ const AddMeeting = () => {
 
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+             {isSaving && (
+              <div className="absolute inset-0 h-[120vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+                <ScaleLoader color="#605BFF" size={60} />
+              </div>
+            )}
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-newPrimary">
                 {selectedMeeting ? "Edit Meeting" : "Add Meeting"}
