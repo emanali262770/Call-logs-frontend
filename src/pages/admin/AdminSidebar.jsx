@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaDiagramSuccessor } from "react-icons/fa6";
+import axios from "axios";
 
 import {
   FaTachometerAlt,
@@ -64,11 +65,31 @@ const AdminSidebar = () => {
   
   const isAdmin = userInfo?.isAdmin === true;
 
-  const handleLogout = () => {
-    
+const handleLogout = async () => {
+  try {
+    const token = userInfo?.token;
+
+    if (token) {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    }
+
+    // ✅ Clear local storage and redirect
     localStorage.removeItem("userInfo");
     navigate("/");
-  };
+
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Still remove localStorage to avoid stuck session
+    localStorage.removeItem("userInfo");
+    navigate("/");
+  }
+};
 
   // 🔹 Filter links based on role & permissions
 const filteredLinks = links.filter((link) => {

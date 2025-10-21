@@ -32,6 +32,25 @@ const StaffTrack = () => {
   // ✅ Check if filters are applied
   const hasFilters = staff !== "" || product !== "" || range !== "all";
 
+  // ✅ Fetch Staff Login History
+  useEffect(() => {
+    const fetchLoginHistory = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/auth/staff-track`
+        );
+        setRecords(res.data.users || []);
+      } catch (err) {
+        console.error("Error fetching staff login history:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLoginHistory();
+  }, []);
+
+
   // ✅ Clear filters
   const handleClearFilters = () => {
     setStaff("");
@@ -201,46 +220,46 @@ const StaffTrack = () => {
         </div>
       </div>
 
-      {/* ✅ Staff Activity Table */}
+      {/* ✅ Staff Login History Table */}
       <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
-        <table className="min-w-[950px] w-full text-sm text-left border-collapse table-fixed">
+        <table className="min-w-[850px] w-full text-sm text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
               <th className="py-3 px-4 w-[60px]">Sr</th>
-              <th className="py-3 px-4 w-[180px]">Staff Name</th>
-              <th className="py-3 px-4 w-[200px]">Company</th>
-              <th className="py-3 px-4 w-[180px]">Person</th>
-              <th className="py-3 px-4 w-[180px]">Product</th>
-              <th className="py-3 px-4 w-[160px]">Status</th>
-              <th className="py-3 px-4 text-center w-[180px]">Date & Time</th>
+              <th className="py-3 px-4 w-[200px]">Staff Name</th>
+              <th className="py-3 px-4 w-[160px]">Phone</th>
+              <th className="py-3 px-4 w-[120px]">Status</th>
+              <th className="py-3 px-4 w-[180px] text-center">Last Login</th>
+              <th className="py-3 px-4 w-[180px] text-center">Last Logout</th>
+              <th className="py-3 px-4 w-[100px] text-center">Total Logins</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredData.length > 0 ? (
-              filteredData.map((r, i) => (
+            {records.length > 0 ? (
+              records.map((r, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50 transition">
                   <td className="py-3 px-4 text-gray-900 font-medium">{i + 1}</td>
-                  <td className="py-3 px-4 text-gray-900 truncate">
-                    {r.staff?.username || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 truncate">
-                    {r.companyName || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 truncate">
-                    {r.person?.fullName || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 truncate">
-                    {r.product?.name || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-gray-700 truncate">
-                    {r.status || "—"}
+                  <td className="py-3 px-4 text-gray-900 truncate">{r.username}</td>
+                  <td className="py-3 px-4 text-gray-700">{r.phone}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${r.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                      {r.status}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-center text-gray-700">
-                    {r.followDates?.[0]
-                      ? new Date(r.followDates[0]).toLocaleDateString()
-                      : "—"}{" "}
-                    {r.followTimes?.[0] || ""}
+                    {r.lastLoginAt || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-center text-gray-700">
+                    {r.lastLogoutAt || "—"}
+                  </td>
+                  <td className="py-3 px-4 text-center text-gray-900 font-semibold">
+                    {r.totalLogins}
                   </td>
                 </tr>
               ))
@@ -250,13 +269,14 @@ const StaffTrack = () => {
                   colSpan="7"
                   className="text-center py-8 text-gray-500 rounded-lg"
                 >
-                  No staff activity records found
+                  No staff login activity found
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
     </div>
   );
 };

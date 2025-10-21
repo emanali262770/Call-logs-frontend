@@ -22,7 +22,6 @@ import AssignRights from "./pages/admin/AccessControl";
 import Modules from "./pages/admin/Modules";
 import ModulesFunctionalities from "./pages/admin/ModulesFunctionalities";
 import SuccessClient from "./pages/admin/SuccessClient";
-import MoreProductAssign from "./pages/admin/MoreProductAssign";
 import AssignTo from "./pages/admin/AssignTo";
 import ActivityTrack from "./pages/History/ActivityTrack";
 import CustomerTrack from "./pages/History/CustomerTrack";
