@@ -216,9 +216,7 @@ const StaffList = () => {
 
       toast.error(`❌ ${backendMessage}`);
     } finally {
-    
       setIsSaving(false);
-     
     }
   };
 
@@ -243,8 +241,8 @@ const StaffList = () => {
 
   // Open the edit modal and populate the form
   const handleEdit = (staff) => {
-    console.log({staff});
-    
+    console.log({ staff });
+
     setIsEdit(true);
     setEditId(staff._id);
     setStaffName(staff.name || "");
@@ -538,7 +536,7 @@ const StaffList = () => {
             className="w-full md:w-1/2 lg:w-1/3 bg-white h-full overflow-y-auto shadow-lg"
           >
             {isSaving && (
-          <div className="absolute top-0 left-0 w-full h-[120vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-50">
+              <div className="absolute top-0 left-0 w-full h-[120vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-50">
                 <ScaleLoader color="#605BFF" size={60} />
               </div>
             )}
@@ -656,8 +654,9 @@ const StaffList = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={6} // 👈 limits password length to 6
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                  placeholder="Enter password"
+                  placeholder="Enter password (max 6 characters)"
                 />
               </div>
 

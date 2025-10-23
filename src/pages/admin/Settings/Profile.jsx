@@ -241,7 +241,9 @@ const Profile = () => {
               type="password"
               name="password"
               value={formData.password}
+              maxLength={6}
               onChange={handleChange}
+              placeholder="Enter password (max 6 characters)"
               disabled={!editing}
               className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${editing
                   ? "border-gray-300 bg-white"
@@ -259,6 +261,8 @@ const Profile = () => {
               type="password"
               name="confirmPassword"
               value={confirmPassword}
+              maxLength={6}
+              placeholder="Re-enter password (max 6 characters)"
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={!editing}
               className={`mt-1 w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-newPrimary/40 outline-none ${editing
