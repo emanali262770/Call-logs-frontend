@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Loader } from "lucide-react";
 
 const Signup = () => {
   const [form, setForm] = useState({
@@ -46,7 +47,7 @@ const Signup = () => {
       return;
     }
     setLoading(true);
-    
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/auth/register`,
@@ -85,7 +86,9 @@ const Signup = () => {
         </div>
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Full Name</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Full Name
+            </label>
             <input
               type="text"
               name="name"
@@ -97,7 +100,9 @@ const Signup = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Username</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Username
+            </label>
             <input
               type="text"
               name="username"
@@ -109,7 +114,9 @@ const Signup = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Email Address</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Email Address
+            </label>
             <input
               type="email"
               name="email"
@@ -120,9 +127,11 @@ const Signup = () => {
               required
             />
           </div>
-          
+
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Password</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -134,7 +143,9 @@ const Signup = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Confirm Password</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Confirm Password
+            </label>
             <input
               type="password"
               name="confirm"
@@ -156,21 +167,37 @@ const Signup = () => {
             />
             <span className="text-xs text-gray-600">
               By creating an account you agree to the{" "}
-              <a href="#" className="text-indigo-600 underline">terms of use</a> and our{" "}
-              <a href="#" className="text-indigo-600 underline">privacy policy</a>.
+              <a href="#" className="text-indigo-600 underline">
+                terms of use
+              </a>{" "}
+              and our{" "}
+              <a href="#" className="text-indigo-600 underline">
+                privacy policy
+              </a>
+              .
             </span>
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-newPrimary hover:bg-secondary text-white py-2 rounded-md font-semibold transition-all"
+            className="w-full flex justify-center items-center gap-2 bg-newPrimary hover:bg-secondary text-white py-2 rounded-md font-semibold transition-all disabled:opacity-70"
           >
-            {loading ? "Signing up..." : "Create account"}
+            {loading ? (
+              <>
+                <Loader className="animate-spin" size={20} />
+                <span>Creating...</span>
+              </>
+            ) : (
+              "Create account"
+            )}
           </button>
         </form>
         <div className="mt-4 text-center text-sm text-gray-700">
           Already have an account?{" "}
-          <Link to="/" className="text-secondary hover:text-secondary/80 font-medium">
+          <Link
+            to="/"
+            className="text-secondary hover:text-secondary/80 font-medium"
+          >
             Log in
           </Link>
         </div>

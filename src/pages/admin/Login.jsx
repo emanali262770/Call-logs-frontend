@@ -6,9 +6,12 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../../context/authSlice";
+import { set } from "date-fns";
+import { Loader } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -19,45 +22,46 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
 
         { email, password }
-
       );
       console.log("Login response:", response.data);
-  
+
       const { token, user } = response.data;
-  
+
       // ✅ Merge token with user and save as userInfo
       const userInfo = { ...user, token };
-  
+
       // ✅ Store in Redux (will also store in localStorage via authSlice)
       dispatch(loginSuccess(userInfo));
       localStorage.setItem("userInfo", JSON.stringify(userInfo));
       // ✅ Toast and redirect
       toast.success("Logged in successfully 🎉");
       console.log("Stored userInfo:", userInfo);
-  
+
       if (user.isAdmin === true || user.isAdmin === false) {
         navigate("/admin");
       } else {
         navigate("/");
       }
-  
+
       setTimeout(() => {
         window.location.reload();
       }, 100);
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-        error.message ||
-        "Login failed. Please try again."
+          error.message ||
+          "Login failed. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -72,7 +76,9 @@ const Login = () => {
         </div>
         <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Email Address</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Email Address
+            </label>
             <input
               type="email"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -83,7 +89,9 @@ const Login = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-1 font-medium">Password</label>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Password
+            </label>
             <input
               type="password"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -95,14 +103,18 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-md font-semibold transition-all"
+            disabled={loading}
+            className="w-full flex justify-center items-center bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-md font-semibold transition-all disabled:opacity-70"
           >
-            Login
+            {loading ? <Loader className="animate-spin" size={22} /> : "Login"}
           </button>
         </form>
         <div className="mt-4 text-center text-sm text-gray-700">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-indigo-600 hover:text-indigo-800 font-medium">
+          <Link
+            to="/signup"
+            className="text-indigo-600 hover:text-indigo-800 font-medium"
+          >
             Sign up
           </Link>
         </div>
