@@ -14,7 +14,9 @@ body {
     transform: translateX(100%);
   }
 }
-
+::-webkit-scrollbar {
+    display: none;
+}
 .animate-shimmer {
   background: linear-gradient(
     90deg,
