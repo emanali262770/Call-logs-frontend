@@ -101,7 +101,7 @@ const filteredLinks = links.filter((link) => {
 
 
   return (
-    <aside className="bg-white shadow min-h-screen w-16 sm:w-20 md:w-60 flex flex-col py-8 px-2 sm:px-4 justify-between transition-all duration-300">
+    <aside className="bg-white overflow-scroll shadow min-h-screen w-16 sm:w-20 md:w-60 flex flex-col py-8 px-2 sm:px-4 justify-between transition-all duration-300">
       {/* Logo / Title */}
       <Link to='/admin'>
       <div>
@@ -129,12 +129,14 @@ const filteredLinks = links.filter((link) => {
             <div className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
           </div>
           <h1 className="hidden md:block text-xl font-bold bg-gradient-to-r from-newPrimary to-primaryDark bg-clip-text text-transparent">
+
             Call Logs Dashboard <span>/Infinitybyte</span>
+
           </h1>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col  gap-2">
           {filteredLinks.map((link, idx) =>
             link.children ? (
               <div key={idx}>
@@ -198,7 +200,7 @@ const filteredLinks = links.filter((link) => {
       </div>
       </Link>
 
-      <div className="min-h-screen">
+      <div className="mt-auto">
         {/* Logout */}
       <button
         onClick={handleLogout}
