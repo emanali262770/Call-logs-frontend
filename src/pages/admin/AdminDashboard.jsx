@@ -169,9 +169,7 @@ const AdminDashboard = () => {
           }));
           setDayData(formatted);
 
-          if (formatted.every((d) => d.calls === 0)) {
-            toast.info("No calls recorded this week.");
-          }
+         
         }
       } catch (error) {
         const backendMessage =
@@ -211,10 +209,7 @@ const AdminDashboard = () => {
           // Optional: log total calls
           // console.log("Total Calls:", res.data.totalCalls);
 
-          // Optional toast
-          if (res.data.totalCalls === 0) {
-            toast.info("No calls recorded this year.");
-          }
+         
         }
       } catch (error) {
         const backendMessage =
@@ -252,9 +247,7 @@ const AdminDashboard = () => {
           setCalendarMeetings(res.data.data || []);
           setTotalMeetings(res.data.totalMeetings || 0);
 
-          if ((res.data.data || []).length === 0) {
-            toast.info("No meetings scheduled for this month.");
-          }
+          
         }
       } catch (error) {
         const backendMessage =``

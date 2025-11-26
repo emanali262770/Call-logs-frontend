@@ -15,7 +15,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Eye } from "lucide-react";
 import FollowUpViewModal from "./FollowUpViewModal";
-import { ScaleLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 
 const FollowUp = () => {
   const [loading, setLoading] = useState(false);
@@ -93,7 +93,9 @@ const FollowUp = () => {
       console.error("Error fetching meetings data:", error);
       toast.error("Failed to load meetings data");
     } finally {
-      setLoading(false);
+        setTimeout(() => {
+        setLoading(false);
+      }, 3000); // delay 2 seconds
     }
   }, []);
 
@@ -237,6 +239,13 @@ const FollowUp = () => {
   );
   const totalPages = Math.ceil(filteredFollowUps.length / itemsPerPage);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <PuffLoader color="#1d4ed8" />
+      </div>
+    );
+  }
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

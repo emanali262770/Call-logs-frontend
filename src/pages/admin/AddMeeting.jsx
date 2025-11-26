@@ -21,7 +21,7 @@ import axios from "axios";
 
 const AddMeeting = () => {
   const [showModal, setShowModal] = useState(false);
-   const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customerList, setCustomerList] = useState([]);
   const [meetings, setMeetings] = useState([]);
@@ -93,7 +93,7 @@ const AddMeeting = () => {
     } finally {
       setTimeout(() => {
         setLoading(false);
-      }, 2000); // delay 2 seconds
+      }, 4000); // delay 2 seconds
     }
   }, []);
 
@@ -151,9 +151,11 @@ const AddMeeting = () => {
       console.error("Error fetching Meeting data:", error);
       setTimeout(() => {
         toast.error("Failed to load Meeting data");
-      }, 2000); 
+      }, 2000);
     } finally {
-      setLoading(false);
+       setTimeout(() => {
+        setLoading(false);
+      }, 4000); // delay 2 seconds
     }
   }, []);
 
@@ -177,7 +179,9 @@ const AddMeeting = () => {
       console.error("Error fetching Staff data:", error);
       toast.error("Failed to load Staff data");
     } finally {
-      setLoading(false);
+        setTimeout(() => {
+        setLoading(false);
+      }, 4000); // delay 2 seconds
     }
   }, []);
 
@@ -284,15 +288,23 @@ const AddMeeting = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setIsSaving(true)
-    
+      setIsSaving(true);
 
       const selectedCompany = customerList.find(
         (c) => c.companyName === companyName
       );
-      const selectedStaff = referToStaffList.find(
-        (s) => s.username === referToStaff
-      );
+      let selectedStaff = null;
+
+      // Admin: manual select
+      if (userInfo?.isAdmin) {
+        selectedStaff = referToStaffList.find(
+          (s) => s.username === referToStaff
+        );
+      }
+      // Non-admin: always assign their own ID
+      else {
+        selectedStaff = { _id: userInfo?.id };
+      }
 
       // ✅ Conditional payload
       let payload;
@@ -359,8 +371,7 @@ const AddMeeting = () => {
 
       toast.error(`❌ ${backendMessage}`);
     } finally {
-   
-      setIsSaving(false)
+      setIsSaving(false);
     }
   };
 
@@ -399,7 +410,7 @@ const AddMeeting = () => {
     setContactMethod("By Visit");
   };
 
-   useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
   // Pagination logic
@@ -418,7 +429,6 @@ const AddMeeting = () => {
       </div>
     );
   }
-
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -443,8 +453,6 @@ const AddMeeting = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
             />
           </div>
-
-         
         </div>
       </div>
 
@@ -563,8 +571,8 @@ const AddMeeting = () => {
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-             {isSaving && (
-              <div className="absolute inset-0 h-[120vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+            {isSaving && (
+              <div className=" fixed inset-0  bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
                 <ScaleLoader color="#605BFF" size={60} />
               </div>
             )}
@@ -650,7 +658,7 @@ const AddMeeting = () => {
                     })()}
                   </div>
                 </div>
-                 <div>
+                <div>
                   <label className="block text-gray-700 mb-2 font-medium">
                     Designation
                   </label>
@@ -673,15 +681,13 @@ const AddMeeting = () => {
                   <input
                     type="text"
                     readOnly
-                      disabled
+                    disabled
                     value={products}
                     className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none"
                     placeholder="Auto-filled product"
                   />
                 </div>
               </div>
-
-            
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <label
@@ -767,54 +773,58 @@ const AddMeeting = () => {
 
               {followUpStatus === "Follow Up Required" && (
                 <>
-                <div className="border rounded-lg border-gray-400 p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div>
-                      <label className="block text-gray-700 mb-2 font-medium">
-                        Next Follow-up Date
-                      </label>
-                      <div className="relative">
-                        <FiCalendar className="absolute left-3 top-3 text-gray-400" />
-                        <input
-                          type="date"
-                          value={nextFollowUpDate}
-                          onChange={(e) => setNextFollowUpDate(e.target.value)}
-                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+                  <div className="border rounded-lg border-gray-400 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                      <div>
+                        <label className="block text-gray-700 mb-2 font-medium">
+                          Next Follow-up Date
+                        </label>
+                        <div className="relative">
+                          <FiCalendar className="absolute left-3 top-3 text-gray-400" />
+                          <input
+                            type="date"
+                            value={nextFollowUpDate}
+                            onChange={(e) =>
+                              setNextFollowUpDate(e.target.value)
+                            }
+                            className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
                focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
                focus:border-newPrimary transition-all"
-                        />
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-2 font-medium">
-                        Time
-                      </label>
-                      <div className="relative">
-                        <FiClock className="absolute left-3 top-3 text-gray-400" />
-                        <input
-                          type="time"
-                          value={nextFollowUpTime}
-                          onChange={(e) => setNextFollowUpTime(e.target.value)}
-                          className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
+                      <div>
+                        <label className="block text-gray-700 mb-2 font-medium">
+                          Time
+                        </label>
+                        <div className="relative">
+                          <FiClock className="absolute left-3 top-3 text-gray-400" />
+                          <input
+                            type="time"
+                            value={nextFollowUpTime}
+                            onChange={(e) =>
+                              setNextFollowUpTime(e.target.value)
+                            }
+                            className="w-full pl-10 pr-4 p-2.5 border border-gray-300 rounded-lg 
                focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
                focus:border-newPrimary transition-all"
-                        />
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mt-4">
-                    <label className="block text-gray-700 mb-2 font-medium">
-                      Next Visit Details
-                    </label>
-                    <textarea
-                      value={nextVisitDetails}
-                      onChange={(e) => setNextVisitDetails(e.target.value)}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                      placeholder="Write here..."
-                      rows="3"
-                    />
-                  </div>
+                    <div className="mt-4">
+                      <label className="block text-gray-700 mb-2 font-medium">
+                        Next Visit Details
+                      </label>
+                      <textarea
+                        value={nextVisitDetails}
+                        onChange={(e) => setNextVisitDetails(e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                        placeholder="Write here..."
+                        rows="3"
+                      />
+                    </div>
                   </div>
 
                   <div className="border border-gray-400 rounded-lg p-4">
@@ -885,23 +895,27 @@ const AddMeeting = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-gray-700 mb-2 font-medium">
-                        Refer To Staff
-                      </label>
-                      <select
-                        value={referToStaff}
-                        onChange={(e) => setReferToStaff(e.target.value)}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                      >
-                        <option value="">Select Staff</option>
-                        {referToStaffList?.map((staff) => (
-                          <option key={staff._id} value={staff.username}>
-                            {staff.username}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {userInfo?.isAdmin && (
+                      <div>
+                        <label className="block text-gray-700 mb-2 font-medium">
+                          Refer To Staff
+                        </label>
+                        <select
+                          value={referToStaff}
+                          onChange={(e) => setReferToStaff(e.target.value)}
+                          className="w-full p-2.5 border border-gray-300 rounded-lg 
+      focus:outline-none focus:ring-2 focus:ring-newPrimary/50 
+      focus:border-newPrimary transition-all"
+                        >
+                          <option value="">Select Staff</option>
+                          {referToStaffList?.map((staff) => (
+                            <option key={staff._id} value={staff._id}>
+                              {staff.username}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border rounded-lg p-4">

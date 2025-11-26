@@ -14,6 +14,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import axios from 'axios'
+import { PuffLoader } from "react-spinners";
 
 const MeetingCallsTrack = () => {
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,10 @@ const MeetingCallsTrack = () => {
       setMeetingList([]);
       setFilteredMeetings([]);
     } finally {
-      setLoading(false);
+       setTimeout(() => {
+        setLoading(false);
+      }, 3000); // delay 2 seconds
+     
     }
   }, []);
 
@@ -155,7 +159,13 @@ const MeetingCallsTrack = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
-
+if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <PuffLoader color="#1d4ed8" />
+      </div>
+    );
+  }
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

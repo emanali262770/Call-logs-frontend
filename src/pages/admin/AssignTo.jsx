@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { PuffLoader } from "react-spinners";
+import { PuffLoader, ScaleLoader } from "react-spinners";
 import Swal from "sweetalert2";
 import { FiSearch, FiTrash2 } from "react-icons/fi";
 import * as XLSX from "xlsx";
+
+
 
 const AssignTo = () => {
   const [customerList, setCustomerData] = useState([]);
@@ -15,27 +17,18 @@ const AssignTo = () => {
   const [staffMembers, setStaffMember] = useState([]);
   const [productList, setProductList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [customerCity, setCustomerCity] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [businessType, setBusinessType] = useState("");
-  const [persons, setPersons] = useState([
-    { fullName: "", phone: "", email: "", designation: "", department: "" },
-  ]);
+  const [isSaving, setIsSaving] = useState(false);
+ 
   const [assignedStaff, setAssignedStaff] = useState("");
   const [assignedProduct, setAssignedProduct] = useState("");
-  const [image, setImage] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
-  const [editId, setEditId] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [file, setFile] = useState(null);
   const [excelData, setExcelData] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [uploading, setUploading] = useState(false);
+
 
   // ✅ new states for checkbox selection
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -78,7 +71,10 @@ const AssignTo = () => {
     } catch (error) {
       toast.error("Failed to fetch customer data");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+           setLoading(false);
+      }, 4000);
+   
     }
   }, []);
 
@@ -121,7 +117,9 @@ const AssignTo = () => {
         toast.error("Failed to fetch staff/product data");
       }, 2000);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+           setLoading(false);
+      }, 4000);
     }
   }, []);
 
@@ -131,6 +129,7 @@ const AssignTo = () => {
 
   // ✅ handle save (assign)
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const headers = {
         Authorization: `Bearer ${userInfo?.token}`,
@@ -155,6 +154,8 @@ const AssignTo = () => {
       fetchCustomerData();
     } catch (error) {
       toast.error("Failed to assign customers");
+    }finally{
+      setIsSaving(false);
     }
   };
 
@@ -213,7 +214,7 @@ const AssignTo = () => {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+      <div className="rounded-xl shadow mt-6 p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
         <table className="min-w-[1100px] w-full text-sm text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
@@ -322,6 +323,11 @@ const AssignTo = () => {
       {/* Modal for Assign */}
       {isSliderOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+           {isSaving && (
+              <div className="fixed inset-0  bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+                <ScaleLoader color="#605BFF" size={60} />
+              </div>
+            )}
           <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl">
             <div className="flex justify-between items-center p-4 border-b">
               <h2 className="text-xl font-bold text-newPrimary">Assign</h2>

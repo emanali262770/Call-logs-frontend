@@ -38,7 +38,7 @@ const StaffTrack = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/staff-track`
+          `${import.meta.env.VITE_API_BASE_URL}/history/staff-track`
         );
         setRecords(res.data.users || []);
       } catch (err) {
@@ -240,7 +240,7 @@ const StaffTrack = () => {
               records.map((r, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50 transition">
                   <td className="py-3 px-4 text-gray-900 font-medium">{i + 1}</td>
-                  <td className="py-3 px-4 text-gray-900 truncate">{r.username}</td>
+                  <td className="py-3 px-4 text-gray-900 truncate">{r.staff}</td>
                   <td className="py-3 px-4 text-gray-700">{r.phone}</td>
                   <td className="py-3 px-4">
                     <span

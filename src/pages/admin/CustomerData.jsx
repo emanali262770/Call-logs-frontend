@@ -147,7 +147,10 @@ const CustomerData = () => {
       console.error("Error fetching customer data:", error);
       toast.error("Failed to fetch customer data");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+          setLoading(false);
+      }, 5000);
+    
     }
   }, []);
 
@@ -208,7 +211,10 @@ const CustomerData = () => {
       console.error("Error fetching assigned data:", error);
       toast.error("Failed to fetch staff/product data");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+         setLoading(false);
+      }, 5000);
+     
     }
   }, []);
 
@@ -637,7 +643,7 @@ const CustomerData = () => {
       </div>
 
       {/* Customer Table */}
-      <div className="rounded-xl shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
+      <div className="rounded-xl mt-6 shadow p-4 md:p-6 border border-gray-100 w-full overflow-x-auto">
         <table className="min-w-[1100px] w-full text-sm text-left border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
@@ -692,26 +698,26 @@ const CustomerData = () => {
 
                   {/* City */}
                   <td className="py-3 px-4 text-green-600 truncate">
-                    {client.city || " "}
+                    {client.city || "-"}
                   </td>
 
                   {/* Person */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.persons?.[0]?.fullName || " "}
+                    {client.persons?.[0]?.fullName || "-"}
                   </td>
                   {/* Department */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.persons?.[0]?.department || "N/A"}
+                    {client.persons?.[0]?.department || "-"}
                   </td>
 
                   {/* Designation */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.persons?.[0]?.designation || " "}
+                    {client.persons?.[0]?.designation || "-"}
                   </td>
 
                   {/* phoneNumber */}
                   <td className="py-3 px-4 text-gray-700 truncate">
-                    {client.persons?.[0]?.phoneNumber || " "}
+                    {client.persons?.[0]?.phoneNumber || "-"}
                   </td>
 
                   {/* Actions */}
@@ -754,7 +760,7 @@ const CustomerData = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="relative  bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             {isSaving && (
-              <div className="absolute inset-0 h-[140vh] bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
+              <div className="fixed inset-0  bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[9999]">
                 <ScaleLoader color="#605BFF" size={60} />
               </div>
             )}
