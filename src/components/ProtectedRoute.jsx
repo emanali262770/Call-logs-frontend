@@ -1,49 +1,63 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children }) => {
   const [isValid, setIsValid] = useState(null);
   const user = JSON.parse(localStorage.getItem("userInfo"));
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/token/check`;
+  const location = useLocation();
+
+  // 🔹 URL → Permission Mapping
+  const permissionMap = {
+    "staff": "isStaff",
+    "products": "isProduct",
+    "customers": "isCustomer",
+    "assign": "isAssign",
+    "calendar": "isCalendar",
+    "followup": "isFollow",
+    "success-client": "isCustomer",
+    "meetings": "isMeeting",
+    "meetings-tracking": "isTrack",
+    "history": "isHistory",
+    "groups": "isSecurity",
+    "users": "isSecurity",
+    "modules-functionalities": "isSecurity",
+  };
 
   useEffect(() => {
-    const checkTokenValidOrNot = async () => {
-      if (!user || !user.token) {
-        setIsValid(false);
-        return;
-      }
+    if (!user?.token) {
+      setIsValid(false);
+      return;
+    }
 
-      try {
-        const res = await axios.get(API_URL, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        if (res.data.success === false) {
-          localStorage.clear();
-          setIsValid(false);
-        } else {
-          setIsValid(true);
-        }
-      } catch (error) {
-        console.error("Token validation failed:", error);
+    axios
+      .get(`${import.meta.env.VITE_API_BASE_URL}/token/check`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      })
+      .then((res) => {
+        setIsValid(res.data.success !== false);
+      })
+      .catch(() => {
         localStorage.clear();
         setIsValid(false);
-      }
-    };
-
-    checkTokenValidOrNot();
+      });
   }, []);
 
-  // Show nothing (or a loader) while verifying
+  // Still loading
   if (isValid === null) return null;
 
-  // Redirect if user not found or invalid
+  // Invalid / no user
   if (!user || !isValid) return <Navigate to="/" replace />;
 
-  // Optional: Role-based protection
-  if (role && user.role !== role) return <Navigate to="/" replace />;
+  // ⭐ AUTO PERMISSION CHECK (This is the magic)
+  const path = location.pathname.split("/")[2]; // e.g. "staff"
+  const requiredPermission = permissionMap[path];
+
+  if (!user.isAdmin && requiredPermission) {
+    if (user[requiredPermission] !== true) {
+      return <Navigate to="/admin" replace />;
+    }
+  }
 
   return children;
 };

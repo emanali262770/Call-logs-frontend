@@ -8,8 +8,13 @@ import {
   FiCalendar,
   FiX,
 } from "react-icons/fi";
+import StaffTrackViewModal from "../../components/Dashboard/StaffTrackViewModal";
+import { Eye } from "lucide-react";
 
 const StaffTrack = () => {
+  const [isView, setIsView] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
   const [records, setRecords] = useState([]);
   const [staff, setStaff] = useState("");
   const [staffList, setStaffList] = useState([]);
@@ -40,7 +45,9 @@ const StaffTrack = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/history/staff-track`
         );
-        setRecords(res.data.users || []);
+        console.log(res);
+
+        setRecords(res.data.data || []);
       } catch (err) {
         console.error("Error fetching staff login history:", err);
       } finally {
@@ -49,7 +56,6 @@ const StaffTrack = () => {
     };
     fetchLoginHistory();
   }, []);
-
 
   // ✅ Clear filters
   const handleClearFilters = () => {
@@ -227,11 +233,11 @@ const StaffTrack = () => {
             <tr className="bg-gray-50 text-xs font-medium text-gray-600 uppercase">
               <th className="py-3 px-4 w-[60px]">Sr</th>
               <th className="py-3 px-4 w-[200px]">Staff Name</th>
-              <th className="py-3 px-4 w-[160px]">Phone</th>
               <th className="py-3 px-4 w-[120px]">Status</th>
               <th className="py-3 px-4 w-[180px] text-center">Last Login</th>
               <th className="py-3 px-4 w-[180px] text-center">Last Logout</th>
               <th className="py-3 px-4 w-[100px] text-center">Total Logins</th>
+              <th className="py-3 px-4 w-[100px] text-center">Action</th>
             </tr>
           </thead>
 
@@ -239,27 +245,55 @@ const StaffTrack = () => {
             {records.length > 0 ? (
               records.map((r, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50 transition">
-                  <td className="py-3 px-4 text-gray-900 font-medium">{i + 1}</td>
-                  <td className="py-3 px-4 text-gray-900 truncate">{r.staff}</td>
-                  <td className="py-3 px-4 text-gray-700">{r.phone}</td>
+                  <td className="py-3 px-4 text-gray-900 font-medium">
+                    {i + 1}
+                  </td>
+
+                  <td className="py-3 px-4 text-gray-900 truncate">
+                    {r.staff}
+                  </td>
+
+                  {/* Status from r.action */}
                   <td className="py-3 px-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${r.status === "active"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        r.action === "Staff active"
                           ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                        }`}
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
-                      {r.status}
+                      {r.action}
                     </span>
                   </td>
+
+                  {/* Last Login */}
                   <td className="py-3 px-4 text-center text-gray-700">
-                    {r.lastLoginAt || "—"}
+                    {r.lastLoginAt
+                      ? new Date(r.lastLoginAt).toLocaleString()
+                      : "—"}
                   </td>
+
+                  {/* Last Logout */}
                   <td className="py-3 px-4 text-center text-gray-700">
-                    {r.lastLogoutAt || "—"}
+                    {r.lastLogoutAt
+                      ? new Date(r.lastLogoutAt).toLocaleString()
+                      : "—"}
                   </td>
+
+                  {/* Total Logins */}
                   <td className="py-3 px-4 text-center text-gray-900 font-semibold">
-                    {r.totalLogins}
+                    {r.loginHistory?.length || 0}
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <button
+                      onClick={() => {
+                        setSelectedRecord(r);
+                        setIsView(true);
+                      }}
+                      className="px-3 py-1 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    >
+                      <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
               ))
@@ -276,7 +310,12 @@ const StaffTrack = () => {
           </tbody>
         </table>
       </div>
-
+      {isView && selectedRecord && (
+        <StaffTrackViewModal
+          data={selectedRecord}
+          onClose={() => setIsView(false)}
+        />
+      )}
     </div>
   );
 };
