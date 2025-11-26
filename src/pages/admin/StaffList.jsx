@@ -19,6 +19,8 @@ import {
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 const StaffList = () => {
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+
   const [staffList, setStaffList] = useState([]);
   const [filteredStaffList, setFilteredStaffList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -355,7 +357,7 @@ const StaffList = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredStaffList.length / itemsPerPage);
-  console.log({ filteredStaffList });
+  // console.log({ filteredStaffList });
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -650,14 +652,29 @@ const StaffList = () => {
                 <label className="block text-sm font-medium text-gray-900 mb-1">
                   Password <span className="text-newPrimary">*</span>
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  maxLength={6} // 👈 limits password length to 6
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
-                  placeholder="Enter password (max 6 characters)"
-                />
+
+                <div className="relative">
+                  <input
+                    type={showPasswordInput ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    maxLength={6}
+                    className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary transition-all"
+                    placeholder="Enter password (max 6 characters)"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordInput(!showPasswordInput)}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800"
+                  >
+                    {showPasswordInput ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Image Upload */}

@@ -318,7 +318,7 @@ const headers = {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6">
+      <div className="flex flex-col items-start lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6">
         {/* Mini Calendar */}
         <div className="w-full lg:w-1/3 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
           <div className="text-md font-semibold mb-4 text-gray-800 flex items-center gap-2">
@@ -383,8 +383,8 @@ const headers = {
         </div>
 
         {/* Main Calendar */}
-        <div className="w-full lg:w-2/3 bg-white flex flex-col flex-1 p-5 rounded-xl shadow-sm border border-gray-100 min-h-[calc(100vh-120px)]">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+        <div className="w-full lg:w-2/3 bg-white flex  flex-col flex-1 p-5 rounded-xl shadow-sm border border-gray-100 min-h-[calc(100vh-120px)]">
+          <div className="flex  flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrev}

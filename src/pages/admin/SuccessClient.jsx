@@ -12,6 +12,7 @@ import { Eye } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import SuccessClientViewModal from "./SuccessClientViewModal";
+import { PuffLoader } from "react-spinners";
 
 const SuccessClient = () => {
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,10 @@ const SuccessClient = () => {
       console.error("Error fetching success clients:", error);
       toast.error("Failed to load success clients");
     } finally {
-      setLoading(false);
+       setTimeout(() => {
+        setLoading(false);
+      }, 3000); // delay 2 seconds
+     
     }
   }, []);
 
@@ -90,6 +94,14 @@ const SuccessClient = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <PuffLoader color="#1d4ed8" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
