@@ -86,9 +86,30 @@ const AdminDashboard = () => {
   const base = import.meta.env.VITE_API_BASE_URL;
 
   // ✅ Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("userInfo");
-    navigate("/"); // go back to login page
+  const handleLogout = async () => {
+    try {
+      const token = userInfo?.token;
+
+      if (token) {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/auth/logout`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+
+      // ✅ Clear local storage and redirect
+      localStorage.removeItem("userInfo");
+      navigate("/");
+
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still remove localStorage to avoid stuck session
+      localStorage.removeItem("userInfo");
+      navigate("/");
+    }
   };
 
   // ✅ Close menu when clicked outside
@@ -169,7 +190,7 @@ const AdminDashboard = () => {
           }));
           setDayData(formatted);
 
-         
+
         }
       } catch (error) {
         const backendMessage =
@@ -209,7 +230,7 @@ const AdminDashboard = () => {
           // Optional: log total calls
           // console.log("Total Calls:", res.data.totalCalls);
 
-         
+
         }
       } catch (error) {
         const backendMessage =
@@ -247,11 +268,11 @@ const AdminDashboard = () => {
           setCalendarMeetings(res.data.data || []);
           setTotalMeetings(res.data.totalMeetings || 0);
 
-          
+
         }
       } catch (error) {
-        const backendMessage =``
-          error.response?.data?.message ||
+        const backendMessage = ``
+        error.response?.data?.message ||
           "Something went wrong fetching calendar meetings.";
         setTimeout(() => {
           toast.error(`❌ ${backendMessage}`);
