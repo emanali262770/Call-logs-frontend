@@ -14,6 +14,7 @@ import { Eye } from "lucide-react";
 const StaffTrack = () => {
   const [isView, setIsView] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+const [originalRecords, setOriginalRecords] = useState([]);
 
   const [records, setRecords] = useState([]);
   const [staff, setStaff] = useState("");
@@ -48,6 +49,8 @@ const StaffTrack = () => {
         console.log(res);
 
         setRecords(res.data.data || []);
+        setOriginalRecords(res.data.data || []);
+
       } catch (err) {
         console.error("Error fetching staff login history:", err);
       } finally {
@@ -65,26 +68,31 @@ const StaffTrack = () => {
   };
 
   // ✅ Fetch Staff Activity Data
-  useEffect(() => {
-    const fetchStaffRecords = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/staff/track`,
-          {
-            headers: { Authorization: `Bearer ${userInfo?.token}` },
-            params: { staff, product, range },
-          }
-        );
-        setRecords(res.data.data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStaffRecords();
-  }, [staff, product, range]);
+  // useEffect(() => {
+  //   const fetchStaffRecords = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await axios.get(
+  //         `${import.meta.env.VITE_API_BASE_URL}/staff/track`,
+  //         {
+  //           headers: { Authorization: `Bearer ${userInfo?.token}` },
+  //           params: {
+  //             staffId: staff,
+  //             productId: product,
+  //             range
+  //           }
+
+  //         }
+  //       );
+  //       setRecords(res.data.data || []);
+  //     } catch (err) {
+  //       console.error(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchStaffRecords();
+  // }, [staff, product, range]);
 
   // ✅ Fetch Staff List
   useEffect(() => {
@@ -117,16 +125,39 @@ const StaffTrack = () => {
   }, []);
 
   // ✅ Search filter
-  const filteredData = records.filter((item) => {
+const filteredData = originalRecords
+  .filter(item => item.staff !== "Admin")  // 🚀 EXCLUDE ADMIN
+  .filter((item) => {
     const q = searchQuery.toLowerCase();
+
+    // STAFF FILTER
+    if (staff && item.staffId !== staff) return false;
+
+    // PRODUCT FILTER
+    if (product && item.productId !== product) return false;
+
+    // RANGE FILTER
+    if (range !== "all") {
+      const loginDate = new Date(item.lastLoginAt);
+      const today = new Date();
+      const diffDays = Math.floor((today - loginDate) / (1000 * 60 * 60 * 24));
+
+      if (range === "today" && diffDays !== 0) return false;
+      if (range === "1week" && diffDays > 7) return false;
+      if (range === "14days" && diffDays > 14) return false;
+      if (range === "1month" && diffDays > 30) return false;
+    }
+
+    // SEARCH
     return (
-      item.staff?.username?.toLowerCase().includes(q) ||
-      item.companyName?.toLowerCase().includes(q) ||
-      item.person?.fullName?.toLowerCase().includes(q) ||
-      item.product?.name?.toLowerCase().includes(q) ||
-      item.status?.toLowerCase().includes(q)
+      item.staff?.toLowerCase().includes(q) ||
+      item.company?.toLowerCase().includes(q) ||
+      item.product?.toLowerCase().includes(q) ||
+      item.action?.toLowerCase().includes(q)
     );
   });
+
+
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -242,8 +273,8 @@ const StaffTrack = () => {
           </thead>
 
           <tbody>
-            {records.length > 0 ? (
-              records.map((r, i) => (
+            {filteredData.length > 0 ? (
+              filteredData.map((r, i) => (
                 <tr key={i} className="border-b hover:bg-gray-50 transition">
                   <td className="py-3 px-4 text-gray-900 font-medium">
                     {i + 1}
@@ -256,11 +287,10 @@ const StaffTrack = () => {
                   {/* Status from r.action */}
                   <td className="py-3 px-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        r.action === "Staff active"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${r.action === "Staff active"
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
-                      }`}
+                        }`}
                     >
                       {r.action}
                     </span>
