@@ -82,7 +82,7 @@ const AppHeader = () => {
           </button>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-indigo-600">
-              Call Logs Dashboard
+             Infinitybyte Call Logs Dashboard
             </h1>
             <div className="flex items-center mt-1 text-xs md:text-sm text-gray-500">
               <FiCalendar className="mr-1 hidden sm:block" />

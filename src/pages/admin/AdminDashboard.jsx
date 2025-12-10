@@ -462,7 +462,7 @@ const AdminDashboard = () => {
             </button>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-indigo-600">
-                Call Logs Dashboard
+                Infinitybyte Call Logs Dashboard
               </h1>
               <div className="flex items-center mt-1 text-xs md:text-sm text-gray-500">
                 <FiCalendar className="mr-1 hidden sm:block" />
@@ -643,7 +643,7 @@ const AdminDashboard = () => {
                 Welcome back, {userName}!
               </h1>
               <p className="text-indigo-100 mt-1">
-                Here's what's happening with your call logs today.
+                Here's what's happening with your Infinitybyte call logs today.
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-2 bg-white/20 p-2 rounded-lg">
