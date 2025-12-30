@@ -31,14 +31,16 @@ import SuccessClientTrack from "./pages/History/SuccessClientTrack";
 import StaffTrack from "./pages/History/StaffTrack";
 import Profile from "./pages/admin/Settings/Profile";
 import MeetingCallsTrack from "./pages/admin/MeetingCallsTrack";
+import Landing from "./pages/Landing";
 function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <main className="flex-1">
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<Landing />} />
 
           {/* Admin Routes */}
           <Route
