@@ -81,13 +81,13 @@ const handleLogout = async () => {
 
     // ✅ Clear local storage and redirect
     localStorage.removeItem("userInfo");
-    navigate("/");
+    navigate("/login");
 
   } catch (error) {
     console.error("Logout error:", error);
     // Still remove localStorage to avoid stuck session
     localStorage.removeItem("userInfo");
-    navigate("/");
+    navigate("/login");
   }
 };
 
