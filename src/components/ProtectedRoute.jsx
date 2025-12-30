@@ -47,7 +47,7 @@ const ProtectedRoute = ({ children }) => {
   if (isValid === null) return null;
 
   // Invalid / no user
-  if (!user || !isValid) return <Navigate to="/" replace />;
+  if (!user || !isValid) return <Navigate to="/login" replace />;
 
   // ⭐ AUTO PERMISSION CHECK (This is the magic)
   const path = location.pathname.split("/")[2]; // e.g. "staff"
