@@ -30,7 +30,7 @@ const Testimonials = () => {
 
   const testimonials = [
     {
-      quote: "Call Logs has transformed our communication process. The dashboard is intuitive and the AI features save us hours every week.",
+      quote: "CMS has transformed our communication process. The dashboard is intuitive and the AI features save us hours every week.",
       author: "Ahsan Malik",
       role: "Sales Manager @ Hashlogics",
       avatar: "AM",
