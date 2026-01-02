@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Phone className="w-6 h-6 text-secondary" />
-              <span className="text-2xl font-bold font-['Poppins']">Call Logs</span>
+              <span className="text-2xl font-bold font-['Poppins']">CMS</span>
             </div>
             <p className="text-white/70 font-['Inter']">
               Simplify your customer communication with our unified platform.
