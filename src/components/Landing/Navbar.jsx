@@ -11,7 +11,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Phone className="w-6 h-6 text-secondary" />
-            <span className="text-2xl font-bold text-white font-['Poppins']">Call Logs</span>
+            <span className="text-2xl font-bold text-white font-['Poppins']">CMS</span>
           </div>
 
           {/* Desktop Menu */}
