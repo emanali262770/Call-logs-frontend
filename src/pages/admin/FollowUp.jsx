@@ -82,7 +82,7 @@ const FollowUp = () => {
             ? new Date(item.followDates[0]).toISOString().split("T")[0]
             : "N/A",
         time: convertTo24HourFormat(item.followTimes?.[0]),
-        status: item.status || "N/A",
+         status: item.Timeline || "Active",
         timeline: item.Timeline,
       }));
 
@@ -363,14 +363,12 @@ const FollowUp = () => {
                   <td className="py-3 px-4">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        followUp.status === "Follow Up Required"
+                        followUp.status === "Active"
                           ? "bg-yellow-100 text-yellow-800"
-                          : followUp.status === "Not Interested"
+                          : followUp.status === "Hold"
                           ? "bg-red-100 text-red-800"
-                          : followUp.status === "All Ready Installed"
+                          : followUp.status === "Completed"
                           ? "bg-green-100 text-green-800"
-                          : followUp.status === "Phone Number Responding"
-                          ? "bg-blue-100 text-blue-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
