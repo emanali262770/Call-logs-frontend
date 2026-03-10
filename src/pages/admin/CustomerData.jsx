@@ -794,7 +794,7 @@ const CustomerData = () => {
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-1">
-                      Company Name
+                      Company Name <span className="text-newPrimary">*</span>
                     </label>
                     <input
                       type="text"
@@ -836,7 +836,7 @@ const CustomerData = () => {
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-1">
-                      Phone Number
+                      Phone Number <span className="text-newPrimary">*</span>
                     </label>
                     <input
                       type="text"
@@ -921,7 +921,7 @@ const CustomerData = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-gray-700 mb-1">
-                          Full Name
+                          Full Name <span className="text-newPrimary">*</span>
                         </label>
                         <input
                           type="text"

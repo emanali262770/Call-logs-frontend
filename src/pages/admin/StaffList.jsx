@@ -680,7 +680,7 @@ const StaffList = () => {
               {/* Image Upload */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Staff Image <span className="text-newPrimary">*</span>
+                  Staff Image 
                 </label>
                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                   <div className="space-y-1 text-center">
