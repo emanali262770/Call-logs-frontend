@@ -130,7 +130,7 @@ const filteredLinks = links.filter((link) => {
           </div>
           <h1 className="hidden md:block text-xl font-bold bg-gradient-to-r from-newPrimary to-primaryDark bg-clip-text text-transparent">
 
-            CRM Dashboard <span>/Infinitybyte</span>
+            CMS Dashboard
 
           </h1>
         </div>

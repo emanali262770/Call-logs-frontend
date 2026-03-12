@@ -36,7 +36,7 @@ const Hero = () => {
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0b2a6f] via-[#0b3dbd] to-[#1b4cff]"
 >
       {/* Decorative gradient orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+      <div className="absolute top-10 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-6 pt-32 pb-20 relative z-10">
@@ -67,7 +67,7 @@ const Hero = () => {
 
           {/* Right: Hero Image with floating icons */}
           <div className="relative">
-            <div className="relative z-10">
+            <div className="relative z-0">
               <img
                 src={heroImage}
                 alt="Call Logs Dashboard"

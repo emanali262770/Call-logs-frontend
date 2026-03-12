@@ -32,6 +32,7 @@ import StaffTrack from "./pages/History/StaffTrack";
 import Profile from "./pages/admin/Settings/Profile";
 import MeetingCallsTrack from "./pages/admin/MeetingCallsTrack";
 import Landing from "./pages/Landing";
+
 function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
