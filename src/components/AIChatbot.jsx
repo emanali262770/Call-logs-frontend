@@ -2,6 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
 
+const chatApiBaseUrl = (
+  import.meta.env.VITE_API_BASE_URL || ""
+).replace(/\/$/, "");
+
+const getStoredToken = () => {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    return userInfo?.token || "";
+  } catch {
+    return "";
+  }
+};
+
 const AIChatbot = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -45,6 +58,13 @@ const AIChatbot = () => {
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
+    const token = getStoredToken();
+
+    if (!token) {
+      typeMessage("Your session has expired. Please log in again to use the AI assistant.");
+      return;
+    }
+
     const userMessage = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
@@ -52,14 +72,24 @@ const AIChatbot = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/ai/chat`,
-        { message: input }
+        `${chatApiBaseUrl}/ai/chat`,
+        { message: input },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       // Use typing effect for response
       typeMessage(res?.data?.reply || "Sorry, I couldn't process that request.");
     } catch (error) {
-      typeMessage("Sorry, I'm having trouble connecting. Please try again.");
+      console.error("AI chat request failed", error);
+      typeMessage(
+        error.response?.status === 403
+          ? "You are not authorized to use the AI assistant. Please log in again."
+          : "Sorry, I'm having trouble connecting. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
