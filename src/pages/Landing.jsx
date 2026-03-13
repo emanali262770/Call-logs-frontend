@@ -28,10 +28,6 @@ const Landing = () => {
       </main>
 
       <Footer />
-
-      {/* Global Floating Chatbot */}
-      <AIChatbot />
-
     </div>
   );
 };

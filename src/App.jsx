@@ -32,12 +32,19 @@ import StaffTrack from "./pages/History/StaffTrack";
 import Profile from "./pages/admin/Settings/Profile";
 import MeetingCallsTrack from "./pages/admin/MeetingCallsTrack";
 import Landing from "./pages/Landing";
+import AIChatbot from "./components/AIChatbot";
 
 function AppContent() {
+
+  const user = JSON.parse(localStorage.getItem("userInfo"));
+
+  const isAdmin = user?.role === "admin";
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <main className="flex-1">
         <Routes>
+
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -49,15 +56,17 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AdminLayout />
+                {/* Show AI Agent only for Admin */}
+            {isAdmin && <AIChatbot />}  
               </ProtectedRoute>
             }
           >
+
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="staff" element={<StaffList />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/add" element={<AddProduct />} />
-            {/* <Route path="more-product-assign" element={<MoreProductAssign />} /> */}
             <Route path="customers" element={<CustomerData />} />
             <Route path="assign" element={<AssignTo />} />
             <Route path="calendar" element={<Calendar />} />
@@ -81,7 +90,7 @@ function AppContent() {
             <Route path="history/staff" element={<StaffTrack />} />
 
             {/* Settings */}
-             <Route path="settings/profile" element={<Profile />} />
+            <Route path="settings/profile" element={<Profile />} />
 
             <Route path="access-rights" element={<AssignRights />} />
             <Route path="modules" element={<Modules />} />
@@ -89,9 +98,11 @@ function AppContent() {
               path="modules-functionalities"
               element={<ModulesFunctionalities />}
             />
+
           </Route>
         </Routes>
       </main>
+
       <ToastContainer position="top-right" autoClose={2000} />
     </div>
   );
