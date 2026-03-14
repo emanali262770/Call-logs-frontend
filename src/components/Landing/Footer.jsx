@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Phone className="w-6 h-6 text-secondary" />
-              <span className="text-2xl font-bold font-['Poppins']">CMS</span>
+              <span className="text-2xl font-bold font-['Poppins']">CRM</span>
             </div>
             <p className="text-white/70 font-['Inter']">
               Simplify your customer communication with our unified platform.
@@ -51,7 +51,7 @@ const Footer = () => {
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/60 text-sm font-['Inter']">
-            © 2025 CMS. All rights reserved.
+            © 2025 CRM. All rights reserved.
           </p>
           <div className="flex gap-4">
             <a href="#" className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">

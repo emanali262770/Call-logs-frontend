@@ -28,7 +28,7 @@ const Contact = () => {
             </h2>
 
             <p className="text-slate-500 text-lg mb-10 max-w-xl font-['Inter']">
-              Book a demo and see how CMS can transform your communication workflow.
+              Book a demo and see how CRM can transform your communication workflow.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
@@ -114,7 +114,7 @@ const Contact = () => {
                 Schedule a Demo
               </p>
               <p className="text-slate-500 font-['Inter']">
-                See CMS in action
+                See CRM in action
               </p>
             </div>
           </div>

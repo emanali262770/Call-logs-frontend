@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, User, Trash2 } from "lucide-react";
 
 const chatApiBaseUrl = (
   import.meta.env.VITE_API_BASE_URL || ""
 ).replace(/\/$/, "");
+
+const INITIAL_MESSAGES = [
+  { role: "assistant", content: "Hi 👋 How can I help you today?" }
+];
 
 const getStoredToken = () => {
   try {
@@ -17,25 +21,21 @@ const getStoredToken = () => {
 
 const AIChatbot = () => {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi 👋 How can I help you today?" }
-  ]);
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [typingMessage, setTypingMessage] = useState("");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    scrollToBottom(); 
+    scrollToBottom();
   }, [messages, typingMessage]);
 
-  // Focus input when chat opens
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -44,7 +44,14 @@ const AIChatbot = () => {
     }
   }, [open]);
 
-  // Typing effect
+  // ✅ NEW: Clear chat logic
+  const clearChat = () => {
+    setMessages(INITIAL_MESSAGES);
+    setInput("");
+    setTypingMessage("");
+    setIsLoading(false);
+  };
+
   const typeMessage = (text, index = 0) => {
     if (index < text.length) {
       setTypingMessage(text.substring(0, index + 1));
@@ -81,7 +88,6 @@ const AIChatbot = () => {
         }
       );
 
-      // Use typing effect for response
       typeMessage(res?.data?.reply || "Sorry, I couldn't process that request.");
     } catch (error) {
       console.error("AI chat request failed", error);
@@ -104,10 +110,10 @@ const AIChatbot = () => {
 
   return (
     <>
-      {/* Floating Button with Pulse Effect */}
+      {/* Floating Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 bg-[#0d1117] from-[#0d1117]  text-white p-4 rounded-full shadow-lg hover:scale-110 transition-all duration-300 group animate-pulse-slow"
+        className="fixed bottom-6 right-6 bg-[#0d1117] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-all duration-300 group animate-pulse-slow"
         aria-label="Chat with AI Assistant"
       >
         {open ? (
@@ -120,8 +126,8 @@ const AIChatbot = () => {
       {/* Chat Window */}
       {open && (
         <div className="z-10 fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 animate-slide-up">
-          
-          {/* Header */}
+
+          {/* ✅ UPDATED Header — clear button added */}
           <div className="bg-gradient-to-r from-[#461792] to-purple-600 p-4 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-lg">
@@ -132,12 +138,27 @@ const AIChatbot = () => {
                 <p className="text-xs text-white/80">Always here to help</p>
               </div>
             </div>
-            <button 
-              onClick={() => setOpen(false)}
-              className="hover:bg-white/20 p-1 rounded-lg transition"
-            >
-              <X size={20} />
-            </button>
+
+            <div className="flex items-center gap-1">
+              {/* Clear Chat Button */}
+              <button
+                onClick={clearChat}
+                title="Clear chat"
+                className="hover:bg-white/20 p-1.5 rounded-lg transition"
+                aria-label="Clear chat history"
+              >
+                <Trash2 size={17} />
+              </button>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setOpen(false)}
+                className="hover:bg-white/20 p-1.5 rounded-lg transition"
+                aria-label="Close chat"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Container */}
@@ -148,16 +169,14 @@ const AIChatbot = () => {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div className={`flex items-start gap-2 max-w-[80%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                  {/* Avatar */}
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === "user" 
-                      ? "bg-blue-100 text-[#461792]" 
+                    message.role === "user"
+                      ? "bg-blue-100 text-[#461792]"
                       : "bg-purple-100 text-purple-600"
                   }`}>
                     {message.role === "user" ? <User size={16} /> : <Bot size={16} />}
                   </div>
-                  
-                  {/* Message Bubble */}
+
                   <div
                     className={`p-3 rounded-2xl ${
                       message.role === "user"
@@ -175,7 +194,7 @@ const AIChatbot = () => {
                 </div>
               </div>
             ))}
-            
+
             {/* Typing Indicator */}
             {typingMessage && (
               <div className="flex justify-start">
@@ -185,14 +204,12 @@ const AIChatbot = () => {
                   </div>
                   <div className="p-3 rounded-2xl bg-white text-gray-800 rounded-tl-none shadow-sm">
                     <p className="text-sm">{typingMessage}</p>
-                    <span className="text-[10px] opacity-70 mt-1 block">
-                      Typing...
-                    </span>
+                    <span className="text-[10px] opacity-70 mt-1 block">Typing...</span>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -216,7 +233,7 @@ const AIChatbot = () => {
                   </div>
                 )}
               </div>
-              
+
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
@@ -229,8 +246,7 @@ const AIChatbot = () => {
                 <Send size={18} />
               </button>
             </div>
-            
-            {/* Hint Text */}
+
             <p className="text-xs text-gray-400 mt-2 text-center">
               Press Enter to send • Shift + Enter for new line
             </p>
@@ -240,32 +256,15 @@ const AIChatbot = () => {
 
       <style jsx>{`
         @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
         @keyframes pulse-slow {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-          }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+          50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
         }
-        
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 2s infinite;
-        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        .animate-pulse-slow { animation: pulse-slow 2s infinite; }
       `}</style>
     </>
   );

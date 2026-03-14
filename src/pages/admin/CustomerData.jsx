@@ -49,6 +49,21 @@ const CustomerData = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  const normalizeStaffValue = useCallback(
+    (value) => {
+      if (!value) return "";
+
+      const matchedById = staffMembers.find((staff) => staff._id === value);
+      if (matchedById) return matchedById._id;
+
+      const matchedByUsername = staffMembers.find(
+        (staff) => staff.username === value
+      );
+      return matchedByUsername?._id || value;
+    },
+    [staffMembers]
+  );
+
   // Default image constant
   const DEFAULT_IMAGE =
     "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg?ts=1672291305";
@@ -166,6 +181,33 @@ const CustomerData = () => {
       const query = searchQuery.toLowerCase();
 
       const filtered = customerList.filter((customer) => {
+        const staffSearchText =
+          typeof customer.assignedStaff === "string"
+            ? customer.assignedStaff
+            : customer.assignedStaff && typeof customer.assignedStaff === "object"
+            ? customer.assignedStaff.username ||
+              customer.assignedStaff.fullName ||
+              customer.assignedStaff.name ||
+              ""
+            : "";
+
+        const productSearchText = Array.isArray(customer.assignedProducts)
+          ? customer.assignedProducts
+              .map((product) =>
+                typeof product === "string"
+                  ? product
+                  : product?.name || product?.productName || ""
+              )
+              .join(" ")
+          : typeof customer.assignedProducts === "string"
+          ? customer.assignedProducts
+          : customer.assignedProducts &&
+            typeof customer.assignedProducts === "object"
+          ? customer.assignedProducts.name ||
+            customer.assignedProducts.productName ||
+            ""
+          : "";
+
         return (
           (customer.companyName || "").toLowerCase().includes(query) ||
           (customer.email || "").toLowerCase().includes(query) ||
@@ -179,14 +221,8 @@ const CustomerData = () => {
               (person.designation || "").toLowerCase().includes(query) ||
               (person.department || "").toLowerCase().includes(query)
           ) ||
-          (customer.assignedStaff &&
-            typeof customer.assignedStaff === "object" &&
-            (customer.assignedStaff || "").toLowerCase().includes(query)) ||
-          (customer.assignedProducts &&
-            typeof customer.assignedProducts === "object" &&
-            (customer.assignedProducts.name || "")
-              .toLowerCase()
-              .includes(query))
+            staffSearchText.toLowerCase().includes(query) ||
+            productSearchText.toLowerCase().includes(query)
         );
       });
 
@@ -243,7 +279,7 @@ const CustomerData = () => {
       formData.append(`persons[${index}][email]`, person.email);
     });
 
-    formData.append("assignedStaff", assignedStaff);
+    formData.append("assignedStaff", normalizeStaffValue(assignedStaff));
     formData.append("assignedProducts", assignedProduct);
 
     // 🧠 LOG each entry properly
@@ -368,9 +404,11 @@ const CustomerData = () => {
     );
 
     setAssignedStaff(
-      typeof client.assignedStaff === "object"
-        ? client.assignedStaff?._id || ""
-        : client.assignedStaff || ""
+      normalizeStaffValue(
+        typeof client.assignedStaff === "object"
+          ? client.assignedStaff?._id || client.assignedStaff?.username || ""
+          : client.assignedStaff || ""
+      )
     );
 
     setAssignedProduct(
@@ -1020,15 +1058,13 @@ const CustomerData = () => {
                     </label>
                     <select
                       value={assignedStaff}
-                      onChange={(e) => setAssignedStaff(e.target.value)} // 👈 now stores staff.username
+                      onChange={(e) => setAssignedStaff(e.target.value)}
                       className="w-full p-2 border rounded focus:ring-2 focus:ring-newPrimary/50 focus:border-newPrimary outline-none transition-all"
                     >
                       <option value="">Select Staff</option>
                       {staffMembers.map((staff) => (
-                        <option key={staff._id} value={staff.username}>
-                          {" "}
-                          {/* 👈 use staff.name, not staff._id */}
-                          {staff.username} {/* Display readable name */}
+                        <option key={staff._id} value={staff._id}>
+                          {staff.username}
                         </option>
                       ))}
                     </select>
